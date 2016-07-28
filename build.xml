@@ -1,0 +1,35 @@
+<project name="wiretap" default="jar" >
+
+  <property name="src.dir" value="src"/>
+  <property name="build.dir" value="build"/>
+  <property name="classes.dir" value="${build.dir}/classes"/>
+  <!-- <property name="lib.dir" value="lib" /> -->
+
+  <!-- <path id="lib.path.id"> -->
+  <!--   <fileset dir="${lib.dir}" /> -->
+  <!-- </path> -->
+
+  <target name="compile">
+    <mkdir dir="${classes.dir}"/>
+    <javac srcdir="${src.dir}"
+           includeantruntime="false"
+           destdir="${classes.dir}"/>
+           <!-- classpathref="lib.path.id" -->
+  </target>
+
+  <target name="jar" depends="compile">
+    <jar destfile="${build.dir}/${ant.project.name}.jar"
+         basedir="${classes.dir}">
+      <manifest>
+        <attribute name="Premain-Class" value="edu.ucla.pls.wiretap.Agent"/>
+      </manifest>
+      <fileset dir="${classes.dir}" includes="**/*.class"/>
+      <!-- <zipgroupfileset dir="${lib.dir}" includes="**/*.jar"/>  -->
+    </jar>
+  </target>
+
+  <target name="clean">
+    <delete dir="${build.dir}"/>
+  </target>
+
+</project>
