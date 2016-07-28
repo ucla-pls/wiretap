@@ -1,0 +1,21 @@
+# Wiretap
+
+Wiretap is a project meant to trace information of running a java
+program. This information can be used to create dynamic analyses that
+can run after the fact. This project aims to
+
+- scale, it needs to run fast;
+- be extendable, it can track different things;
+- and be re-playable, so a trace can be reproduced.
+
+## Getting Started
+
+Wiretap is implemented as a java agent. To run it write
+
+```
+java -javaagent:wiretap.jar .. normal parameters 
+```
+
+This will create a wiretap folder `_wiretap/`, which will contain logs of
+the execution of the program. As a default the program will log enough to 
+be able to replay itself.
