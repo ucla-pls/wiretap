@@ -8,6 +8,11 @@ import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
 import java.security.ProtectionDomain;
 
+import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.Opcodes;
+
 
 /**
  * @author Christian Gram Kalhauge <kalhauge@cs.ucla.edu>
@@ -17,12 +22,15 @@ public class Agent implements ClassFileTransformer {
 
   private final File folder;
   private final File classfile;
+  private final File methodfile;
 
   private BufferedWriter classWriter;
+  private BufferedWriter methodWriter;
 
   public Agent (File folder) {
     this.folder = folder;
     this.classfile = new File(folder, "classes.txt");
+    this.methodfile = new File(folder, "methods.txt");
   }
 
   /** Create a new agent from the command-line options
@@ -46,6 +54,7 @@ public class Agent implements ClassFileTransformer {
 
     try {
       classWriter = new BufferedWriter(new FileWriter(this.classfile));
+      methodWriter = new BufferedWriter(new FileWriter(this.methodfile));
     } catch (IOException e) {
       System.err.println(e);
       System.exit(-1);
@@ -55,16 +64,18 @@ public class Agent implements ClassFileTransformer {
   public void close () {
     try {
       classWriter.close();
+      methodWriter.close();
     } catch (IOException e) {
       System.err.println(e);
     }
   }
 
   public void greet() {
-    System.err.println("== Running program with Wiretap ==");
-    System.err.println("folder    = '" + this.folder + "'");
-    System.err.println("classfile = '" + this.classfile + "'");
-    System.err.println("==================================");
+    System.err.println("====== Running program with Wiretap ======");
+    System.err.println("folder     = '" + this.folder + "'");
+    System.err.println("classfile  = '" + this.classfile + "'");
+    System.err.println("methodfile = '" + this.methodfile + "'");
+    System.err.println("==========================================");
   }
 
   public byte[] transform(ClassLoader loader,
@@ -72,13 +83,46 @@ public class Agent implements ClassFileTransformer {
                           Class<?> clazz,
                           ProtectionDomain protectionDomain,
                           byte[] buffer) {
+
     System.err.println("Class '" + className + "' has " + buffer.length + " bytes.");
+
     try {
       classWriter.write(className);
       classWriter.write("\n");
     } catch (IOException e) {
       System.err.println(e);
     }
+
+    ClassReader reader = new ClassReader(buffer);
+    reader.accept(new ClassVisitor (Opcodes.ASM5) {
+        public MethodVisitor visitMethod (int access,
+                                          String name,
+                                          String desc,
+                                          String signature,
+                                          String[] exceptions) {
+          try {
+            methodWriter.write(className);
+            methodWriter.write("/");
+            methodWriter.write(name);
+            methodWriter.write(desc);
+            if (signature != null) {
+              methodWriter.write("+");
+              methodWriter.write(signature);
+            }
+            if (exceptions != null) {
+              for (String exception: exceptions) {
+                methodWriter.write("!");
+                methodWriter.write(exception);
+              }
+            }
+            methodWriter.write("\n");
+          } catch (IOException e) {
+            System.err.println(e);
+          }
+
+          return null;
+        }
+      }, 0);
 
     // This is the last file loaded by the class-loader, it's a HACK -- fix
     // needed.

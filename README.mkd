@@ -26,6 +26,21 @@ to be able to replay itself.
 The `_wiretap/` folder contain these files:
 
 - `classes.txt` a list of classes encountered by wiretap, in chronological order.
+- `methods.txt` a list of methods instrumented by wiretap. The methods are
+  formatted like this:
+  ```
+  <FullyQualifiedMethod>(<Signature>)<ReturnType>[+<GenericSignature>][!<FullyQualifiedException>]*
+  ```
+  Stuff that still needs to be worked on: 
+  [ ] Find a good way to represent the GenericSignature, Should it replace the
+      Signature?
+  [ ] Also there is the private/public access flag, that needs to be represented 
+      in a fancy way.
+      
+## Building from source
+
+Make sure that [asm-5.1.jar](http://asm.ow2.org/) is in `lib/`. Run `ant`.
+Simple as that.
 
 ## Q&A
 
