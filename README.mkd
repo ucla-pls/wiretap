@@ -6,6 +6,7 @@ can run after the fact. This project aims to
 
 - scale, it needs to run fast;
 - be extendable, it can track different things;
+- thread safe;
 - and be re-playable, so a trace can be reproduced.
 
 ## Getting Started
@@ -16,6 +17,20 @@ Wiretap is implemented as a java agent. To run it write
 java -javaagent:wiretap.jar .. normal parameters 
 ```
 
-This will create a wiretap folder `_wiretap/`, which will contain logs of
-the execution of the program. As a default the program will log enough to 
-be able to replay itself.
+This will by default create a wiretap folder `_wiretap/`, which will contain
+logs of the execution of the program. As a default the program will log enough
+to be able to replay itself.
+
+## Output Defined
+
+The `_wiretap/` folder contain these files:
+
+- `classes.txt` a list of classes encountered by wiretap, in chronological order.
+
+## Q&A
+
+- Why not instrument before running the program? 
+  The problem is that some programs hot-loads classes that did not statically 
+  exist in the program before running the program. To cover all cases, and the
+  actual behavior of the program we have to instrument as the classes are loaded
+  by the class loader.
