@@ -48,13 +48,32 @@ public class Basic extends MethodVisitor {
     mv.visitMethodInsn(opcode, owner, name, signature, isInterface);
   }
 
+
   public static void enterMethod(String method) {
-    System.err.println("enter " + method);
+    System.out.println("enter " + method);
   }
 
   @Override
   public void visitCode() {
     mv.visitLdcInsn(qualifiedName);
     dynamicInvoke("enterMethod", "(Ljava/lang/String;)V");
+  }
+
+  public static void exitMethod(String method) {
+    System.out.println("exit " + method);
+  }
+
+  public void visitInsn(int opcode) {
+    switch (opcode) {
+    case Opcodes.IRETURN:
+    case Opcodes.LRETURN:
+    case Opcodes.FRETURN:
+    case Opcodes.DRETURN:
+    case Opcodes.ARETURN:
+    case Opcodes.RETURN:
+      mv.visitLdcInsn(qualifiedName);
+      dynamicInvoke("exitMethod", "(Ljava/lang/String;)V");
+    }
+    mv.visitInsn(opcode);
   }
 }
