@@ -22,6 +22,7 @@
          basedir="${classes.dir}">
       <manifest>
         <attribute name="Premain-Class" value="edu.ucla.pls.wiretap.Agent"/>
+        <attribute name="Boot-Class-Path" value="${ant.project.name}.jar"/>
       </manifest>
       <fileset dir="${classes.dir}" includes="**/*.class"/>
       <zipgroupfileset dir="${lib.dir}" includes="**/*.jar"/>

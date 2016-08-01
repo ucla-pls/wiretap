@@ -8,9 +8,8 @@ import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
 import java.security.ProtectionDomain;
 
-import org.objectweb.asm.ClassVisitor;
-import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
 
 
@@ -37,9 +36,9 @@ public class Agent implements ClassFileTransformer {
    */
   public static Agent fromOptions(String options) {
     File folder =
-      new File(options != null ? options : "_wiretap").getAbsoluteFile();
+        new File(options != null ? options : "_wiretap").getAbsoluteFile();
     Agent agent =
-      new Agent(folder);
+        new Agent(folder);
     agent.setup();
     return agent;
   }
@@ -94,42 +93,18 @@ public class Agent implements ClassFileTransformer {
     }
 
     ClassReader reader = new ClassReader(buffer);
-    reader.accept(new ClassVisitor (Opcodes.ASM5) {
-        public MethodVisitor visitMethod (int access,
-                                          String name,
-                                          String desc,
-                                          String signature,
-                                          String[] exceptions) {
-          try {
-            methodWriter.write(className);
-            methodWriter.write("/");
-            methodWriter.write(name);
-            methodWriter.write(desc);
-            if (signature != null) {
-              methodWriter.write("+");
-              methodWriter.write(signature);
-            }
-            if (exceptions != null) {
-              for (String exception: exceptions) {
-                methodWriter.write("!");
-                methodWriter.write(exception);
-              }
-            }
-            methodWriter.write("\n");
-          } catch (IOException e) {
-            System.err.println(e);
-          }
+    ClassWriter writer = new ClassWriter(reader, ClassWriter.COMPUTE_FRAMES);
+    Wiretapper wiretapper = new Wiretapper(writer, className, methodWriter);
 
-          return null;
-        }
-      }, 0);
+    reader.accept(wiretapper, 0);
 
     // This is the last file loaded by the class-loader, it's a HACK -- fix
     // needed.
     if (className.equals("java/lang/Shutdown$Lock")) {
       close();
     }
-    return buffer;
+
+    return writer.toByteArray();
   }
 
   /** Entry point for the javaagent.

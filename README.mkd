@@ -21,6 +21,15 @@ This will by default create a wiretap folder `_wiretap/`, which will contain
 logs of the execution of the program. As a default the program will log enough
 to be able to replay itself.
 
+If you have build the test submodule `baseline`, then you can test it all with
+this command:
+
+```
+java -javaagent:build/wiretap.jar \
+  -cp test/baseline/build/baseline.jar \
+  edu.ucla.pls.baseline.Transfer
+```
+
 ## Output Defined
 
 The `_wiretap/` folder contain these files:
@@ -37,7 +46,18 @@ The `_wiretap/` folder contain these files:
   [ ] Also there is the private/public access flag, that needs to be represented 
       in a fancy way.
       
-## Building from source
+- `log/`, this is where the fun happens. Each logger will add events to one of
+  the files in this directory. The files are numerated by thread. The events of
+  different threads are stored in different files to reduce the needed for
+  synchronization.
+
+
+## Loggers 
+
+- Basic Logger: The basic logger logs information about forking and joining of
+  threads.
+  
+## Building from Source
 
 Make sure that [asm-5.1.jar](http://asm.ow2.org/) is in `lib/`. Run `ant`.
 Simple as that.
@@ -49,3 +69,9 @@ Simple as that.
   exist in the program before running the program. To cover all cases, and the
   actual behavior of the program we have to instrument as the classes are loaded
   by the class loader.
+
+## Todos
+
+[ ] Create a test that figures out if extended inherits graph and information is
+    needed. The special case is the Thread.start(). Is it possible that if a
+    class extends Thread that the implementation won't catch that. 
