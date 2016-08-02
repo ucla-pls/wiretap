@@ -52,10 +52,19 @@ The `_wiretap/` folder contain these files:
   synchronization.
 
 
-## Loggers 
+## Wiretaps 
 
-- Basic Logger: The basic logger logs information about forking and joining of
-  threads.
+All wiretaps inherit from the basic `Wiretap`. Each Wiretap logs information about the 
+execution of the program, but should not interfere with each other. A wiretap should be
+self contained. This means that it will both instruments the code and contain the static
+methods that the instrumented code can access. 
+
+
+### Basic wiretap
+
+The basic wiretap logs information about forking and joining of threads. To do
+this correctly the wiretap also has to track which methods are called and when
+they are exited. 
   
 ## Building from Source
 

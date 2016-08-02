@@ -1,38 +1,24 @@
-package edu.ucla.pls.wiretap.bugs;
+package edu.ucla.pls.wiretap.wiretaps;
 
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
+import edu.ucla.pls.wiretap.Wiretap;
+
 /** The Basic Bug, measures the basic events.
  */
-public class Basic extends MethodVisitor {
+public class Basic extends Wiretap {
 
   private final String methodName;
   private final String signature;
   private final String qualifiedName;
 
   public Basic(MethodVisitor mv, String methodName, String signature) {
-    super(Opcodes.ASM5, mv);
+    super("edu/ucla/pls/wiretap/wiretaps/Basic", mv);
     this.methodName = methodName;
     this.signature = signature;
     this.qualifiedName = methodName + signature;
   }
-
-  private void dynamicInvoke(String name, String signature) {
-    mv.visitMethodInsn(Opcodes.INVOKESTATIC,
-                       "edu/ucla/pls/wiretap/bugs/Basic",
-                       name, signature, false);
-  }
-
-  public void dynamicPrintln(String string) {
-    mv.visitFieldInsn(Opcodes.GETSTATIC, "java/lang/System",
-                      "err","Ljava/io/PrintStream;");
-    mv.visitLdcInsn(string);
-    mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/io/PrintStream",
-                       "println", "(Ljava/lang/String;)V");
-
-  }
-
   public static void startThread(Thread thread) {
     System.err.println("Started thread + " + thread);
     thread.start();
@@ -47,7 +33,6 @@ public class Basic extends MethodVisitor {
     }
     mv.visitMethodInsn(opcode, owner, name, signature, isInterface);
   }
-
 
   public static void enterMethod(String method) {
     System.out.println("enter " + method);
@@ -71,6 +56,7 @@ public class Basic extends MethodVisitor {
     case Opcodes.DRETURN:
     case Opcodes.ARETURN:
     case Opcodes.RETURN:
+    case Opcodes.ATHROW:
       mv.visitLdcInsn(qualifiedName);
       dynamicInvoke("exitMethod", "(Ljava/lang/String;)V");
     }

@@ -7,7 +7,7 @@ import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
-import edu.ucla.pls.wiretap.bugs.Basic;
+import edu.ucla.pls.wiretap.wiretaps.Basic;
 
 public class Wiretapper extends ClassVisitor {
 
