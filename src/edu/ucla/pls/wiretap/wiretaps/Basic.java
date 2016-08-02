@@ -56,7 +56,6 @@ public class Basic extends Wiretap {
     case Opcodes.DRETURN:
     case Opcodes.ARETURN:
     case Opcodes.RETURN:
-    case Opcodes.ATHROW:
       mv.visitLdcInsn(qualifiedName);
       dynamicInvoke("exitMethod", "(Ljava/lang/String;)V");
     }

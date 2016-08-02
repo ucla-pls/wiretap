@@ -57,14 +57,47 @@ The `_wiretap/` folder contain these files:
 All wiretaps inherit from the basic `Wiretap`. Each Wiretap logs information about the 
 execution of the program, but should not interfere with each other. A wiretap should be
 self contained. This means that it will both instruments the code and contain the static
-methods that the instrumented code can access. 
+methods that the instrumented code can access. Dynamic state is allowed, but should be in 
+an extra class in the same file.
 
+All wiretaps are listed below.
 
 ### Basic wiretap
 
 The basic wiretap logs information about forking and joining of threads. To do
 this correctly the wiretap also has to track which methods are called and when
-they are exited. 
+they are exited. This wiretap logs 7 kinds of events. 
+
+- `fork`, a thread has been forked. 
+  This is tracked by looking at `java/lang/Thread.start(Ljava/lang/Thread;)V`
+  methods. When a thread is started a new event is created; a `fork` event
+  pointing to the new thread. This event will also name the thread in the system, 
+  so that future references are correlated.
+   
+- `join`, a thread has been joined. 
+  This is a very simple logger, as it logs after
+  `java/lang/Thread.join(Ljava/lang/Thread;)V`. Even though that there exists
+  join methods where you can give a time out, they are not hard constraints and
+  can therefor be safely ignored.
+
+- `begin`, a thread has begun. 
+  A thread can have any number of enter and exit points, especially if some of
+  the code isn't instrumented. We assume that a thread has begun, when it enters
+  the first method.
+
+- `end`, a thread has ended.
+  The best way to check if a thread has ended is to see if the method stack is
+  empty. We track the method stack with the `enter` and `exit` events.
+
+- `enter`, a thread has entered a method.
+  Enter is easy, we simply emit an `enter` event as the first in each method.
+
+- `exit`, a thread has exited a method.
+  Exit is harder. It's easy to track `RETURN` instructions in the code, but a 
+  method can also be exited using an exception, and caught in any layer in the 
+  method stack.
+  
+  [ ] Find solution to this.
   
 ## Building from Source
 
