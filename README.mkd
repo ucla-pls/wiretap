@@ -9,6 +9,8 @@ can run after the fact. This project aims to
 - thread safe;
 - and be re-playable, so a trace can be reproduced.
 
+Wiretap should work with java's down to version 1.5.
+
 ## Getting Started
 
 Wiretap is implemented as a java agent. To run it write
@@ -54,11 +56,11 @@ The `_wiretap/` folder contain these files:
 
 ## Wiretaps 
 
-All wiretaps inherit from the basic `Wiretap`. Each Wiretap logs information about the 
-execution of the program, but should not interfere with each other. A wiretap should be
-self contained. This means that it will both instruments the code and contain the static
-methods that the instrumented code can access. Dynamic state is allowed, but should be in 
-an extra class in the same file.
+All wiretaps inherit from the basic `Wiretap`. Each Wiretap logs information
+about the execution of the program, but should not interfere with each other. A
+wiretap should be self contained. This means that it will both instruments the
+code and contain the static methods that the instrumented code can access. Dynamic
+stat is done through recorders. 
 
 All wiretaps are listed below.
 
@@ -82,7 +84,7 @@ they are exited. This wiretap logs 7 kinds of events.
 
 - `begin`, a thread has begun. 
   A thread can have any number of enter and exit points, especially if some of
-  the code isn't instrumented. We assume that a thread has begun, when it enters
+  the code isn't instrumented. We log that a thread has begun, when it enters
   the first method.
 
 - `end`, a thread has ended.
