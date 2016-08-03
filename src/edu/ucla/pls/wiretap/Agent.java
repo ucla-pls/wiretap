@@ -1,6 +1,7 @@
 package edu.ucla.pls.wiretap;
 
 import java.io.BufferedWriter;
+import java.io.Closeable;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -13,13 +14,16 @@ import org.objectweb.asm.ClassWriter;
 
 /**
  * @author Christian Gram Kalhauge <kalhauge@cs.ucla.edu>
+ * The agent holds all the information of the run-time of the program.
  */
 
-public class Agent implements ClassFileTransformer {
+public class Agent implements ClassFileTransformer, Closeable {
 
   private final File folder;
   private final File classfile;
   private final File methodfile;
+
+  private final LoggerFactory loggers;
 
   private BufferedWriter classWriter;
   private BufferedWriter methodWriter;
@@ -28,6 +32,7 @@ public class Agent implements ClassFileTransformer {
     this.folder = folder;
     this.classfile = new File(folder, "classes.txt");
     this.methodfile = new File(folder, "methods.txt");
+    this.loggers = new LoggerFactory(new File(folder, "log"));
   }
 
   /** Create a new agent from the command-line options
@@ -49,6 +54,8 @@ public class Agent implements ClassFileTransformer {
     }
     folder.mkdirs();
 
+    loggers.setup();
+
     try {
       classWriter = new BufferedWriter(new FileWriter(this.classfile));
       methodWriter = new BufferedWriter(new FileWriter(this.methodfile));
@@ -58,13 +65,10 @@ public class Agent implements ClassFileTransformer {
     }
   }
 
-  public void close () {
-    try {
-      classWriter.close();
-      methodWriter.close();
-    } catch (IOException e) {
-      System.err.println(e);
-    }
+  public void close () throws IOException {
+    classWriter.close();
+    methodWriter.close();
+    loggers.close();
   }
 
   public void greet() {
@@ -99,7 +103,11 @@ public class Agent implements ClassFileTransformer {
     // This is the last file loaded by the class-loader, it's a HACK -- fix
     // needed.
     if (className.equals("java/lang/Shutdown$Lock")) {
-      close();
+      try {
+        close();
+      } catch (IOException e) {
+        System.err.println(e);
+      }
     }
 
     return writer.toByteArray();
