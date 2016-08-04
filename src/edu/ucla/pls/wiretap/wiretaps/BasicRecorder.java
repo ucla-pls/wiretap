@@ -5,33 +5,54 @@ import edu.ucla.pls.wiretap.Recorder;
 
 public class BasicRecorder extends Recorder {
 
-  private final Stack frames = new Stack();
+  private Stack frames;
+  // This permssion flag helps removing problems with recursion.
+  // The thing is that the BasicRecorder is not instrumented but the
+  // Stack frame is.
+  private boolean permission = false;
 
   public BasicRecorder(Logger log) {
     super(log);
+  }
+
+  public void setup () {
+    frames = new Stack ();
+    permission = true;
   }
 
   /** enterMethod should be called as the first thing when entering
       a method.
   */
   public void enterMethod(String method) {
-    frames.push(method);
-    log.write("enter", method);
+    if (permission) {
+      permission = false;
+      frames.push(method);
+      log.write("enter", method);
+      permission = true;
+    }
   }
 
   /** exitMethod should be called as the last thing in a method. The
       method should be the top of the stack. 
   */
   public void exitMethod(String method) {
-    String topMethod = this.frames.pop();
-    assert topMethod.equals(method);
+    if (permission) {
+      permission = false;
+      String topMethod = frames.pop();
+      assert topMethod.equals(method);
+      permission = true;
+    }
   }
 
   /** recoverFrame should be called when the current frame level is known but
       the frame might be wrong.
   */
   public void recoverFrame(String method) {
-    this.frames.push(method);
+    if (permission) {
+      permission = false;
+      frames.push(method);
+      permission = true;
+    }
   }
 
 }

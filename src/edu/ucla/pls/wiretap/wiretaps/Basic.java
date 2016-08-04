@@ -27,6 +27,7 @@ public class Basic extends Wiretap<BasicRecorder> {
     if (recorder == null) {
       recorder = new BasicRecorder(Agent.v().getLogger(thread));
       recorders.put(thread, recorder);
+      recorder.setup();
     }
     return recorder;
   }
@@ -55,11 +56,9 @@ public class Basic extends Wiretap<BasicRecorder> {
 
   @Override
   public void visitCode() {
-    dynamicPrintln(qualifiedName);
     pushRecorder();
     mv.visitLdcInsn(qualifiedName);
     record("enterMethod", "Ljava/lang/String;");
-
   }
 
   @Override

@@ -38,23 +38,36 @@ public class Agent implements ClassFileTransformer, Closeable {
     this.loggers = new LoggerFactory(new File(folder, "log"));
   }
 
+  private static boolean delete(File f) throws IOException {
+    if (f.isDirectory()) {
+      for (File c : f.listFiles()) {
+        delete(c);
+      }
+    }
+    return f.delete();
+  }
+
   public void setup() {
 
     // Clean up, and make sure that the data is consistent.
-    if (folder.exists()) {
-      folder.delete();
-    }
-    folder.mkdirs();
 
-    ignore.add("edu/ucla/pls/wiretap");
+    ignore.add("java");
+    ignore.add("sun");
+    ignore.add("edu/ucla/pls/wiretap/wiretaps");
 
-    loggers.setup();
 
     try {
+      if (folder.exists()) {
+        delete(folder);
+      }
+      folder.mkdirs();
+
+      loggers.setup();
+
       classWriter = new BufferedWriter(new FileWriter(this.classfile));
       methodWriter = new BufferedWriter(new FileWriter(this.methodfile));
     } catch (IOException e) {
-      System.err.println(e);
+      e.printStackTrace();
       System.exit(-1);
     }
   }
@@ -82,6 +95,15 @@ public class Agent implements ClassFileTransformer, Closeable {
 
     for (String prefix: ignore) {
       if (className.startsWith(prefix)) {
+        // This is the last file loaded by the class-loader, it's a HACK -- fix
+        // needed.
+        if (className.equals("java/lang/Shutdown$Lock")) {
+          try {
+            close();
+          } catch (IOException e) {
+            System.err.println(e);
+          }
+        }
         return null;
       }
     }

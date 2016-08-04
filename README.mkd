@@ -119,3 +119,4 @@ Simple as that.
 [ ] Create a test that figures out if extended inherits graph and information is
     needed. The special case is the Thread.start(). Is it possible that if a
     class extends Thread that the implementation won't catch that. 
+    
