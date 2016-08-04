@@ -22,4 +22,20 @@ public class Logger implements Closeable {
     writer.close();
   }
 
+  public void write(String event) {
+    try {
+      writer.write(String.format("%s\n", event));
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+  }
+
+  public void write(String event, String args) {
+    try {
+      writer.write(String.format("%s %s\n", event, args));
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+  }
+
 }

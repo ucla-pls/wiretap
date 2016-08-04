@@ -8,6 +8,8 @@ import java.io.IOException;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
 import java.security.ProtectionDomain;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
@@ -22,6 +24,7 @@ public class Agent implements ClassFileTransformer, Closeable {
   private final File folder;
   private final File classfile;
   private final File methodfile;
+  private final List<String> ignore = new ArrayList<String>();
 
   private final LoggerFactory loggers;
 
@@ -35,24 +38,15 @@ public class Agent implements ClassFileTransformer, Closeable {
     this.loggers = new LoggerFactory(new File(folder, "log"));
   }
 
-  /** Create a new agent from the command-line options
-   */
-  public static Agent fromOptions(String options) {
-    File folder =
-        new File(options != null ? options : "_wiretap").getAbsoluteFile();
-    Agent agent =
-        new Agent(folder);
-    agent.setup();
-    return agent;
-  }
-
-  public void setup () {
+  public void setup() {
 
     // Clean up, and make sure that the data is consistent.
     if (folder.exists()) {
       folder.delete();
     }
     folder.mkdirs();
+
+    ignore.add("edu/ucla/pls/wiretap");
 
     loggers.setup();
 
@@ -81,9 +75,16 @@ public class Agent implements ClassFileTransformer, Closeable {
 
   public byte[] transform(ClassLoader loader,
                           String className,
+
                           Class<?> clazz,
                           ProtectionDomain protectionDomain,
                           byte[] buffer) {
+
+    for (String prefix: ignore) {
+      if (className.startsWith(prefix)) {
+        return null;
+      }
+    }
 
     System.err.println("Class '" + className + "' has " + buffer.length + " bytes.");
 
@@ -112,6 +113,26 @@ public class Agent implements ClassFileTransformer, Closeable {
 
     return writer.toByteArray();
   }
+
+  public Logger getLogger(Thread thread) {
+    return loggers.getLogger(thread);
+  }
+
+  private static Agent instance;
+  /** Create a new agent from the command-line options
+   */
+  public static Agent fromOptions(String options) {
+    File folder =
+      new File(options != null ? options : "_wiretap").getAbsoluteFile();
+    instance = new Agent(folder);
+    instance.setup();
+    return instance;
+  }
+
+  public static Agent v(){
+    return instance;
+  }
+
 
   /** Entry point for the javaagent.
    */
