@@ -42,6 +42,23 @@ public abstract class Wiretap<T extends Recorder> extends MethodVisitor {
     mv.visitLdcInsn(string);
     mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/io/PrintStream",
                        "println", "(Ljava/lang/String;)V", false);
+  }
+
+  protected void printerr(String string) {
+    mv.visitFieldInsn(Opcodes.GETSTATIC, "java/lang/System",
+                      "err","Ljava/io/PrintStream;");
+    mv.visitLdcInsn(string);
+    mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/io/PrintStream",
+                       "println", "(Ljava/lang/String;)V", false);
+
+  }
+
+  protected void printout(String string) {
+    mv.visitFieldInsn(Opcodes.GETSTATIC, "java/lang/System",
+                      "out","Ljava/io/PrintStream;");
+    mv.visitLdcInsn(string);
+    mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/io/PrintStream",
+                       "println", "(Ljava/lang/String;)V", false);
 
   }
 

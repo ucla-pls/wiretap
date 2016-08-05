@@ -97,9 +97,8 @@ they are exited. This wiretap logs 7 kinds of events.
 - `exit`, a thread has exited a method.
   Exit is harder. It's easy to track `RETURN` instructions in the code, but a 
   method can also be exited using an exception, and caught in any layer in the 
-  method stack.
-  
-  [ ] Find solution to this.
+  method stack. The solution has been to catch all exceptions in all instrumented
+  methods.
   
 ## Building from Source
 

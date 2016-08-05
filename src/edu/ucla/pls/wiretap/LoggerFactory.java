@@ -40,6 +40,9 @@ public class LoggerFactory implements Closeable {
         BufferedWriter writer = new BufferedWriter(new FileWriter(file));
         logger = new Logger(id, writer);
         loggers.put(thread, logger);
+
+        // Begin the thread
+        logger.write("begin");
       } catch (IOException e) {
         System.err.println(e);
         System.exit(-1);

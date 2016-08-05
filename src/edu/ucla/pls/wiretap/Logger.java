@@ -17,9 +17,8 @@ public class Logger implements Closeable {
     this.writer = writer;
   }
 
-  @Override
-  public void close() throws IOException {
-    writer.close();
+  public int getId() {
+    return id;
   }
 
   public void write(String event) {
@@ -36,6 +35,11 @@ public class Logger implements Closeable {
     } catch (IOException e) {
       e.printStackTrace();
     }
+  }
+
+  @Override
+  public void close() throws IOException {
+    writer.close();
   }
 
 }

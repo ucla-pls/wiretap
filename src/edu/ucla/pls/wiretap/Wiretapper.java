@@ -37,7 +37,7 @@ public class Wiretapper extends ClassVisitor {
     // The use of desc over signature, might be a mistake. Note that signature
     // can be null.
 
-    return new Basic(mv_, className + "." + name, desc);
+    return new Basic(mv_, className + "." + name + ":" + desc);
   }
 
   public void writeMethod(int access,

@@ -3,6 +3,7 @@ package edu.ucla.pls.wiretap.wiretaps;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
@@ -32,33 +33,75 @@ public class Basic extends Wiretap<BasicRecorder> {
     return recorder;
   }
 
-  private final String methodName;
-  private final String signature;
   private final String qualifiedName;
 
-  public Basic(MethodVisitor mv, String methodName, String signature) {
+  public Basic(MethodVisitor mv, String qualifiedName) {
     super(BasicRecorder.class, mv);
-    this.methodName = methodName;
-    this.signature = signature;
-    this.qualifiedName = methodName + signature;
+    this.qualifiedName = qualifiedName;
   }
 
   @Override
   public void visitMethodInsn(int opcode, String owner,
                               String name, String signature,
                               boolean isInterface) {
-    //if (owner.equals("java/lang/Thread") && name.equals("start")) {
-    //  // dynamicInvoke("fork", "(Ljava/lang/Thread;)V");
-    //} else {
+    if (owner.equals("java/lang/Thread")) {
+      if (name.equals("start")) {
+
+        mv.visitInsn(Opcodes.DUP);
+
+        pushRecorder();
+        mv.visitInsn(Opcodes.SWAP);
+        record("forkThread", "Ljava/lang/Thread;");
+
+        mv.visitMethodInsn(opcode, owner, name, signature, isInterface);
+
+      } else if (name.equals("join") && signature.equals("()V")) {
+
+        mv.visitInsn(Opcodes.DUP);
+
+        mv.visitMethodInsn(opcode, owner, name, signature, isInterface);
+
+        pushRecorder();
+        mv.visitInsn(Opcodes.SWAP);
+        record("joinThread", "Ljava/lang/Thread;");
+      } else {
+        mv.visitMethodInsn(opcode, owner, name, signature, isInterface);
+      }
+    } else {
       mv.visitMethodInsn(opcode, owner, name, signature, isInterface);
-    //}
+    }
   }
+
+  private final Label
+    start = new Label(),
+    end = new Label(),
+    handle = new Label(),
+    handleEnd = new Label();
 
   @Override
   public void visitCode() {
+    super.visitCode();
+
     pushRecorder();
     mv.visitLdcInsn(qualifiedName);
     record("enterMethod", "Ljava/lang/String;");
+
+    mv.visitTryCatchBlock(start, end, end, null); //"java/lang/Throwable");
+    visitLabel(start);
+  }
+
+  @Override
+  public void visitMaxs(int maxStack, int maxLocals) {
+    mv.visitLabel(end);
+
+    pushRecorder();
+    mv.visitLdcInsn(qualifiedName);
+    record("exitMethod", "Ljava/lang/String;");
+
+    mv.visitTypeInsn(Opcodes.CHECKCAST, "java/lang/Throwable" );
+    mv.visitInsn(Opcodes.ATHROW);
+
+    super.visitMaxs(maxStack, maxLocals);
   }
 
   @Override

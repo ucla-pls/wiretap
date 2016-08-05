@@ -1,5 +1,6 @@
 package edu.ucla.pls.wiretap.wiretaps;
 
+import edu.ucla.pls.wiretap.Agent;
 import edu.ucla.pls.wiretap.Logger;
 import edu.ucla.pls.wiretap.Recorder;
 
@@ -40,17 +41,33 @@ public class BasicRecorder extends Recorder {
       permission = false;
       String topMethod = frames.pop();
       assert topMethod.equals(method);
+      log.write("exit", method);
+
+      if (frames.isEmpty()) {
+        log.write("end");
+      }
       permission = true;
     }
   }
 
-  /** recoverFrame should be called when the current frame level is known but
-      the frame might be wrong.
-  */
-  public void recoverFrame(String method) {
+  /** forkThread should be called with the forked thread.
+   */
+  public void forkThread(Thread other) {
     if (permission) {
       permission = false;
-      frames.push(method);
+      int id = Agent.v().getLogger(other).getId();
+      log.write("fork", "t" + id);
+      permission = true;
+    }
+  }
+
+  /** forkThread should be called with the forked thread.
+   */
+  public void joinThread(Thread other) {
+    if (permission) {
+      permission = false;
+      int id = Agent.v().getLogger(other).getId();
+      log.write("join", "t" + id);
       permission = true;
     }
   }
@@ -69,6 +86,10 @@ class Stack {
 
   public void push(String value) {
     node = new Node(value, node);
+  }
+
+  public boolean isEmpty() {
+    return node == null;
   }
 
   private class Node {
