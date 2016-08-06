@@ -6,6 +6,7 @@ import java.io.IOException;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.commons.TryCatchBlockSorter;
 
 import edu.ucla.pls.wiretap.wiretaps.Basic;
 
@@ -33,10 +34,10 @@ public class Wiretapper extends ClassVisitor {
 
     MethodVisitor mv_ =
         super.visitMethod(access, name, desc, signature, exceptions);
+    mv_ = new TryCatchBlockSorter(mv_, access, name, desc, signature, exceptions);
 
     // The use of desc over signature, might be a mistake. Note that signature
     // can be null.
-
     return new Basic(mv_, className + "." + name + ":" + desc);
   }
 
@@ -62,7 +63,7 @@ public class Wiretapper extends ClassVisitor {
       }
       methodWriter.write("\n");
     } catch (IOException e) {
-      System.err.println(e);
+      // Silent
     }
   }
 }

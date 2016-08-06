@@ -25,7 +25,7 @@ public class Logger implements Closeable {
     try {
       writer.write(String.format("%s\n", event));
     } catch (IOException e) {
-      e.printStackTrace();
+      // Silent exception
     }
   }
 
@@ -33,7 +33,7 @@ public class Logger implements Closeable {
     try {
       writer.write(String.format("%s %s\n", event, args));
     } catch (IOException e) {
-      e.printStackTrace();
+      // Silent exception
     }
   }
 

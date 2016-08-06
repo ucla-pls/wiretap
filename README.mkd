@@ -9,7 +9,7 @@ can run after the fact. This project aims to
 - thread safe;
 - and be re-playable, so a trace can be reproduced.
 
-Wiretap should work with java's down to version 1.5.
+Wiretap should work with java's down to version 1.6.
 
 ## Getting Started
 
@@ -102,8 +102,9 @@ they are exited. This wiretap logs 7 kinds of events.
   
 ## Building from Source
 
-Make sure that [asm-5.1.jar](http://asm.ow2.org/) is in `lib/`. Run `ant`.
-Simple as that.
+Make sure that
+[asm-5.1.jar, asm-tree-5.1.jar, and asm-commons-5.1.jar](http://asm.ow2.org/) is
+in `lib/`. Run `ant`. Simple as that.
 
 ## Q&A
 
@@ -115,7 +116,15 @@ Simple as that.
 
 ## Todos
 
-[ ] Create a test that figures out if extended inherits graph and information is
-    needed. The special case is the Thread.start(). Is it possible that if a
-    class extends Thread that the implementation won't catch that. 
-    
+- Create a test that figures out if extended inherits graph and information is
+  needed. The special case is the Thread.start(). Is it possible that if a
+  class extends Thread that the implementation won't catch that. 
+  ( This does seam to be confirmed)
+
+- Create a way to close buffers when they need it.
+
+- Improve logging speed.
+
+- Create a settings file.
+
+- Create a Trie for ignore classes.

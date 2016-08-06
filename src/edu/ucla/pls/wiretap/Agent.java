@@ -55,11 +55,6 @@ public class Agent implements ClassFileTransformer, Closeable {
   public void setup() {
 
     // Clean up, and make sure that the data is consistent.
-
-    ignore.add("java/lang/Shutdown");
-    // Ignore this to get around strange exception error. With
-    // `java.security.PrivilegedActionException`
-    ignore.add("sun/misc/URLClassPath");
     ignore.add("edu/ucla/pls/wiretap/wiretaps");
 
 
@@ -77,6 +72,19 @@ public class Agent implements ClassFileTransformer, Closeable {
       e.printStackTrace();
       System.exit(-1);
     }
+
+    Runtime.getRuntime().addShutdownHook(new Thread() {
+        public void run() {
+          try {
+            System.err.println("Closing agent");
+            Agent.v().close();
+            System.err.println("Agent closed");
+          } catch (IOException e) {
+            System.err.println("Could not close agent");
+            e.printStackTrace();
+          }
+        }
+      });
   }
 
   public void close () throws IOException {
@@ -102,15 +110,6 @@ public class Agent implements ClassFileTransformer, Closeable {
 
     for (String prefix: ignore) {
       if (className.startsWith(prefix)) {
-        // This is the last file loaded by the class-loader, it's a HACK -- fix
-        // needed.
-        if (className.equals("java/lang/Shutdown$Lock")) {
-          try {
-            close();
-          } catch (IOException e) {
-            System.err.println(e);
-          }
-        }
         return null;
       }
     }
@@ -121,7 +120,7 @@ public class Agent implements ClassFileTransformer, Closeable {
       classWriter.write(className);
       classWriter.write("\n");
     } catch (IOException e) {
-      System.err.println(e);
+      //Silent exception;
     }
 
     ClassReader reader = new ClassReader(buffer);
@@ -146,20 +145,6 @@ public class Agent implements ClassFileTransformer, Closeable {
       filestream.close();
     } catch (IOException e) {
       e.printStackTrace();
-      System.exit(-1);
-    }
-
-
-    //new File(packageFolder, "ER")
-
-    // This is the last file loaded by the class-loader, it's a HACK -- fix
-    // needed.
-    if (className.equals("java/lang/Shutdown$Lock")) {
-      try {
-        close();
-      } catch (IOException e) {
-        System.err.println(e);
-      }
     }
 
     return bytes;
@@ -183,7 +168,6 @@ public class Agent implements ClassFileTransformer, Closeable {
   public static Agent v(){
     return instance;
   }
-
 
   /** Entry point for the javaagent.
    */

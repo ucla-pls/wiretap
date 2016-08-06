@@ -80,7 +80,6 @@ public class Basic extends Wiretap<BasicRecorder> {
 
   @Override
   public void visitCode() {
-    super.visitCode();
 
     pushRecorder();
     mv.visitLdcInsn(qualifiedName);
@@ -88,10 +87,15 @@ public class Basic extends Wiretap<BasicRecorder> {
 
     mv.visitTryCatchBlock(start, end, end, null); //"java/lang/Throwable");
     visitLabel(start);
+
+    super.visitCode();
   }
 
   @Override
   public void visitMaxs(int maxStack, int maxLocals) {
+
+    super.visitMaxs(maxStack, maxLocals);
+
     mv.visitLabel(end);
 
     pushRecorder();
@@ -100,8 +104,6 @@ public class Basic extends Wiretap<BasicRecorder> {
 
     mv.visitTypeInsn(Opcodes.CHECKCAST, "java/lang/Throwable" );
     mv.visitInsn(Opcodes.ATHROW);
-
-    super.visitMaxs(maxStack, maxLocals);
   }
 
   @Override

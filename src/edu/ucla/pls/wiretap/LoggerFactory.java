@@ -44,7 +44,7 @@ public class LoggerFactory implements Closeable {
         // Begin the thread
         logger.write("begin");
       } catch (IOException e) {
-        System.err.println(e);
+        e.printStackTrace();
         System.exit(-1);
       }
     }
