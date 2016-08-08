@@ -57,7 +57,6 @@ public class Agent implements ClassFileTransformer, Closeable {
     // Clean up, and make sure that the data is consistent.
     ignore.add("edu/ucla/pls/wiretap/wiretaps");
 
-
     try {
       if (folder.exists()) {
         delete(folder);
@@ -73,13 +72,16 @@ public class Agent implements ClassFileTransformer, Closeable {
       System.exit(-1);
     }
 
+    final Thread mainThread = Thread.currentThread();
     Runtime.getRuntime().addShutdownHook(new Thread() {
         public void run() {
           try {
+            System.err.println("Waiting for the main thread to close...");
+            mainThread.join();
             System.err.println("Closing agent");
             Agent.v().close();
             System.err.println("Agent closed");
-          } catch (IOException e) {
+          } catch (Exception e) {
             System.err.println("Could not close agent");
             e.printStackTrace();
           }

@@ -121,10 +121,11 @@ in `lib/`. Run `ant`. Simple as that.
   class extends Thread that the implementation won't catch that. 
   ( This does seam to be confirmed)
 
-- Create a way to close buffers when they need it.
-
-- Improve logging speed.
-
 - Create a settings file.
 
 - Create a Trie for ignore classes.
+
+- Create a method writer, which both creates logs and assign integers to methods.
+
+- Improve logging speed.
+
