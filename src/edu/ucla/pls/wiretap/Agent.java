@@ -9,8 +9,7 @@ import java.io.IOException;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
 import java.security.ProtectionDomain;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Arrays;
 
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
@@ -22,25 +21,15 @@ import org.objectweb.asm.ClassWriter;
 
 public class Agent implements ClassFileTransformer, Closeable {
 
-  private final File folder;
-  private final File classfile;
-  private final File classesfolder;
-  private final File methodfile;
-  private final boolean dumpClassFiles;
-  private final List<String> ignore = new ArrayList<String>();
-
+  private final Properties properties;
   private final LoggerFactory loggers;
 
   private BufferedWriter classWriter;
   private BufferedWriter methodWriter;
 
-  public Agent (File folder) {
-    this.folder = folder;
-    this.classfile = new File(folder, "classes.txt");
-    this.methodfile = new File(folder, "methods.txt");
-    this.classesfolder = new File (folder, "classes");
-    this.loggers = new LoggerFactory(new File(folder, "log"));
-    this.dumpClassFiles = true;
+  public Agent(Properties properties) {
+    this.properties = properties;
+    this.loggers = new LoggerFactory(properties.logfolder);
   }
 
   private static boolean delete(File f) throws IOException {
@@ -55,18 +44,16 @@ public class Agent implements ClassFileTransformer, Closeable {
   public void setup() {
 
     // Clean up, and make sure that the data is consistent.
-    ignore.add("edu/ucla/pls/wiretap/wiretaps");
-
     try {
-      if (folder.exists()) {
-        delete(folder);
+      if (properties.folder.exists()) {
+        delete(properties.folder);
       }
-      folder.mkdirs();
+      properties.folder.mkdirs();
 
       loggers.setup();
 
-      classWriter = new BufferedWriter(new FileWriter(this.classfile));
-      methodWriter = new BufferedWriter(new FileWriter(this.methodfile));
+      classWriter = new BufferedWriter(new FileWriter(properties.classfile));
+      methodWriter = new BufferedWriter(new FileWriter(properties.methodfile));
     } catch (IOException e) {
       e.printStackTrace();
       System.exit(-1);
@@ -97,33 +84,21 @@ public class Agent implements ClassFileTransformer, Closeable {
 
   public void greet() {
     System.err.println("====== Running program with Wiretap ======");
-    System.err.println("folder     = '" + this.folder + "'");
-    System.err.println("classfile  = '" + this.classfile + "'");
-    System.err.println("methodfile = '" + this.methodfile + "'");
+    properties.print(System.err);
     System.err.println("==========================================");
   }
 
   public byte[] transform(ClassLoader loader,
                           String className,
-
                           Class<?> clazz,
                           ProtectionDomain protectionDomain,
                           byte[] buffer) {
 
-    for (String prefix: ignore) {
-      if (className.startsWith(prefix)) {
-        return null;
-      }
+    if (properties.isIgnored(className)) {
+      return null;
     }
 
-    System.err.println("Class '" + className + "' has " + buffer.length + " bytes.");
-
-    try {
-      classWriter.write(className);
-      classWriter.write("\n");
-    } catch (IOException e) {
-      //Silent exception;
-    }
+    logClass(className, buffer);
 
     ClassReader reader = new ClassReader(buffer);
     ClassWriter writer = new ClassWriter(reader, ClassWriter.COMPUTE_FRAMES);
@@ -133,10 +108,28 @@ public class Agent implements ClassFileTransformer, Closeable {
 
     byte[] bytes = writer.toByteArray();
 
+    if (properties.doDumpClassFiles()) {
+      dumpClassFile(className, bytes);
+    }
 
+    return bytes;
+  }
+
+  private void logClass(String className, byte[] bytes)  {
+    System.err.println("Class '" + className + "' has " + bytes.length + " bytes.");
+
+    try {
+      classWriter.write(className);
+      classWriter.write("\n");
+    } catch (IOException e) {
+      //Silent exception;
+    }
+  }
+
+  private void dumpClassFile(String className, byte[] bytes) {
     String package_ = className.split("/[^/]+$")[0];
     String classId = className.substring(package_.length() + 1);
-    File packageFolder = new File(classesfolder, package_);
+    File packageFolder = new File(properties.classesfolder, package_);
     packageFolder.mkdirs();
 
     File classFile = new File(packageFolder, classId + ".class");
@@ -148,8 +141,6 @@ public class Agent implements ClassFileTransformer, Closeable {
     } catch (IOException e) {
       e.printStackTrace();
     }
-
-    return bytes;
   }
 
   public Logger getLogger(Thread thread) {
@@ -162,7 +153,8 @@ public class Agent implements ClassFileTransformer, Closeable {
   public static Agent fromOptions(String options) {
     File folder =
       new File(options != null ? options : "_wiretap").getAbsoluteFile();
-    instance = new Agent(folder);
+    String [] ignorePrefixes = new String[] { "edu/ucla/pls/wiretap"};
+    instance = new Agent(new Properties(folder, Arrays.asList(ignorePrefixes)));
     instance.setup();
     return instance;
   }
