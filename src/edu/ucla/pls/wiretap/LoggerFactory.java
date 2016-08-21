@@ -12,10 +12,12 @@ public class LoggerFactory implements Closeable {
   private final Map<Thread, Logger> loggers =
     new HashMap<Thread, Logger>();
 
+  private final WiretapProperties properties;
   private final File logfolder;
 
-  public LoggerFactory(File logfolder) {
-    this.logfolder = logfolder;
+  public LoggerFactory(WiretapProperties properties) {
+    this.properties = properties;
+    this.logfolder = properties.getLogFolder();
   }
 
   public void setup() {

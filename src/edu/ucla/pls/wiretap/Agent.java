@@ -24,12 +24,22 @@ public class Agent implements ClassFileTransformer, Closeable {
   private final WiretapProperties properties;
   private final LoggerFactory loggers;
 
+  private final MethodHandler methodHandler;
+
   private BufferedWriter classWriter;
-  private BufferedWriter methodWriter;
 
   public Agent(WiretapProperties properties) {
+		this(properties,
+         new LoggerFactory(properties),
+         new MethodHandler(properties));
+  }
+
+  public Agent (WiretapProperties properties,
+                LoggerFactory loggers,
+                MethodHandler methodHandler) {
     this.properties = properties;
-    this.loggers = new LoggerFactory(properties.getLogFolder());
+    this.loggers = loggers;
+    this.methodHandler = methodHandler;
   }
 
   private static boolean delete(File f) throws IOException {
@@ -41,6 +51,7 @@ public class Agent implements ClassFileTransformer, Closeable {
     return f.delete();
   }
 
+
   public void setup() {
 
     // Clean up, and make sure that the data is consistent.
@@ -51,9 +62,9 @@ public class Agent implements ClassFileTransformer, Closeable {
       properties.getOutFolder().mkdirs();
 
       loggers.setup();
+      methodHandler.setup();
 
       classWriter = new BufferedWriter(new FileWriter(properties.getClassFile()));
-      methodWriter = new BufferedWriter(new FileWriter(properties.getMethodFile()));
     } catch (IOException e) {
       e.printStackTrace();
       System.exit(-1);
@@ -78,7 +89,7 @@ public class Agent implements ClassFileTransformer, Closeable {
 
   public void close () throws IOException {
     classWriter.close();
-    methodWriter.close();
+    methodHandler.close();
     loggers.close();
   }
 
@@ -96,23 +107,23 @@ public class Agent implements ClassFileTransformer, Closeable {
 
     if (properties.isClassIgnored(className)) {
       return null;
+    } else {
+      logClass(className, buffer);
+
+      ClassReader reader = new ClassReader(buffer);
+      ClassWriter writer = new ClassWriter(reader, ClassWriter.COMPUTE_FRAMES);
+      Wiretapper wiretapper = new Wiretapper(writer, className, methodHandler);
+
+      reader.accept(wiretapper, 0);
+
+      byte[] bytes = writer.toByteArray();
+
+      if (properties.doDumpClassFiles()) {
+        dumpClassFile(className, bytes);
+      }
+
+      return bytes;
     }
-
-    logClass(className, buffer);
-
-    ClassReader reader = new ClassReader(buffer);
-    ClassWriter writer = new ClassWriter(reader, ClassWriter.COMPUTE_FRAMES);
-    Wiretapper wiretapper = new Wiretapper(writer, className, methodWriter);
-
-    reader.accept(wiretapper, 0);
-
-    byte[] bytes = writer.toByteArray();
-
-    if (properties.doDumpClassFiles()) {
-      dumpClassFile(className, bytes);
-    }
-
-    return bytes;
   }
 
   private void logClass(String className, byte[] bytes)  {
