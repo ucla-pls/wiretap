@@ -21,15 +21,15 @@ import org.objectweb.asm.ClassWriter;
 
 public class Agent implements ClassFileTransformer, Closeable {
 
-  private final Properties properties;
+  private final WiretapProperties properties;
   private final LoggerFactory loggers;
 
   private BufferedWriter classWriter;
   private BufferedWriter methodWriter;
 
-  public Agent(Properties properties) {
+  public Agent(WiretapProperties properties) {
     this.properties = properties;
-    this.loggers = new LoggerFactory(properties.logfolder);
+    this.loggers = new LoggerFactory(properties.getLogFolder());
   }
 
   private static boolean delete(File f) throws IOException {
@@ -45,15 +45,15 @@ public class Agent implements ClassFileTransformer, Closeable {
 
     // Clean up, and make sure that the data is consistent.
     try {
-      if (properties.folder.exists()) {
-        delete(properties.folder);
+      if (properties.getOutFolder().exists()) {
+        delete(properties.getOutFolder());
       }
-      properties.folder.mkdirs();
+      properties.getOutFolder().mkdirs();
 
       loggers.setup();
 
-      classWriter = new BufferedWriter(new FileWriter(properties.classfile));
-      methodWriter = new BufferedWriter(new FileWriter(properties.methodfile));
+      classWriter = new BufferedWriter(new FileWriter(properties.getClassFile()));
+      methodWriter = new BufferedWriter(new FileWriter(properties.getMethodFile()));
     } catch (IOException e) {
       e.printStackTrace();
       System.exit(-1);
@@ -84,7 +84,7 @@ public class Agent implements ClassFileTransformer, Closeable {
 
   public void greet() {
     System.err.println("====== Running program with Wiretap ======");
-    properties.print(System.err);
+    properties.list(System.err);
     System.err.println("==========================================");
   }
 
@@ -94,7 +94,7 @@ public class Agent implements ClassFileTransformer, Closeable {
                           ProtectionDomain protectionDomain,
                           byte[] buffer) {
 
-    if (properties.isIgnored(className)) {
+    if (properties.isClassIgnored(className)) {
       return null;
     }
 
@@ -129,7 +129,7 @@ public class Agent implements ClassFileTransformer, Closeable {
   private void dumpClassFile(String className, byte[] bytes) {
     String package_ = className.split("/[^/]+$")[0];
     String classId = className.substring(package_.length() + 1);
-    File packageFolder = new File(properties.classesfolder, package_);
+    File packageFolder = new File(properties.getClassFilesFolder().getValue(), package_);
     packageFolder.mkdirs();
 
     File classFile = new File(packageFolder, classId + ".class");
@@ -154,7 +154,7 @@ public class Agent implements ClassFileTransformer, Closeable {
     File folder =
       new File(options != null ? options : "_wiretap").getAbsoluteFile();
     String [] ignorePrefixes = new String[] { "edu/ucla/pls/wiretap"};
-    instance = new Agent(new Properties(folder, Arrays.asList(ignorePrefixes)));
+    instance = new Agent(new WiretapProperties(System.getProperties()));
     instance.setup();
     return instance;
   }
