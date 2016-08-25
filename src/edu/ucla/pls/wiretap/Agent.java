@@ -9,7 +9,7 @@ import java.io.IOException;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
 import java.security.ProtectionDomain;
-import java.util.Arrays;
+import java.util.Collections;
 
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
@@ -112,9 +112,11 @@ public class Agent implements ClassFileTransformer, Closeable {
 
       ClassReader reader = new ClassReader(buffer);
       ClassWriter writer = new ClassWriter(reader, ClassWriter.COMPUTE_FRAMES);
-      Wiretapper wiretapper = new Wiretapper(writer, className, methodHandler);
+      WiretapClassVisitor wiretap =
+        new WiretapClassVisitor(writer, className,
+                                Collections.<Wiretapper>emptyList(), methodHandler);
 
-      reader.accept(wiretapper, 0);
+      reader.accept(wiretap, 0);
 
       byte[] bytes = writer.toByteArray();
 

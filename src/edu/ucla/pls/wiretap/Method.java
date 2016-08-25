@@ -43,4 +43,8 @@ public class Method {
     return false;
   }
 
+  public int getId () {
+    return this.id;
+  };
+
 }
