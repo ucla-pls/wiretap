@@ -9,10 +9,12 @@ import java.io.IOException;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
 import java.security.ProtectionDomain;
-import java.util.Collections;
+import java.util.Arrays;
 
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
+
+import edu.ucla.pls.wiretap.wiretaps.EnterMethod;
 
 /**
  * @author Christian Gram Kalhauge <kalhauge@cs.ucla.edu>
@@ -74,8 +76,8 @@ public class Agent implements ClassFileTransformer, Closeable {
     Runtime.getRuntime().addShutdownHook(new Thread() {
         public void run() {
           try {
-            System.err.println("Waiting for the main thread to close...");
-            mainThread.join();
+            System.err.println("Waiting for the main thread to close... 5s");
+            mainThread.join(5000);
             System.err.println("Closing agent");
             Agent.v().close();
             System.err.println("Agent closed");
@@ -113,10 +115,20 @@ public class Agent implements ClassFileTransformer, Closeable {
       ClassReader reader = new ClassReader(buffer);
       ClassWriter writer = new ClassWriter(reader, ClassWriter.COMPUTE_FRAMES);
       WiretapClassVisitor wiretap =
-        new WiretapClassVisitor(writer, className,
-                                Collections.<Wiretapper>emptyList(), methodHandler);
+        new WiretapClassVisitor(writer,
+                                className,
+                                Arrays.asList(new Wiretapper [] {
+                                    new EnterMethod(),
+                                }),
+                                methodHandler,
+                                Logger.class);
 
-      reader.accept(wiretap, 0);
+      try {
+        reader.accept(wiretap, 0);
+      } catch (Exception e) {
+        e.printStackTrace();
+        throw e;
+      }
 
       byte[] bytes = writer.toByteArray();
 
@@ -164,9 +176,6 @@ public class Agent implements ClassFileTransformer, Closeable {
   /** Create a new agent from the command-line options
    */
   public static Agent fromOptions(String options) {
-    File folder =
-      new File(options != null ? options : "_wiretap").getAbsoluteFile();
-    String [] ignorePrefixes = new String[] { "edu/ucla/pls/wiretap"};
     instance = new Agent(new WiretapProperties(System.getProperties()));
     instance.setup();
     return instance;

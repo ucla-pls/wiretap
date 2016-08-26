@@ -6,39 +6,43 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /** This class handles, and compresses methods.
  */
 public class MethodHandler implements Closeable {
 
-  private final Map<String, Method> methods;
+  private final Map<String, Method> lookup;
+  private final List<Method> methods;
   private final WiretapProperties properties;
 
   private Writer writer;
 
-  private int count;
-
-  public MethodHandler(WiretapProperties properties, Map<String, Method> methods) {
+  public MethodHandler(WiretapProperties properties, List<Method> methods) {
     this.methods = methods;
     this.properties = properties;
+    this.lookup = new HashMap<String, Method>();
+
+    for (Method method: methods) {
+      lookup.put(method.getDescriptor(), method);
+    }
   }
 
   public MethodHandler (WiretapProperties properties) {
-    this(properties, new HashMap<String, Method>());
+    this(properties, new ArrayList<Method>());
   }
 
   public void setup() {
     final File methodfile = properties.getMethodFile();
-
     try {
       writer = new BufferedWriter(new FileWriter(methodfile));
     } catch (IOException e) {
       e.printStackTrace();
       System.exit(-1);
     }
-
   }
 
   public void close() throws IOException {
@@ -46,7 +50,29 @@ public class MethodHandler implements Closeable {
   }
 
   public synchronized Method getMethodUnsafe(String descriptor) {
-    return methods.get(descriptor);
+    return lookup.get(descriptor);
+  }
+
+  public synchronized Method getMethod(int id) {
+    return methods.get(id);
+  }
+
+  public synchronized Method createMethod(int access,
+                                     String className,
+                                     String name,
+                                     String typeDesc,
+                                     String [] exceptions) {
+    Method method = new Method(methods.size(), access,
+                        className, name, typeDesc, exceptions);
+    methods.add(method);
+    try { 
+      writer.write(method.getDescriptor());
+      writer.write("\n");
+    } catch (IOException e) {
+      System.err.println("Could not write '" + method.getDescriptor() + "' to file");
+    }
+    lookup.put(method.getDescriptor(), method);
+    return method;
   }
 
   public Method getMethod(String descriptor) {
@@ -70,9 +96,7 @@ public class MethodHandler implements Closeable {
     synchronized (this) {
       method = getMethodUnsafe(desc);
       if (method == null) {
-        method = new Method(count++, access,
-                            className, name, typeDesc, exceptions);
-        methods.put(desc, method);
+        method = createMethod(access, className, name, typeDesc, exceptions);
       }
     }
     return method;

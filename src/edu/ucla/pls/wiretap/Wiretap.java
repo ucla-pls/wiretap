@@ -67,8 +67,8 @@ public abstract class Wiretap extends MethodVisitor {
   private static String toSignature(String [] args) {
     StringBuilder b = new StringBuilder();
     b.append("(");
-    for (String arg: args) {
-      b.append(args);
+    for (String arg : args) {
+      b.append(arg);
     }
     b.append(")V");
     return b.toString();

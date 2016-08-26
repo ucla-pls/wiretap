@@ -1,7 +1,6 @@
 package edu.ucla.pls.wiretap;
 
 import java.io.File;
-import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -60,7 +59,8 @@ public class WiretapProperties extends Properties {
   }
 
   public Maybe<File> getClassFilesFolder() {
-    return Maybe.<File>fromMaybeNull(getFile("classfilesfolder", null));
+    File file = getFile("classfilesfolder", null);
+    return Maybe.<File>fromMaybeNull(file);
   }
 
   public boolean doDumpClassFiles() {
@@ -75,6 +75,11 @@ public class WiretapProperties extends Properties {
   @Override
   public String getProperty(String key, String def) {
     return super.getProperty("wiretap." + key, def);
+  }
+
+  @Override
+  public String getProperty(String key) {
+    return super.getProperty("wiretap." + key);
   }
 
   public File getFile(String key, File def) {

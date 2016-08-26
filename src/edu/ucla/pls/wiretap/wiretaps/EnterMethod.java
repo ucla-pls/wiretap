@@ -7,23 +7,19 @@ import edu.ucla.pls.wiretap.Method;
 import edu.ucla.pls.wiretap.Wiretap;
 import edu.ucla.pls.wiretap.Wiretapper;
 
-public class EnterMethod<T> extends Wiretapper<T> {
-
-  public EnterMethod (Class<T> recorder) {
-    super(recorder);
-  }
+public class EnterMethod extends Wiretapper {
 
   @Override
   public Wiretap instrument(MethodVisitor next,
                             MethodVisitor out,
+                            Class<?> recorder,
                             final Method method) {
-    return
-      new Wiretap(Type.getInternalName(getRecorder()), next, out) {
-        @Override
-        public void visitCode() {
-          visitCode();
-          emit("enter", method.getId());
-        }
-      };
+    return new Wiretap(Type.getInternalName(recorder), next, out) {
+      @Override
+      public void visitCode() {
+        super.visitCode();
+        emit("enter", method.getId());
+      }
+    };
   }
 }

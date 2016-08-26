@@ -17,13 +17,18 @@ public class Logger implements Closeable {
     this.writer = writer;
   }
 
-  public int getId() {
-    return id;
+  public static Logger getRecorder() {
+    return Agent.v().getLogger(Thread.currentThread());
+  }
+
+  public void enter(int id) {
+    write("E", Integer.toHexString(id));
   }
 
   public void write(String event) {
     try {
-      writer.write(String.format("%s\n", event));
+      writer.write(event);
+      writer.write("\n");
     } catch (IOException e) {
       // Silent exception
     }
@@ -31,10 +36,17 @@ public class Logger implements Closeable {
 
   public void write(String event, String args) {
     try {
-      writer.write(String.format("%s %s\n", event, args));
+      writer.write(event);
+      writer.write(" ");
+      writer.write(args);
+      writer.write("\n");
     } catch (IOException e) {
       // Silent exception
     }
+  }
+
+  public int getId() {
+    return id;
   }
 
   @Override
