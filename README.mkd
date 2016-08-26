@@ -40,13 +40,11 @@ The `_wiretap/` folder contain these files:
 - `methods.txt` a list of methods instrumented by wiretap. The methods are
   formatted like this:
   ```
-  <FullyQualifiedMethod>(<Signature>)<ReturnType>[+<GenericSignature>][!<FullyQualifiedException>]*
+  <FullyQualifiedMethod>:(<Signature>)<ReturnType>
   ```
   Stuff that still needs to be worked on: 
   [ ] Find a good way to represent the GenericSignature, Should it replace the
       Signature?
-  [ ] Also there is the private/public access flag, that needs to be represented 
-      in a fancy way.
       
 - `log/`, this is where the fun happens. Each logger will add events to one of
   the files in this directory. The files are numerated by thread. The events of
@@ -56,59 +54,34 @@ The `_wiretap/` folder contain these files:
 
 ## Wiretaps 
 
-All wiretaps inherit from the basic `Wiretap`. Each Wiretap logs information
-about the execution of the program, but should not interfere with each other. A
-wiretap should be self contained. This means that it will both instruments the
-code and contain the static methods that the instrumented code can access. Dynamic
-stat is done through recorders. 
+Wiretaps are installed by a Wiretapper. A wiretapper is essentially a wrapper
+around the constructor for the Wiretap. It also has the ability to add information
+about the wiretap and inspect the recorder to see if it can accept the events that
+the Wiretap emit.
 
-All wiretaps are listed below.
+## Recorder 
 
-### Basic wiretap
+A recorder is something that can handle incoming events. The recorder is
+statically linked to the main program, so it has to implement at least the
+static method:
 
-The basic wiretap logs information about forking and joining of threads. To do
-this correctly the wiretap also has to track which methods are called and when
-they are exited. This wiretap logs 7 kinds of events. 
+```
+public static <Recorder> getRecorder(); 
+```
 
-- `fork`, a thread has been forked. 
-  This is tracked by looking at `java/lang/Thread.start(Ljava/lang/Thread;)V`
-  methods. When a thread is started a new event is created; a `fork` event
-  pointing to the new thread. This event will also name the thread in the system, 
-  so that future references are correlated.
-   
-- `join`, a thread has been joined. 
-  This is a very simple logger, as it logs after
-  `java/lang/Thread.join(Ljava/lang/Thread;)V`. Even though that there exists
-  join methods where you can give a time out, they are not hard constraints and
-  can therefor be safely ignored.
+Also it has to implement the methods for all the event that it will accept.
 
-- `begin`, a thread has begun. 
-  A thread can have any number of enter and exit points, especially if some of
-  the code isn't instrumented. We log that a thread has begun, when it enters
-  the first method.
+Note: Recorders can be chained if some of the events has to be processed. 
 
-- `end`, a thread has ended.
-  The best way to check if a thread has ended is to see if the method stack is
-  empty. We track the method stack with the `enter` and `exit` events.
-
-- `enter`, a thread has entered a method.
-  Enter is easy, we simply emit an `enter` event as the first in each method.
-
-- `exit`, a thread has exited a method.
-  Exit is harder. It's easy to track `RETURN` instructions in the code, but a 
-  method can also be exited using an exception, and caught in any layer in the 
-  method stack. The solution has been to catch all exceptions in all instrumented
-  methods.
-  
 ## Building from Source
 
 Make sure that
-[asm-5.1.jar, asm-tree-5.1.jar, and asm-commons-5.1.jar](http://asm.ow2.org/) is
+[asm-5.1.jar, asm-tree-5.1.jar, and asm-commons-5.1.jar](http://asm.ow2.org/) are
 in `lib/`. Run `ant`. Simple as that.
 
 ## Q&A
 
-- Why not instrument before running the program? 
+- *Why not instrument before running the program?* 
   The problem is that some programs hot-loads classes that did not statically 
   exist in the program before running the program. To cover all cases, and the
   actual behavior of the program we have to instrument as the classes are loaded
@@ -121,11 +94,7 @@ in `lib/`. Run `ant`. Simple as that.
   class extends Thread that the implementation won't catch that. 
   ( This does seam to be confirmed)
 
-- Create a settings file.
-
 - Create a Trie for ignore classes.
-
-- Create a method writer, which both creates logs and assign integers to methods.
 
 - Improve logging speed.
 
