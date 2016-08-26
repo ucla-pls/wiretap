@@ -63,10 +63,12 @@ the Wiretap emit.
 
 A recorder is something that can handle incoming events. The recorder is
 statically linked to the main program, so it has to implement at least the
-static method:
+following static methods:
 
 ```
 public static <Recorder> getRecorder(); 
+public static void setupRecorder(WiretapProperties); 
+public static void closeRecorder(); 
 ```
 
 Also it has to implement the methods for all the event that it will accept.

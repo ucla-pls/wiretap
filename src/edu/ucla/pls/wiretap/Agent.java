@@ -8,13 +8,12 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.security.ProtectionDomain;
-import java.util.Arrays;
 
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
-
-import edu.ucla.pls.wiretap.wiretaps.EnterMethod;
 
 /**
  * @author Christian Gram Kalhauge <kalhauge@cs.ucla.edu>
@@ -24,24 +23,25 @@ import edu.ucla.pls.wiretap.wiretaps.EnterMethod;
 public class Agent implements ClassFileTransformer, Closeable {
 
   private final WiretapProperties properties;
-  private final LoggerFactory loggers;
-
   private final MethodHandler methodHandler;
+  private final Class<?> recorder;
 
   private BufferedWriter classWriter;
 
+  private Method closeRecorder;
+
   public Agent(WiretapProperties properties) {
 		this(properties,
-         new LoggerFactory(properties),
+         properties.getRecorder(),
          new MethodHandler(properties));
   }
 
   public Agent (WiretapProperties properties,
-                LoggerFactory loggers,
+                Class<?> recorder,
                 MethodHandler methodHandler) {
     this.properties = properties;
-    this.loggers = loggers;
     this.methodHandler = methodHandler;
+    this.recorder = recorder;
   }
 
   private static boolean delete(File f) throws IOException {
@@ -63,11 +63,16 @@ public class Agent implements ClassFileTransformer, Closeable {
       }
       properties.getOutFolder().mkdirs();
 
-      loggers.setup();
+      recorder.getDeclaredMethod("setupRecorder", WiretapProperties.class).invoke(null, properties);
+      closeRecorder = recorder.getDeclaredMethod("closeRecorder");
       methodHandler.setup();
 
       classWriter = new BufferedWriter(new FileWriter(properties.getClassFile()));
     } catch (IOException e) {
+      e.printStackTrace();
+      System.exit(-1);
+    } catch (Exception e) {
+      System.err.println("Could not call setup on recorder");
       e.printStackTrace();
       System.exit(-1);
     }
@@ -92,7 +97,12 @@ public class Agent implements ClassFileTransformer, Closeable {
   public void close () throws IOException {
     classWriter.close();
     methodHandler.close();
-    loggers.close();
+    try {
+      closeRecorder.invoke(null);
+    } catch (Exception e) {
+      System.err.println("Could not close recorder");
+      e.printStackTrace();
+    }
   }
 
   public void greet() {
@@ -119,7 +129,7 @@ public class Agent implements ClassFileTransformer, Closeable {
                                 className,
                                 properties.getWiretappers(),
                                 methodHandler,
-                                Logger.class);
+                                recorder);
 
       try {
         reader.accept(wiretap, 0);
@@ -164,10 +174,6 @@ public class Agent implements ClassFileTransformer, Closeable {
     } catch (IOException e) {
       e.printStackTrace();
     }
-  }
-
-  public Logger getLogger(Thread thread) {
-    return loggers.getLogger(thread);
   }
 
   private static Agent instance;

@@ -18,6 +18,7 @@ public class WiretapProperties extends Properties {
   private Collection<String> ignoredPrefixes;
 
   private List<Wiretapper> wiretappers;
+  private Class<?> recorder;
 
   public WiretapProperties (Properties p) {
     super(p);
@@ -72,7 +73,7 @@ public class WiretapProperties extends Properties {
   }
 
   public List<Wiretapper> getWiretappers() {
-    if (wiretappers != null) {
+    if (wiretappers == null) {
       List<String> names =
         getList("wiretappers", Arrays.asList(new String [] {"EnterMethod"}));
       wiretappers = new ArrayList<Wiretapper>();
@@ -83,15 +84,35 @@ public class WiretapProperties extends Properties {
           Constructor<?> ctor = cls.getConstructor();
           wiretappers.add((Wiretapper)ctor.newInstance());
         } catch (ClassNotFoundException e) {
-          System.out.println("Could not find class '" + classname + "'");
+          System.err.println("Could not find class '" + classname + "'");
           e.printStackTrace();
         } catch (NoSuchMethodException e) {
-          System.out.println("'" + classname + "' must have an empty constructor");
+          System.err.println("'" + classname + "' must have an empty constructor");
+          e.printStackTrace();
+        } catch (Exception e) {
+          System.err.println("Unexpected exception");
           e.printStackTrace();
         }
       }
     }
     return wiretappers;
+  }
+
+  public Class<?> getRecorder() {
+    if (recorder == null) {
+      String recorderName =
+        "edu.ucla.pls.wiretap.recorders." + getProperty("recorder", "Logger");
+      try {
+        recorder = Class.forName(recorderName);
+      } catch (ClassNotFoundException e) {
+        System.err.println("Could not find class '" + recorderName + "'");
+        e.printStackTrace();
+      } catch (Exception e) {
+        System.err.println("Unexpected exception");
+        e.printStackTrace();
+      }
+    }
+    return recorder;
   }
 
   @Override
