@@ -76,8 +76,8 @@ public class Agent implements ClassFileTransformer, Closeable {
     Runtime.getRuntime().addShutdownHook(new Thread() {
         public void run() {
           try {
-            System.err.println("Waiting for the main thread to close... 5s");
-            mainThread.join(5000);
+            System.err.println("Waiting for the main thread to close... 2s");
+            mainThread.join(2000);
             System.err.println("Closing agent");
             Agent.v().close();
             System.err.println("Agent closed");
@@ -117,9 +117,7 @@ public class Agent implements ClassFileTransformer, Closeable {
       WiretapClassVisitor wiretap =
         new WiretapClassVisitor(writer,
                                 className,
-                                Arrays.asList(new Wiretapper [] {
-                                    new EnterMethod(),
-                                }),
+                                properties.getWiretappers(),
                                 methodHandler,
                                 Logger.class);
 

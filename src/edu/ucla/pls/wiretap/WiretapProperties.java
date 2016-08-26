@@ -1,6 +1,8 @@
 package edu.ucla.pls.wiretap;
 
 import java.io.File;
+import java.lang.reflect.Constructor;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -14,6 +16,8 @@ public class WiretapProperties extends Properties {
 
   private File outFolder;
   private Collection<String> ignoredPrefixes;
+
+  private List<Wiretapper> wiretappers;
 
   public WiretapProperties (Properties p) {
     super(p);
@@ -44,7 +48,7 @@ public class WiretapProperties extends Properties {
 
   public Collection<String> getIgnoredPrefixes() {
     if (ignoredPrefixes == null) {
-      ignoredPrefixes = getList("ignoredprefixes", Collections.<String>emptyList());
+      ignoredPrefixes = getList("ignoredprefixes", Arrays.asList("java", "sun", "edu/ucla/pls/wiretap"));
     }
     return ignoredPrefixes;
   }
@@ -65,6 +69,29 @@ public class WiretapProperties extends Properties {
 
   public boolean doDumpClassFiles() {
     return getClassFilesFolder().hasValue();
+  }
+
+  public List<Wiretapper> getWiretappers() {
+    if (wiretappers != null) {
+      List<String> names =
+        getList("wiretappers", Arrays.asList(new String [] {"EnterMethod"}));
+      wiretappers = new ArrayList<Wiretapper>();
+      for (String name: names) {
+        String classname = "edu.ucla.pls.wiretap.wiretaps." + name;
+        try {
+          Class<?> cls = Class.forName(classname);
+          Constructor<?> ctor = cls.getConstructor();
+          wiretappers.add((Wiretapper)ctor.newInstance());
+        } catch (ClassNotFoundException e) {
+          System.out.println("Could not find class '" + classname + "'");
+          e.printStackTrace();
+        } catch (NoSuchMethodException e) {
+          System.out.println("'" + classname + "' must have an empty constructor");
+          e.printStackTrace();
+        }
+      }
+    }
+    return wiretappers;
   }
 
   @Override
