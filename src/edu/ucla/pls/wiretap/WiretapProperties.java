@@ -101,7 +101,8 @@ public class WiretapProperties extends Properties {
   public Class<?> getRecorder() {
     if (recorder == null) {
       String recorderName =
-        "edu.ucla.pls.wiretap.recorders." + getProperty("recorder", "Logger");
+        "edu.ucla.pls.wiretap.recorders." + getProperty("recorder");
+      System.out.println("RecorderName " + recorderName);
       try {
         recorder = Class.forName(recorderName);
       } catch (ClassNotFoundException e) {
@@ -122,7 +123,7 @@ public class WiretapProperties extends Properties {
 
   @Override
   public String getProperty(String key, String def) {
-    return super.getProperty("wiretap." + key, def);
+    throw new UnsupportedOperationException("Only set defaults through defaults");
   }
 
   @Override

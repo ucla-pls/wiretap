@@ -105,6 +105,11 @@ public class Agent implements ClassFileTransformer, Closeable {
     }
   }
 
+  public MethodHandler getMethodHandler () {
+    return this.methodHandler;
+  };
+
+
   public void greet() {
     System.err.println("====== Running program with Wiretap ======");
     properties.list(System.err);
