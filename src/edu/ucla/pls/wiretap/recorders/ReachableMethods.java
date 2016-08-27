@@ -5,6 +5,7 @@ import java.io.Closeable;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.Vector;
 
@@ -24,7 +25,7 @@ public class ReachableMethods implements Closeable{
     handler = Agent.v().getMethodHandler();
     File file = new File(properties.getOutFolder(), "reachable.txt");
     try {
-      Writer writer = new BufferedWriter(new FileWriter(file));
+      PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter(file)));
       instance = new ReachableMethods(writer);
     } catch (IOException e) {
       System.err.println("Could not open file 'reachable.txt' in out folder");
@@ -40,26 +41,23 @@ public class ReachableMethods implements Closeable{
     return instance;
   }
 
-  private final Writer writer;
+  private final PrintWriter writer;
+  private boolean [] visitedMethods;
 
-  private volatile boolean [] visitedMethods;
-
-  public ReachableMethods (Writer writer) {
+  public ReachableMethods (PrintWriter writer) {
     this.writer = writer;
     this.visitedMethods = new boolean [INITIAL_CAP];
   }
 
   public void enter(int id) {
-    final boolean [] local = visitedMethods;
-    final int size = local.length;
-    if (size <= id) {
+    boolean [] local = visitedMethods;
+    if (local.length <= id) {
       synchronized (this) {
-        if (visitedMethods.length <= id) {
-          boolean [] newarray = new boolean [size << 1];
-          for (int ii = size - 1; ii > 0; --ii) {
-            newarray[ii] = local[ii];
-          }
-          visitedMethods = newarray;
+        final int size = visitedMethods.length;
+        if (size <= id) {
+          local = new boolean [size << 1];
+          System.arraycopy(visitedMethods, 0, local, 0, size);
+          visitedMethods = local;
         }
       }
     }
@@ -67,12 +65,7 @@ public class ReachableMethods implements Closeable{
       synchronized (this) {
         if (!visitedMethods[id]) {
           visitedMethods[id] = true;
-          try {
-            writer.write(handler.getMethod(id).getDescriptor());
-            writer.write("\n");
-          } catch (IOException e) {
-            System.err.println("Couldn't access reachable file");
-          }
+          writer.println(handler.getMethod(id).getDescriptor());
         }
       }
     }
