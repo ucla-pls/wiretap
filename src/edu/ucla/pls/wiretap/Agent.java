@@ -116,6 +116,13 @@ public class Agent implements ClassFileTransformer, Closeable {
     System.err.println("==========================================");
   }
 
+  static double getVersion () {
+    String version = System.getProperty("java.version");
+    int pos = version.indexOf('.');
+    pos = version.indexOf('.', pos+1);
+    return Double.parseDouble (version.substring (0, pos));
+  }
+
   public byte[] transform(ClassLoader loader,
                           String className,
                           Class<?> clazz,
@@ -127,8 +134,13 @@ public class Agent implements ClassFileTransformer, Closeable {
     } else {
       logClass(className, buffer);
 
+      int flag = ClassWriter.COMPUTE_MAXS;
+      if (getVersion() >= 1.7) {
+        flag |= ClassWriter.COMPUTE_FRAMES;
+      }
+
       ClassReader reader = new ClassReader(buffer);
-      ClassWriter writer = new ClassWriter(reader, ClassWriter.COMPUTE_FRAMES);
+      ClassWriter writer = new ClassWriter(reader, flag);
       WiretapClassVisitor wiretap =
         new WiretapClassVisitor(writer,
                                 className,
@@ -140,7 +152,7 @@ public class Agent implements ClassFileTransformer, Closeable {
         reader.accept(wiretap, 0);
       } catch (Exception e) {
         e.printStackTrace();
-        throw e;
+        System.exit(-1);
       }
 
       byte[] bytes = writer.toByteArray();
