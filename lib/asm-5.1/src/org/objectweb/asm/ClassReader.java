@@ -26,6 +26,11 @@
  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
  * THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Changes made by UCLA is in the bottom of the file, and in the readCode
+ * method, clearly marked with an UCLA tag.
+ *
+ *
  */
 package org.objectweb.asm;
 
@@ -1289,6 +1294,8 @@ public class ClassReader {
         while (u < codeEnd) {
             int offset = u - codeStart;
 
+            /* UCLA */ offsetHandler.setOffset(offset);
+
             // visits the label and line number for this offset, if any
             Label l = labels[offset];
             if (l != null) {
@@ -2504,4 +2511,25 @@ public class ClassReader {
             return new Handle(tag, owner, name, desc, itf);
         }
     }
+
+    /* UCLA CHANGES FROM HERE */
+
+    private final OffsetHandler offsetHandler = new OffsetHandler();
+
+    public OffsetHandler getOffsetHandler () {
+        return this.OffsetHandler;
+    }
+
+    public class OffsetHandler {
+        int offset = -1;
+
+        public int getOffset () {
+            return offset;
+        }
+
+        private void setOffset (int offset) {
+            this.offset = offset;
+        }
+    }
+
 }
