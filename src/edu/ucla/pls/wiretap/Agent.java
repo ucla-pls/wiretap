@@ -14,9 +14,6 @@ import java.security.ProtectionDomain;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 
-
-import org.objectweb.asm.ClassReader$OffsetHandler;
-
 /**
  * @author Christian Gram Kalhauge <kalhauge@cs.ucla.edu>
  * The agent holds all the information of the run-time of the program.

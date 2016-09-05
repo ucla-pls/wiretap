@@ -71,6 +71,11 @@ public class Logger implements Closeable {
     write("X", Integer.toHexString(id));
   }
 
+  public void read(Object o, int inst) {
+    int id = o == null ? 0 : System.identityHashCode(o);
+    write("R", Integer.toHexString(inst), Integer.toHexString(id));
+  }
+
   public void write(String event) {
     try {
       writer.write(event);
@@ -80,11 +85,13 @@ public class Logger implements Closeable {
     }
   }
 
-  public void write(String event, String args) {
+  public void write(String event, String ... args) {
     try {
       writer.write(event);
-      writer.write(" ");
-      writer.write(args);
+      for (String arg: args) {
+        writer.write(" ");
+        writer.write(arg);
+      }
       writer.write("\n");
     } catch (IOException e) {
       // Silent exception

@@ -47,7 +47,7 @@ public class InstructionManager implements Closeable {
   }
 
   public Instruction getInstruction(Method m, int offset)  {
-    final Pair key = Pair.of(m, Integer.valueOf(offset));
+    final Pair<Method,Integer> key = Pair.of(m, Integer.valueOf(offset));
     final Instruction inst = getInstructionUnsafe(key);
     return inst != null ? inst : createInstruction(key);
   }

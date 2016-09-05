@@ -1,8 +1,7 @@
 package edu.ucla.pls.wiretap;
 
-import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassReader$OffsetHandler;
+import org.objectweb.asm.MethodVisitor;
 
 public abstract class Wiretapper {
 

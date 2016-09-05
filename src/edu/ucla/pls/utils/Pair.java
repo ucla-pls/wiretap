@@ -20,7 +20,7 @@ public class Pair<A, B> {
 
   public boolean equal(Object o) {
     if (o instanceof Pair) {
-      final Pair<?, ?> other = (Pair) o;
+      final Pair<?, ?> other = (Pair<?,?>) o;
       return o == this ||
         ( Objects.equals(fst, other.fst) && Objects.equals(snd, other.snd) );
     } else {

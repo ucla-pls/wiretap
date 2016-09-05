@@ -6,11 +6,8 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.io.Writer;
-import java.util.Vector;
 
 import edu.ucla.pls.wiretap.Agent;
-import edu.ucla.pls.wiretap.Method;
 import edu.ucla.pls.wiretap.MethodManager;
 import edu.ucla.pls.wiretap.WiretapProperties;
 
