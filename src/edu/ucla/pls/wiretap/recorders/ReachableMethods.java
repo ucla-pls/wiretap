@@ -11,14 +11,14 @@ import java.util.Vector;
 
 import edu.ucla.pls.wiretap.Agent;
 import edu.ucla.pls.wiretap.Method;
-import edu.ucla.pls.wiretap.MethodHandler;
+import edu.ucla.pls.wiretap.MethodManager;
 import edu.ucla.pls.wiretap.WiretapProperties;
 
 public class ReachableMethods implements Closeable{
 
   private static final int INITIAL_CAP = 1024;
 
-  private static MethodHandler handler;
+  private static MethodManager handler;
   private static ReachableMethods instance;
 
   public static void setupRecorder (WiretapProperties properties) {

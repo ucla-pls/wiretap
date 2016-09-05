@@ -25,7 +25,7 @@ import org.objectweb.asm.ClassReader$OffsetHandler;
 public class Agent implements ClassFileTransformer, Closeable {
 
   private final WiretapProperties properties;
-  private final MethodHandler methodHandler;
+  private final MethodManager methodHandler;
   private final Class<?> recorder;
 
   private BufferedWriter classWriter;
@@ -35,12 +35,12 @@ public class Agent implements ClassFileTransformer, Closeable {
   public Agent(WiretapProperties properties) {
 		this(properties,
          properties.getRecorder(),
-         new MethodHandler(properties));
+         new MethodManager(properties));
   }
 
   public Agent (WiretapProperties properties,
                 Class<?> recorder,
-                MethodHandler methodHandler) {
+                MethodManager methodHandler) {
     this.properties = properties;
     this.methodHandler = methodHandler;
     this.recorder = recorder;
@@ -107,7 +107,7 @@ public class Agent implements ClassFileTransformer, Closeable {
     }
   }
 
-  public MethodHandler getMethodHandler () {
+  public MethodManager getMethodHandler () {
     return this.methodHandler;
   };
 

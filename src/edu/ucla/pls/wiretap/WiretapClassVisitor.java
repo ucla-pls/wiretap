@@ -13,14 +13,14 @@ import org.objectweb.asm.commons.TryCatchBlockSorter;
 public class WiretapClassVisitor extends ClassVisitor {
 
   private final String className;
-  private final MethodHandler methodHandler;
+  private final MethodManager methodHandler;
   private final List<Wiretapper> wiretappers;
   private final Class<?> recorder;
 
   public WiretapClassVisitor(ClassVisitor visitor,
                              String className,
                              List<Wiretapper> wiretappers,
-                             MethodHandler methodHandler,
+                             MethodManager methodHandler,
                              Class<?> recorder) {
     super(Opcodes.ASM5, visitor);
     this.className = className;

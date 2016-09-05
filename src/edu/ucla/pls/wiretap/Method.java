@@ -25,7 +25,7 @@ public class Method {
   private String descriptor;
   public String getDescriptor() {
     if (descriptor == null) {
-      descriptor = MethodHandler.getMethodDescriptor(className, name, typeDesc);
+      descriptor = MethodManager.getMethodDescriptor(className, name, typeDesc);
     }
     return descriptor;
   }

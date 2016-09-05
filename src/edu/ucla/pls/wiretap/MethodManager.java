@@ -13,7 +13,7 @@ import java.util.Map;
 
 /** This class handles, and compresses methods.
  */
-public class MethodHandler implements Closeable {
+public class MethodManager implements Closeable {
 
   private final Map<String, Method> lookup;
   private final List<Method> methods;
@@ -21,7 +21,7 @@ public class MethodHandler implements Closeable {
 
   private Writer writer;
 
-  public MethodHandler(WiretapProperties properties, List<Method> methods) {
+  public MethodManager(WiretapProperties properties, List<Method> methods) {
     this.methods = methods;
     this.properties = properties;
     this.lookup = new HashMap<String, Method>();
@@ -31,7 +31,7 @@ public class MethodHandler implements Closeable {
     }
   }
 
-  public MethodHandler (WiretapProperties properties) {
+  public MethodManager (WiretapProperties properties) {
     this(properties, new ArrayList<Method>());
   }
 
