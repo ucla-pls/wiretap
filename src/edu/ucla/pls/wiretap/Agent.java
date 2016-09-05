@@ -8,12 +8,14 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.security.ProtectionDomain;
 
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
+
+
+import org.objectweb.asm.ClassReader$OffsetHandler;
 
 /**
  * @author Christian Gram Kalhauge <kalhauge@cs.ucla.edu>
@@ -148,8 +150,9 @@ public class Agent implements ClassFileTransformer, Closeable {
                                 methodHandler,
                                 recorder);
 
+
       try {
-        reader.accept(wiretap, 0);
+        wiretap.readFrom(reader);
       } catch (Exception e) {
         e.printStackTrace();
         System.exit(-1);

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
@@ -48,5 +49,12 @@ public class WiretapClassVisitor extends ClassVisitor {
       next = wiretapper.instrument(next, visitor, recorder, m);
     }
     return next;
+  }
+
+  public void readFrom(ClassReader reader) {
+    for (Wiretapper tapper: wiretappers) {
+      tapper.setOffsetHandler(reader.getOffsetHandler());
+    }
+    reader.accept(this, 0);
   }
 }
