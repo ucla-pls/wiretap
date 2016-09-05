@@ -4,9 +4,10 @@
   <property name="build.dir" value="build"/>
   <property name="classes.dir" value="${build.dir}/classes"/>
   <property name="lib.dir" value="lib" />
+  <property name="asm.dir" value="lib/asm-5.1/output/build/" />
 
   <path id="lib.path.id">
-    <fileset dir="${lib.dir}" />
+    <pathelement path="${asm.dir}" />
   </path>
 
   <target name="compile">
@@ -25,7 +26,7 @@
         <attribute name="Boot-Class-Path" value="${ant.project.name}.jar"/>
       </manifest>
       <fileset dir="${classes.dir}" includes="**/*.class"/>
-      <zipgroupfileset dir="${lib.dir}" includes="**/*.jar"/>
+      <fileset dir="${asm.dir}" includes="**/*.class"/>
     </jar>
   </target>
 
