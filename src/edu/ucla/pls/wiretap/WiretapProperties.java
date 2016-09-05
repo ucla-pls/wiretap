@@ -47,6 +47,11 @@ public class WiretapProperties extends Properties {
     return getFile("methodfile", _default);
   }
 
+  public File getInstructionFile() {
+    final File _default = new File (getOutFolder(), "instructions.txt");
+    return getFile("instructionfile", _default);
+  }
+
   public Collection<String> getIgnoredPrefixes() {
     if (ignoredPrefixes == null) {
       ignoredPrefixes = getList("ignoredprefixes", Arrays.asList("java", "sun", "edu/ucla/pls/wiretap"));

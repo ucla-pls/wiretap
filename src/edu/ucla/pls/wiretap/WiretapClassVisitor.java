@@ -13,18 +13,18 @@ import org.objectweb.asm.commons.TryCatchBlockSorter;
 public class WiretapClassVisitor extends ClassVisitor {
 
   private final String className;
-  private final MethodManager methodHandler;
+  private final MethodManager methodManager;
   private final List<Wiretapper> wiretappers;
   private final Class<?> recorder;
 
   public WiretapClassVisitor(ClassVisitor visitor,
                              String className,
                              List<Wiretapper> wiretappers,
-                             MethodManager methodHandler,
+                             MethodManager methodManager,
                              Class<?> recorder) {
     super(Opcodes.ASM5, visitor);
     this.className = className;
-    this.methodHandler = methodHandler;
+    this.methodManager = methodManager;
     this.wiretappers = new ArrayList<Wiretapper>(wiretappers);
     this.recorder = recorder;
     Collections.reverse(this.wiretappers);
@@ -36,7 +36,7 @@ public class WiretapClassVisitor extends ClassVisitor {
                                    String signature,
                                    String[] exceptions) {
 
-    Method m = methodHandler.getMethod(access, className, name, desc, exceptions);
+    Method m = methodManager.getMethod(access, className, name, desc, exceptions);
 
     MethodVisitor visitor =
         super.visitMethod(access, name, desc, signature, exceptions);

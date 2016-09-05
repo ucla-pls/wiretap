@@ -65,7 +65,7 @@ public class MethodManager implements Closeable {
     Method method = new Method(methods.size(), access,
                         className, name, typeDesc, exceptions);
     methods.add(method);
-    try { 
+    try {
       writer.write(method.getDescriptor());
       writer.write("\n");
     } catch (IOException e) {

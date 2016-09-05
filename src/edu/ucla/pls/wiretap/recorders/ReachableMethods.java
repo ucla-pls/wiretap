@@ -22,7 +22,7 @@ public class ReachableMethods implements Closeable{
   private static ReachableMethods instance;
 
   public static void setupRecorder (WiretapProperties properties) {
-    handler = Agent.v().getMethodHandler();
+    handler = Agent.v().getMethodManager();
     File file = new File(properties.getOutFolder(), "reachable.txt");
     try {
       PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter(file)));

@@ -25,7 +25,8 @@ import org.objectweb.asm.ClassReader$OffsetHandler;
 public class Agent implements ClassFileTransformer, Closeable {
 
   private final WiretapProperties properties;
-  private final MethodManager methodHandler;
+  private final MethodManager methods;
+  private final InstructionManager instructions;
   private final Class<?> recorder;
 
   private BufferedWriter classWriter;
@@ -35,15 +36,18 @@ public class Agent implements ClassFileTransformer, Closeable {
   public Agent(WiretapProperties properties) {
 		this(properties,
          properties.getRecorder(),
-         new MethodManager(properties));
+         new MethodManager(properties),
+         new InstructionManager(properties));
   }
 
   public Agent (WiretapProperties properties,
                 Class<?> recorder,
-                MethodManager methodHandler) {
+                MethodManager methods,
+                InstructionManager instructions) {
     this.properties = properties;
-    this.methodHandler = methodHandler;
+    this.methods = methods;
     this.recorder = recorder;
+    this.instructions = instructions;
   }
 
   private static boolean delete(File f) throws IOException {
@@ -67,7 +71,8 @@ public class Agent implements ClassFileTransformer, Closeable {
 
       recorder.getDeclaredMethod("setupRecorder", WiretapProperties.class).invoke(null, properties);
       closeRecorder = recorder.getDeclaredMethod("closeRecorder");
-      methodHandler.setup();
+      methods.setup();
+      instructions.setup();
 
       classWriter = new BufferedWriter(new FileWriter(properties.getClassFile()));
     } catch (IOException e) {
@@ -98,7 +103,7 @@ public class Agent implements ClassFileTransformer, Closeable {
 
   public void close () throws IOException {
     classWriter.close();
-    methodHandler.close();
+    methods.close();
     try {
       closeRecorder.invoke(null);
     } catch (Exception e) {
@@ -107,8 +112,12 @@ public class Agent implements ClassFileTransformer, Closeable {
     }
   }
 
-  public MethodManager getMethodHandler () {
-    return this.methodHandler;
+  public MethodManager getMethodManager () {
+    return this.methods;
+  };
+
+  public InstructionManager getInstructionManager () {
+    return this.instructions;
   };
 
 
@@ -147,7 +156,7 @@ public class Agent implements ClassFileTransformer, Closeable {
         new WiretapClassVisitor(writer,
                                 className,
                                 properties.getWiretappers(),
-                                methodHandler,
+                                methods,
                                 recorder);
 
 

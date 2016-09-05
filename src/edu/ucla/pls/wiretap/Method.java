@@ -1,5 +1,7 @@
 package edu.ucla.pls.wiretap;
 
+import java.util.Objects;
+
 public class Method {
   private final int id;
   private final int access;
@@ -23,6 +25,7 @@ public class Method {
   }
 
   private String descriptor;
+
   public String getDescriptor() {
     if (descriptor == null) {
       descriptor = MethodManager.getMethodDescriptor(className, name, typeDesc);
@@ -38,13 +41,18 @@ public class Method {
   @Override
   public boolean equals(Object obj) {
     if (obj instanceof Method)  {
-      return ((Method)obj).getDescriptor().equals(getDescriptor());
+      return Objects.equals(((Method)obj).getDescriptor(), getDescriptor());
     }
     return false;
   }
 
   public int getId () {
     return this.id;
-  };
+  }
+
+	@Override
+	public String toString() {
+    return getDescriptor();
+	};
 
 }

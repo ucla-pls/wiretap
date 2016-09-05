@@ -8,6 +8,9 @@ public abstract class Wiretapper {
 
   private ClassReader$OffsetHandler offsetHandler;
 
+  protected final InstructionManager instructions = Agent.v().getInstructionManager();
+  protected final MethodManager methods = Agent.v().getMethodManager();
+
   public void setOffsetHandler (ClassReader$OffsetHandler offsetHandler) {
     this.offsetHandler = offsetHandler;
   }
