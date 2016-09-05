@@ -7,13 +7,12 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 
+import edu.ucla.pls.utils.IntSet;
 import edu.ucla.pls.wiretap.Agent;
 import edu.ucla.pls.wiretap.MethodManager;
 import edu.ucla.pls.wiretap.WiretapProperties;
 
 public class ReachableMethods implements Closeable{
-
-  private static final int INITIAL_CAP = 1024;
 
   private static MethodManager handler;
   private static ReachableMethods instance;
@@ -39,34 +38,20 @@ public class ReachableMethods implements Closeable{
   }
 
   private final PrintWriter writer;
-  private boolean [] visitedMethods;
+  private final IntSet visitedMethods = new IntSet();
 
   public ReachableMethods (PrintWriter writer) {
     this.writer = writer;
-    this.visitedMethods = new boolean [INITIAL_CAP];
   }
 
   public void enter(int id) {
-    boolean [] local = visitedMethods;
-    if (local.length <= id) {
+    if (!visitedMethods.set(id)) {
+      final String desc = handler.getMethod(id).getDescriptor();
       synchronized (this) {
-        final int size = visitedMethods.length;
-        if (size <= id) {
-          local = new boolean [size << 1];
-          System.arraycopy(visitedMethods, 0, local, 0, size);
-          visitedMethods = local;
-        }
+        writer.println(desc);
       }
     }
-    if (!local[id]) {
-      synchronized (this) {
-        if (!visitedMethods[id]) {
-          visitedMethods[id] = true;
-          writer.println(handler.getMethod(id).getDescriptor());
-        }
-      }
-    }
-	}
+  }
 
 	@Override
 	public void close() throws IOException {
