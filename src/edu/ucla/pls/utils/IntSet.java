@@ -24,7 +24,7 @@ public class IntSet {
 
   /** set sets the index to true, and return the previous state of the index.
    */
-  public boolean set(int id) {
+  public boolean add(int id) {
     boolean [] local = set;
     if (local.length <= id) {
       synchronized (lock) {
@@ -40,11 +40,11 @@ public class IntSet {
       synchronized (lock) {
         if (!set[id]) {
           set[id] = true;
-          return false;
+          return true;
         }
       }
     }
-    return true;
+    return false;
   }
 
   public boolean get(int id) {

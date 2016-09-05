@@ -9,6 +9,7 @@ import java.io.PrintWriter;
 
 import edu.ucla.pls.utils.IntSet;
 import edu.ucla.pls.wiretap.Agent;
+import edu.ucla.pls.wiretap.InstructionManager;
 import edu.ucla.pls.wiretap.MethodManager;
 import edu.ucla.pls.wiretap.WiretapProperties;
 
@@ -45,7 +46,7 @@ public class ReachableMethods implements Closeable{
   }
 
   public void enter(int id) {
-    if (!visitedMethods.set(id)) {
+    if (visitedMethods.add(id)) {
       final String desc = handler.getMethod(id).getDescriptor();
       synchronized (this) {
         writer.println(desc);
