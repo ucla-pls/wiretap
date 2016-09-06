@@ -1,34 +1,34 @@
 package edu.ucla.pls.wiretap.wiretaps;
 
 import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Type;
 import org.objectweb.asm.Opcodes;
 
-import edu.ucla.pls.wiretap.Wiretap;
-import edu.ucla.pls.wiretap.Wiretapper;
+import edu.ucla.pls.wiretap.EventType;
+import edu.ucla.pls.wiretap.EventType.Emitter;
 import edu.ucla.pls.wiretap.Instruction;
-import edu.ucla.pls.wiretap.InstructionManager;
 import edu.ucla.pls.wiretap.Method;
+import edu.ucla.pls.wiretap.Wiretapper;
 
 public class ReadObject extends Wiretapper {
 
+  EventType read = declareEventType("read", Object.class, int.class);
+
   @Override
-  public Wiretap instrument(MethodVisitor next,
-                            MethodVisitor out,
-                            Class<?> recorder,
-                            final Method method) {
-    return new Wiretap(Type.getInternalName(recorder), next, out) {
+  public Wiretap createWiretap(MethodVisitor next,
+                               final MethodVisitor out,
+                               final Method method) {
+    final Emitter read = this.read.getEmitter(out);
+    return new Wiretap(next) {
 
 			@Override
       public void visitInsn(int opcode) {
         final Instruction inst = instructions.getInstruction(method, getOffset());
 
-
         super.visitInsn(opcode);
 
         switch (opcode) {
         case Opcodes.AALOAD:
-          readObject(inst);
+          read.log(inst.getId());
         }
       }
 
@@ -45,17 +45,9 @@ public class ReadObject extends Wiretapper {
           switch (opcode) {
           case Opcodes.GETSTATIC:
           case Opcodes.GETFIELD:
-            readObject(inst);
+            read.log(inst.getId());
           }
         }
-      }
-
-      private void readObject(Instruction inst) {
-        out.visitInsn(Opcodes.DUP);
-        pushRecorder();
-        out.visitInsn(Opcodes.SWAP);
-        push(inst.getId());
-        record("read", "Ljava/lang/Object;", "I");
       }
     };
   }

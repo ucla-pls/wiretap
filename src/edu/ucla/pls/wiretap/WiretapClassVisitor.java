@@ -15,18 +15,16 @@ public class WiretapClassVisitor extends ClassVisitor {
   private final String className;
   private final MethodManager methodManager;
   private final List<Wiretapper> wiretappers;
-  private final Class<?> recorder;
 
   public WiretapClassVisitor(ClassVisitor visitor,
                              String className,
                              List<Wiretapper> wiretappers,
-                             MethodManager methodManager,
-                             Class<?> recorder) {
+                             MethodManager methodManager
+                             ) {
     super(Opcodes.ASM5, visitor);
     this.className = className;
     this.methodManager = methodManager;
     this.wiretappers = new ArrayList<Wiretapper>(wiretappers);
-    this.recorder = recorder;
     Collections.reverse(this.wiretappers);
   }
 
@@ -46,7 +44,7 @@ public class WiretapClassVisitor extends ClassVisitor {
     // can be null.
     MethodVisitor next = visitor;
     for (Wiretapper wiretapper : wiretappers) {
-      next = wiretapper.instrument(next, visitor, recorder, m);
+      next = wiretapper.wiretap(next, visitor, m);
     }
     return next;
   }

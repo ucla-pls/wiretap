@@ -1,22 +1,24 @@
 package edu.ucla.pls.wiretap.wiretaps;
 
-import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Type;
 import org.objectweb.asm.Label;
+import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
+import edu.ucla.pls.wiretap.EventType;
+import edu.ucla.pls.wiretap.EventType.Emitter;
 import edu.ucla.pls.wiretap.Method;
-import edu.ucla.pls.wiretap.Wiretap;
 import edu.ucla.pls.wiretap.Wiretapper;
 
 public class ExitMethod extends Wiretapper {
 
+  EventType exit = declareEventType("exit", int.class);
+
   @Override
-  public Wiretap instrument(MethodVisitor next,
-                            MethodVisitor out,
-                            Class<?> recorder,
-                            final Method method) {
-    return new Wiretap(Type.getInternalName(recorder), next, out) {
+  public Wiretap createWiretap(MethodVisitor next,
+                               final MethodVisitor out,
+                               final Method method) {
+    final Emitter exit = this.exit.getEmitter(out);
+    return new Wiretap(next) {
       private final Label
         start = new Label(),
         end = new Label();
@@ -31,7 +33,7 @@ public class ExitMethod extends Wiretapper {
       @Override
       public void visitMaxs(int mStack, int mLocals) {
         out.visitLabel(end);
-        emit("exit", method.getId());
+        exit.emit(method.getId());
 
         // Rethrow the exception
         out.visitTypeInsn(Opcodes.CHECKCAST, "java/lang/Throwable" );

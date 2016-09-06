@@ -1,24 +1,26 @@
 package edu.ucla.pls.wiretap.wiretaps;
 
 import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Type;
 
+import edu.ucla.pls.wiretap.EventType;
+import edu.ucla.pls.wiretap.EventType.Emitter;
 import edu.ucla.pls.wiretap.Method;
-import edu.ucla.pls.wiretap.Wiretap;
 import edu.ucla.pls.wiretap.Wiretapper;
 
 public class EnterMethod extends Wiretapper {
 
+  EventType enter = declareEventType("enter", int.class);
+
   @Override
-  public Wiretap instrument(MethodVisitor next,
-                            MethodVisitor out,
-                            Class<?> recorder,
+  public Wiretap createWiretap(MethodVisitor next,
+                            final MethodVisitor out,
                             final Method method) {
-    return new Wiretap(Type.getInternalName(recorder), next, out) {
+    final Emitter enter = this.enter.getEmitter(out);
+    return new Wiretap(next) {
       @Override
       public void visitCode() {
         super.visitCode();
-        emit("enter", method.getId());
+        enter.emit(method.getId());
       }
     };
   }

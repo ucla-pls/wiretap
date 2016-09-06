@@ -153,8 +153,7 @@ public class Agent implements ClassFileTransformer, Closeable {
         new WiretapClassVisitor(writer,
                                 className,
                                 properties.getWiretappers(),
-                                methods,
-                                recorder);
+                                methods);
 
 
       try {

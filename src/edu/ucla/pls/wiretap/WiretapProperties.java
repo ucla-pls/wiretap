@@ -79,15 +79,26 @@ public class WiretapProperties extends Properties {
 
   public List<Wiretapper> getWiretappers() {
     if (wiretappers == null) {
+
       List<String> names =
         getList("wiretappers", Arrays.asList(new String [] {"EnterMethod"}));
+
       wiretappers = new ArrayList<Wiretapper>();
+
+      Class<?> recorder = getRecorder();
+
       for (String name: names) {
         String classname = "edu.ucla.pls.wiretap.wiretaps." + name;
         try {
           Class<?> cls = Class.forName(classname);
           Constructor<?> ctor = cls.getConstructor();
-          wiretappers.add((Wiretapper)ctor.newInstance());
+          Wiretapper wiretapper = (Wiretapper)ctor.newInstance();
+          try {
+            wiretapper.setRecorder(recorder);
+            wiretappers.add(wiretapper);
+          } catch (NoSuchMethodException e) {
+            System.err.println("WARNING: " + wiretapper + " not active: " + e.toString());
+          }
         } catch (ClassNotFoundException e) {
           System.err.println("Could not find class '" + classname + "'");
           e.printStackTrace();
@@ -113,9 +124,11 @@ public class WiretapProperties extends Properties {
       } catch (ClassNotFoundException e) {
         System.err.println("Could not find class '" + recorderName + "'");
         e.printStackTrace();
+        System.exit(-1);
       } catch (Exception e) {
         System.err.println("Unexpected exception");
         e.printStackTrace();
+        System.exit(-1);
       }
     }
     return recorder;
