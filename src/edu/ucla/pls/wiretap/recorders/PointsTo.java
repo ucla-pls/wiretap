@@ -52,6 +52,14 @@ public class PointsTo implements Closeable{
   }
 
   public void read(Object o, int inst) {
+    writeIfFirst(inst, o);
+  }
+
+  public void yield(Object o, int inst) {
+    writeIfFirst(inst, o);
+  }
+
+  private final void writeIfFirst(int inst, Object o) {
     if (o != null) {
       final Class<?> c = o.getClass();
       if (pointsto.add(inst, c)) {

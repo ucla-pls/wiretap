@@ -81,7 +81,12 @@ public class WiretapProperties extends Properties {
     if (wiretappers == null) {
 
       List<String> names =
-        getList("wiretappers", Arrays.asList(new String [] {"EnterMethod"}));
+        getList("wiretappers", Arrays.asList(new String [] {
+              "EnterMethod",
+              "ExitMethod",
+              "ReadObject",
+              "YieldObject"
+            }));
 
       wiretappers = new ArrayList<Wiretapper>();
 
