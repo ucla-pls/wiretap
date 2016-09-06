@@ -71,6 +71,14 @@ public class Logger implements Closeable {
     write("X", Integer.toHexString(id));
   }
 
+  public void fork(Thread thread) {
+    write("F", Integer.toHexString(getLogger(thread).getId()));
+  }
+
+  public void join(Thread thread) {
+    write("J", Integer.toHexString(getLogger(thread).getId()));
+  }
+
   public void read(Object o, int inst) {
     int id = o == null ? 0 : System.identityHashCode(o);
     write("R", Integer.toHexString(inst), Integer.toHexString(id));

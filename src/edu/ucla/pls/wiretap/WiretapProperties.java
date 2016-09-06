@@ -85,7 +85,9 @@ public class WiretapProperties extends Properties {
               "EnterMethod",
               "ExitMethod",
               "ReadObject",
-              "YieldObject"
+              "YieldObject",
+              "JoinThread",
+              "ForkThread"
             }));
 
       wiretappers = new ArrayList<Wiretapper>();

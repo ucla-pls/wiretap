@@ -67,7 +67,7 @@ public class EventType {
       record();
     }
 
-    public void log(Object ... args) {
+    public void log(Object... args) {
 
       if (args.length != types.length - 1) {
         throw new IllegalArgumentException("The args needs to be one shorter" +
@@ -81,6 +81,21 @@ public class EventType {
 
       // Dublicate the logged object
       out.visitInsn(Opcodes.DUP);
+
+      consume(args);
+    }
+
+    public void consume(Object... args) {
+
+      if (args.length != types.length - 1) {
+        throw new IllegalArgumentException("The args needs to be one shorter" +
+                                           " than the designated types");
+      }
+
+      if (types[0] == Long.TYPE || types[0] == Double.TYPE) {
+        throw new IllegalArgumentException("Can't call log with a double or " +
+                                           "a long as the first argument");
+      }
 
       // Push the recorder
       pushRecorder();
@@ -99,6 +114,7 @@ public class EventType {
 
       // Record.
       record();
+
     }
 
     public boolean primitiveTypeCheck(Class<?> c, Object o) {
