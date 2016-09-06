@@ -15,8 +15,7 @@ public class YieldObject extends Wiretapper {
 
   @Override
   public Wiretap createWiretap(MethodVisitor next,
-                               final MethodVisitor out,
-                               final Method method) {
+                               final MethodVisitor out) {
     final Emitter yield = this.yield.getEmitter(out);
     return new Wiretap(next) {
 
@@ -26,11 +25,10 @@ public class YieldObject extends Wiretapper {
                                   String desc,
                                   boolean itf) {
 
-        final Instruction inst = instructions.getInstruction(method, getOffset());
         super.visitMethodInsn(opcode, owner, name, desc, itf);
 
         if (Type.getReturnType(desc).getSort() == Type.OBJECT) {
-          yield.log(inst.getId());
+          yield.log(getInstruction().getId());
         }
       }
     };

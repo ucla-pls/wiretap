@@ -40,20 +40,35 @@ public abstract class Wiretapper {
   public Wiretap wiretap(MethodVisitor next,
                          MethodVisitor out,
                          Method method) {
-    Wiretap tap = createWiretap(next, out, method);
+    Wiretap tap = createWiretap(next, out);
+    tap.setMethod(method);
     return tap;
   }
 
 
   public abstract Wiretap createWiretap(MethodVisitor next,
-                                        MethodVisitor out,
-                                        Method method);
+                                        MethodVisitor out
+                                        );
 
 
   public abstract class Wiretap extends MethodVisitor {
 
+    private Method method;
+
     public Wiretap(MethodVisitor next) {
       super(Opcodes.ASM5, next);
+    }
+
+    public void setMethod (Method method) {
+      this.method = method;
+    }
+
+    public Instruction getInstruction () {
+      return instructions.getInstruction(method, getOffset());
+    }
+
+    public Method getMethod () {
+      return method;
     }
 
   }

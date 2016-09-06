@@ -2,6 +2,8 @@ package edu.ucla.pls.wiretap;
 
 import java.util.Objects;
 
+import org.objectweb.asm.Opcodes;
+
 public class Method {
   private final int id;
   private final int access;
@@ -53,6 +55,10 @@ public class Method {
 	@Override
 	public String toString() {
     return getDescriptor();
-	};
+  };
+
+  public boolean isSynchronized() {
+    return (access & Opcodes.ACC_SYNCHRONIZED) != 0;
+  }
 
 }

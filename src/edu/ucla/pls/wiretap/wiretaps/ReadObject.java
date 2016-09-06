@@ -15,20 +15,17 @@ public class ReadObject extends Wiretapper {
 
   @Override
   public Wiretap createWiretap(MethodVisitor next,
-                               final MethodVisitor out,
-                               final Method method) {
+                               final MethodVisitor out) {
     final Emitter read = this.read.getEmitter(out);
     return new Wiretap(next) {
 
 			@Override
       public void visitInsn(int opcode) {
-        final Instruction inst = instructions.getInstruction(method, getOffset());
 
         super.visitInsn(opcode);
 
-        switch (opcode) {
-        case Opcodes.AALOAD:
-          read.log(inst.getId());
+        if (opcode == Opcodes.AALOAD) {
+          read.log(getInstruction().getId());
         }
       }
 
@@ -37,7 +34,6 @@ public class ReadObject extends Wiretapper {
                                  String owner,
                                  String name,
                                  String desc) {
-        final Instruction inst = instructions.getInstruction(method, getOffset());
 
         super.visitFieldInsn(opcode, owner, name, desc);
 
@@ -45,7 +41,7 @@ public class ReadObject extends Wiretapper {
           switch (opcode) {
           case Opcodes.GETSTATIC:
           case Opcodes.GETFIELD:
-            read.log(inst.getId());
+            read.log(getInstruction().getId());
           }
         }
       }

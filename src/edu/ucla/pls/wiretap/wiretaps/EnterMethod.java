@@ -13,14 +13,13 @@ public class EnterMethod extends Wiretapper {
 
   @Override
   public Wiretap createWiretap(MethodVisitor next,
-                            final MethodVisitor out,
-                            final Method method) {
+                            final MethodVisitor out) {
     final Emitter enter = this.enter.getEmitter(out);
     return new Wiretap(next) {
       @Override
       public void visitCode() {
         super.visitCode();
-        enter.emit(method.getId());
+        enter.emit(getMethod().getId());
       }
     };
   }

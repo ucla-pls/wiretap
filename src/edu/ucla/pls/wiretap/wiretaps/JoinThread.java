@@ -16,8 +16,7 @@ public class JoinThread extends Wiretapper {
 
   @Override
   public Wiretap createWiretap(MethodVisitor next,
-                               final MethodVisitor out,
-                               final Method method) {
+                               final MethodVisitor out) {
     final Emitter join = this.join.getEmitter(out);
     return new Wiretap(next) {
 
@@ -29,8 +28,6 @@ public class JoinThread extends Wiretapper {
 
 
         if (name.equals("join") && desc.equals("()V")) {
-          final Instruction inst = instructions.getInstruction(method, getOffset());
-
           out.visitInsn(Opcodes.DUP);
 
           super.visitMethodInsn(opcode, owner, name, desc, itf);

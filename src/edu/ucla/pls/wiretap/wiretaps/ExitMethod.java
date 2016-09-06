@@ -15,8 +15,7 @@ public class ExitMethod extends Wiretapper {
 
   @Override
   public Wiretap createWiretap(MethodVisitor next,
-                               final MethodVisitor out,
-                               final Method method) {
+                               final MethodVisitor out) {
     final Emitter exit = this.exit.getEmitter(out);
     return new Wiretap(next) {
       private final Label
@@ -33,7 +32,7 @@ public class ExitMethod extends Wiretapper {
       @Override
       public void visitMaxs(int mStack, int mLocals) {
         out.visitLabel(end);
-        exit.emit(method.getId());
+        exit.emit(getMethod().getId());
 
         // Rethrow the exception
         out.visitTypeInsn(Opcodes.CHECKCAST, "java/lang/Throwable" );
