@@ -51,7 +51,7 @@ public abstract class Wiretapper {
                                         );
 
 
-  public abstract class Wiretap extends MethodVisitor {
+  public abstract class Wiretap extends MethodVisitor implements Opcodes {
 
     private Method method;
 

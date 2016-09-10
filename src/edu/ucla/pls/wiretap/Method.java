@@ -61,4 +61,13 @@ public class Method {
     return (access & Opcodes.ACC_SYNCHRONIZED) != 0;
   }
 
+  public boolean isStatic() {
+    return (access & Opcodes.ACC_STATIC) != 0;
+  }
+
+  public String getClassName () {
+    return this.className;
+  }
+
+
 }

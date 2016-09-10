@@ -4,7 +4,7 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 
-public class EventType {
+public class EventType implements Opcodes{
 
   private final String methodName;
   private final Class<?>[] types;
@@ -54,17 +54,8 @@ public class EventType {
       // pushRecorder onto the stack
       pushRecorder();
 
-      // Add constants
-      for (int i = 0, len = args.length; i != len; ++i) {
-        if (primitiveTypeCheck(types[i], args[i])) {
-          out.visitLdcInsn(args[i]);
-        } else {
-          throw new IllegalArgumentException("The arg " + i + " is of the wrong type");
-        }
-      }
-
       // Record.
-      record();
+      record(args);
     }
 
     public void log(Object... args) {
@@ -80,7 +71,7 @@ public class EventType {
       }
 
       // Dublicate the logged object
-      out.visitInsn(Opcodes.DUP);
+      out.visitInsn(DUP);
 
       consume(args);
     }
@@ -101,11 +92,25 @@ public class EventType {
       pushRecorder();
 
       // Swap the recorder and the logged object.
-      out.visitInsn(Opcodes.SWAP);
+      out.visitInsn(SWAP);
 
+      // Record args;
+      record(args);
+    }
+
+    /**
+     * record the current stack to the recorder. This method assumes that objects
+     * not in the constants given to the method is already on the stack. Record
+     * will therefor check that the constants matches the types from the end.
+     *
+     */
+    public void record(Object... args) {
+
+      final int len = args.length;
+      final int diff = types.length - len;
       // Add constants
-      for (int i = 0, len = args.length; i != len; ++i) {
-        if (primitiveTypeCheck(types[i+1], args[i])) {
+      for (int i = 0; i != len; ++i) {
+        if (primitiveTypeCheck(types[i + diff], args[i])) {
           out.visitLdcInsn(args[i]);
         } else {
           throw new IllegalArgumentException("The arg " + i + " is of the wrong type");
@@ -113,11 +118,19 @@ public class EventType {
       }
 
       // Record.
-      record();
-
+      out.visitMethodInsn(INVOKEVIRTUAL,
+                          recorder, methodName, signature,
+                          false);
     }
 
-    public boolean primitiveTypeCheck(Class<?> c, Object o) {
+    /** Pushes the recoder onto the stack */
+    public void pushRecorder() {
+      out.visitMethodInsn(INVOKESTATIC,
+                          recorder, "getRecorder",
+                          "()L" + recorder + ";", false);
+    }
+
+    private boolean primitiveTypeCheck(Class<?> c, Object o) {
       if (o instanceof Integer) {
         return c == Integer.TYPE;
       } else if (o instanceof Byte) {
@@ -139,19 +152,6 @@ public class EventType {
       } else {
         throw new IllegalArgumentException("Only Constants allowed");
       }
-    }
-
-    /** Pushes the recoder onto the stack */
-    public void pushRecorder() {
-      out.visitMethodInsn(Opcodes.INVOKESTATIC,
-                          recorder, "getRecorder",
-                          "()L" + recorder + ";", false);
-    }
-
-    public void record() {
-      out.visitMethodInsn(Opcodes.INVOKEVIRTUAL,
-                          recorder, methodName, signature,
-                          false);
     }
 
   }
