@@ -31,8 +31,8 @@ public class WaitLock extends Wiretapper {
         request.pushRecorder();
         out.visitInsn(SWAP);
         out.visitInsn(DUP2);
-        out.visitInsn(DUP2);
         release.record(id);
+        out.visitInsn(DUP2);
         request.record(id);
         acquire.record(id);
       }
