@@ -86,12 +86,14 @@ public class WiretapProperties extends Properties {
               "ExitMethod",
 
               "ReadObject",
+              "WriteObject",
 
               "YieldObject",
 
               "AcquireLock",
               "ReleaseLock",
               "RequestLock",
+              "WaitLock",
 
               "JoinThread",
               "ForkThread"

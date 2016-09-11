@@ -108,6 +108,10 @@ public class Logger implements Closeable {
     write("read", ppInst(inst), ppObject(o));
   }
 
+  public void write(Object o, int inst) {
+    write("write", ppInst(inst), ppObject(o));
+  }
+
   public void request(Object o, int inst) {
     write("request", ppInst(inst), ppObject(o));
   }

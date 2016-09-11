@@ -3,6 +3,7 @@ package edu.ucla.pls.wiretap;
 import java.util.Objects;
 
 import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.Type;
 
 public class Method {
   private final int id;
@@ -67,6 +68,16 @@ public class Method {
 
   public String getClassName () {
     return this.className;
+  }
+
+  public Type[] getArgumentTypes () {
+    return Type.getArgumentTypes(typeDesc);
+  }
+
+  public int getNumberOfArgumentLocals() {
+    System.out.println(this);
+
+    return getArgumentTypes().length + (isStatic() ? 1: 0);
   }
 
 
