@@ -84,6 +84,22 @@ public class Logger implements Closeable {
     write("R", Integer.toHexString(inst), Integer.toHexString(id));
   }
 
+  public void request(Object o, int inst) {
+    int id = o == null ? 0 : System.identityHashCode(o);
+    write("Q", Integer.toHexString(inst), Integer.toHexString(id));
+  }
+
+  public void release(Object o, int inst) {
+    int id = o == null ? 0 : System.identityHashCode(o);
+    write("L", Integer.toHexString(inst), Integer.toHexString(id));
+  }
+
+  public void aquire(Object o, int inst) {
+    int id = o == null ? 0 : System.identityHashCode(o);
+    write("A", Integer.toHexString(inst), Integer.toHexString(id));
+  }
+
+
   public void write(String event) {
     try {
       writer.write(event);

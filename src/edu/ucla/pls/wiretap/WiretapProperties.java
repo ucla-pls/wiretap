@@ -84,8 +84,15 @@ public class WiretapProperties extends Properties {
         getList("wiretappers", Arrays.asList(new String [] {
               "EnterMethod",
               "ExitMethod",
+
               "ReadObject",
+
               "YieldObject",
+
+              "AcquireLock",
+              "ReleaseLock",
+              "RequestLock",
+
               "JoinThread",
               "ForkThread"
             }));

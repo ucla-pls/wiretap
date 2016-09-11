@@ -42,6 +42,7 @@ public abstract class Wiretapper {
                          Method method) {
     Wiretap tap = createWiretap(next, out);
     tap.setMethod(method);
+    tap.setOut(out);
     return tap;
   }
 
@@ -54,6 +55,7 @@ public abstract class Wiretapper {
   public abstract class Wiretap extends MethodVisitor implements Opcodes {
 
     private Method method;
+    protected MethodVisitor out;
 
     public Wiretap(MethodVisitor next) {
       super(Opcodes.ASM5, next);
@@ -63,12 +65,36 @@ public abstract class Wiretapper {
       this.method = method;
     }
 
+    public void setOut (MethodVisitor out) {
+      this.out = out;
+    }
+
     public Instruction getInstruction () {
       return instructions.getInstruction(method, getOffset());
     }
 
     public Method getMethod () {
       return method;
+    }
+
+    public void pushThis() {
+      // Load this
+      out.visitVarInsn(ALOAD, 0);
+    }
+
+    public void pushClass() {
+      out.visitFieldInsn(GETSTATIC,
+                         getMethod().getClassName(),
+                         "class",
+                         "Ljava/lang/Class;");
+    }
+
+    public void pushContext() {
+      if (getMethod().isStatic()) {
+        pushClass();
+      } else {
+        pushThis();
+      }
     }
 
   }

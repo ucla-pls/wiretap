@@ -24,13 +24,24 @@ public class ExitMethod extends Wiretapper {
 
       @Override
       public void visitCode() {
+        super.visitCode();
+
         out.visitTryCatchBlock(start, end, end, null);
         out.visitLabel(start);
-        super.visitCode();
+      }
+
+      @Override
+      public void visitInsn(int opcode) {
+
+        if (opcode == RETURN) {
+          exit.emit(getMethod().getId());
+        }
+        super.visitInsn(opcode);
       }
 
       @Override
       public void visitMaxs(int mStack, int mLocals) {
+
         out.visitLabel(end);
         exit.emit(getMethod().getId());
 
