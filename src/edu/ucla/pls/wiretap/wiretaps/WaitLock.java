@@ -1,7 +1,5 @@
 package edu.ucla.pls.wiretap.wiretaps;
 
-import java.util.Arrays;
-
 import org.objectweb.asm.MethodVisitor;
 
 import edu.ucla.pls.wiretap.EventType;
@@ -22,11 +20,7 @@ public class WaitLock extends Wiretapper {
     final Emitter acquire = this.acquire.getEmitter(out);
     final Emitter release = this.release.getEmitter(out);
 
-    return new Wiretap(next) {
-
-      private int max;
-      // We might need a bigger array;
-      private int[] used = new int[100];
+    return new LocalWiretap(next) {
 
       public void logAll() {
         // This method assumes that the Locking object is on the top of the
@@ -42,12 +36,6 @@ public class WaitLock extends Wiretapper {
         request.record(id);
         acquire.record(id);
       }
-
-      @Override
-      public void visitCode() {
-        max = getMethod().getNumberOfArgumentLocals();
-        super.visitCode();
-			}
 
 			public void visitMethodInsn(int opcode,
                                   String owner,
@@ -68,17 +56,16 @@ public class WaitLock extends Wiretapper {
             out.visitInsn(DUP_X2);  // J,L -> L,J,L
             out.visitInsn(POP);     // J,L,J -> J,L
           } else if (desc.equals("(JI)V")) {
+            int freeLocal = getFreeLocal();
             out.visitInsn(DUP_X2);              // -> L,I,J,I
             out.visitInsn(POP);                 // -> L,I,J
-            out.visitVarInsn(LSTORE, ++max);  // -> L,I
-            used[max] = -1;
+            out.visitVarInsn(LSTORE, freeLocal);  // -> L,I
             out.visitInsn(SWAP);                // -> I,L
 
             logAll();
 
             out.visitInsn(SWAP);                // -> L,I
-            out.visitVarInsn(LLOAD, max);   // -> L,I,J
-            used[max] = -1;
+            out.visitVarInsn(LLOAD, freeLocal);   // -> L,I,J
             out.visitInsn(DUP2_X1);             // -> L,J,I,J
             out.visitInsn(POP2);                // -> L,J,I,J
           }
@@ -86,29 +73,6 @@ public class WaitLock extends Wiretapper {
         super.visitMethodInsn(opcode, owner, name, desc, itf);
       }
 
-
-
-			@Override
-      public void visitVarInsn(int opcode, int var) {
-        if (var > max) {
-          max = var;
-        }
-
-        if (used[var] == -1) {
-          used[var] = ++max;
-          used[max] = -1;
-        } else if (used[var] == 0) {
-          used[var] = var;
-        }
-
-        super.visitVarInsn(opcode, used[var]);
-      }
-
-
-      @Override
-      public void visitMaxs(int maxStack, int maxLocals) {
-        super.visitMaxs(maxStack, max);
-      }
-		};
+    };
 	}
 }

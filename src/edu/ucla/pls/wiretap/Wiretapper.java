@@ -98,4 +98,49 @@ public abstract class Wiretapper {
     }
 
   }
+
+  public abstract class LocalWiretap extends Wiretap {
+    private int max;
+    // We might need a bigger array;
+    private int[] movedTo = new int[100];
+
+    public LocalWiretap (MethodVisitor next) {
+      super(next);
+    }
+
+    public int getFreeLocal() {
+      int freeVar = ++max;
+      movedTo[freeVar] = -1;
+      return freeVar;
+    }
+
+    @Override
+    public void visitCode() {
+      max = getMethod().getNumberOfArgumentLocals();
+      super.visitCode();
+    }
+
+    @Override
+    public void visitVarInsn(int opcode, int var) {
+      if (var > max) {
+        max = var;
+      }
+
+      if (movedTo[var] == -1) {
+        movedTo[var] = getFreeLocal();
+      } else if (movedTo[var] == 0) {
+        movedTo[var] = var;
+      }
+
+      super.visitVarInsn(opcode, movedTo[var]);
+    }
+
+
+    @Override
+    public void visitMaxs(int maxStack, int maxLocals) {
+      super.visitMaxs(maxStack, max);
+    }
+
+  }
+
 }
