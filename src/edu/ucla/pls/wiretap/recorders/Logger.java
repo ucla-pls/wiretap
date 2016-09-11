@@ -9,6 +9,10 @@ import java.io.Writer;
 import java.util.HashMap;
 import java.util.Map;
 
+import edu.ucla.pls.wiretap.Agent;
+import edu.ucla.pls.wiretap.Instruction;
+import edu.ucla.pls.wiretap.InstructionManager;
+import edu.ucla.pls.wiretap.MethodManager;
 import edu.ucla.pls.wiretap.WiretapProperties;
 
 /** The logger logs events to file.
@@ -57,46 +61,63 @@ public class Logger implements Closeable {
 
   private final int id;
   private final Writer writer;
+  private final MethodManager methods;
+  private final InstructionManager instructions;
 
   public Logger(int id, Writer writer) {
     this.id = id;
     this.writer = writer;
+    this.methods = Agent.v().getMethodManager();
+    this.instructions = Agent.v().getInstructionManager();
+  }
+
+  private String ppMethod(int id) {
+    return methods.getMethod(id).toString();
+  }
+
+  private String ppInst(int id) {
+    return instructions.getInstruction(id).toString();
+  }
+
+  private String ppThread(Thread thread) {
+    return Integer.toString(getLogger(thread).getId());
+  }
+
+  private String ppObject(Object object) {
+    int id = object == null ? 0 : System.identityHashCode(object);
+    return Integer.toHexString(id);
   }
 
   public void enter(int id) {
-    write("E", Integer.toHexString(id));
+    write("enter", ppMethod(id));
   }
 
   public void exit(int id) {
-    write("X", Integer.toHexString(id));
+    write("exit", ppMethod(id));
   }
 
   public void fork(Thread thread) {
-    write("F", Integer.toHexString(getLogger(thread).getId()));
+    write("fork", ppThread(thread)) ;
   }
 
   public void join(Thread thread) {
-    write("J", Integer.toHexString(getLogger(thread).getId()));
+    write("join", ppThread(thread));
   }
 
   public void read(Object o, int inst) {
-    int id = o == null ? 0 : System.identityHashCode(o);
-    write("R", Integer.toHexString(inst), Integer.toHexString(id));
+    write("read", ppInst(inst), ppObject(o));
   }
 
   public void request(Object o, int inst) {
-    int id = o == null ? 0 : System.identityHashCode(o);
-    write("Q", Integer.toHexString(inst), Integer.toHexString(id));
+    write("request", ppInst(inst), ppObject(o));
   }
 
   public void release(Object o, int inst) {
-    int id = o == null ? 0 : System.identityHashCode(o);
-    write("L", Integer.toHexString(inst), Integer.toHexString(id));
+    write("release", ppInst(inst), ppObject(o));
   }
 
-  public void aquire(Object o, int inst) {
-    int id = o == null ? 0 : System.identityHashCode(o);
-    write("A", Integer.toHexString(inst), Integer.toHexString(id));
+  public void acquire (Object o, int inst) {
+    write("acquire", ppInst(inst), ppObject(o));
   }
 
 

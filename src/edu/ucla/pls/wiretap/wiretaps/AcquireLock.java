@@ -13,12 +13,12 @@ import edu.ucla.pls.wiretap.Wiretapper;
 
 public class AcquireLock extends Wiretapper {
 
-  EventType aquire = declareEventType("aquire", Object.class, int.class);
+  EventType acquire = declareEventType("acquire", Object.class, int.class);
 
   @Override
   public Wiretap createWiretap(MethodVisitor next,
                                MethodVisitor out) {
-    final Emitter aquire = this.aquire.getEmitter(out);
+    final Emitter acquire = this.acquire.getEmitter(out);
     return new Wiretap(next) {
 
       public void visitInsn(int opcode) {
@@ -26,7 +26,7 @@ public class AcquireLock extends Wiretapper {
         if (opcode == MONITORENTER) {
           out.visitInsn(DUP);
           super.visitInsn(opcode);
-          aquire.consume(getInstruction().getId());
+          acquire.consume(getInstruction().getId());
         } else {
           super.visitInsn(opcode);
         }
@@ -39,9 +39,9 @@ public class AcquireLock extends Wiretapper {
 
         // After other instrumentations has run.
         if (getMethod().isSynchronized()) {
-          aquire.pushRecorder();
+          acquire.pushRecorder();
           pushContext();
-          aquire.record(getInstruction().getId());
+          acquire.record(getInstruction().getId());
         }
       }
     };
