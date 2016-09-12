@@ -75,8 +75,6 @@ public class Method {
   }
 
   public int getNumberOfArgumentLocals() {
-    System.out.println(this);
-
     return getArgumentTypes().length + (isStatic() ? 1: 0);
   }
 

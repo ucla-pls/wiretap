@@ -65,13 +65,12 @@ public class EventType implements Opcodes{
                                            " than the designated types");
       }
 
-      if (types[0] == Long.TYPE || types[0] == Double.TYPE) {
-        throw new IllegalArgumentException("Can't call log with a double or " +
-                                           "a long as the first argument");
-      }
-
       // Dublicate the logged object
-      out.visitInsn(DUP);
+      if (types[0] == Long.TYPE || types[0] == Double.TYPE) {
+        out.visitInsn(DUP2);
+      } else {
+        out.visitInsn(DUP);
+      }
 
       consume(args);
     }
@@ -83,16 +82,18 @@ public class EventType implements Opcodes{
                                            " than the designated types");
       }
 
-      if (types[0] == Long.TYPE || types[0] == Double.TYPE) {
-        throw new IllegalArgumentException("Can't call log with a double or " +
-                                           "a long as the first argument");
-      }
-
       // Push the recorder
       pushRecorder();
 
       // Swap the recorder and the logged object.
-      out.visitInsn(SWAP);
+      if (types[0] == Long.TYPE || types[0] == Double.TYPE) {
+        out.visitInsn(DUP2_X1);
+        out.visitInsn(POP2);
+      } else {
+
+        out.visitInsn(SWAP);
+      }
+
 
       // Record args;
       record(args);
