@@ -35,7 +35,7 @@ public class WriteObject extends Wiretapper {
                                  String name,
                                  String desc) {
 
-        if (desc.charAt(0) == 'L') {
+        if (desc.charAt(0) == 'L' || desc.charAt(0) == '[') {
           switch (opcode) {
           case PUTSTATIC:
           case PUTFIELD:

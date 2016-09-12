@@ -37,7 +37,7 @@ public class ReadObject extends Wiretapper {
 
         super.visitFieldInsn(opcode, owner, name, desc);
 
-        if (desc.charAt(0) == 'L') {
+        if (desc.charAt(0) == 'L' || desc.charAt(0) == '[') {
           switch (opcode) {
           case Opcodes.GETSTATIC:
           case Opcodes.GETFIELD:
