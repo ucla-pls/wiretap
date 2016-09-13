@@ -6,7 +6,6 @@ import org.objectweb.asm.Opcodes;
 
 import edu.ucla.pls.wiretap.EventType;
 import edu.ucla.pls.wiretap.EventType.Emitter;
-import edu.ucla.pls.wiretap.Method;
 import edu.ucla.pls.wiretap.Wiretapper;
 
 public class ExitMethod extends Wiretapper {

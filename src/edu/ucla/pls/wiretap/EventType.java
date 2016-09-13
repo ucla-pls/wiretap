@@ -87,13 +87,36 @@ public class EventType implements Opcodes{
 
       // Swap the recorder and the logged object.
       if (types[0] == Long.TYPE || types[0] == Double.TYPE) {
-        out.visitInsn(DUP2_X1);
-        out.visitInsn(POP2);
+        out.visitInsn(DUP_X2);
+        out.visitInsn(POP);
       } else {
-
         out.visitInsn(SWAP);
       }
 
+
+      // Record args;
+      record(args);
+    }
+
+    public void consume2(Object... args) {
+
+      if (args.length != types.length - 1) {
+        throw new IllegalArgumentException("The args needs to be one shorter" +
+                                           " than the designated types");
+      }
+
+      // Push the recorder
+      pushRecorder();
+
+      // Swap the recorder and the logged object.
+      if (types[0] == Long.TYPE || types[0] == Double.TYPE ||
+          types[1] == Long.TYPE || types[1] == Double.TYPE) {
+        throw new IllegalArgumentException("Can't handle Long and Double... yet," +
+                                           " so you need to do this by hand");
+      } else {
+        out.visitInsn(DUP_X2);
+        out.visitInsn(POP);
+      }
 
       // Record args;
       record(args);

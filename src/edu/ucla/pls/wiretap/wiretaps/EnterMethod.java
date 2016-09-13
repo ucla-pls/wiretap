@@ -4,7 +4,6 @@ import org.objectweb.asm.MethodVisitor;
 
 import edu.ucla.pls.wiretap.EventType;
 import edu.ucla.pls.wiretap.EventType.Emitter;
-import edu.ucla.pls.wiretap.Method;
 import edu.ucla.pls.wiretap.Wiretapper;
 
 public class EnterMethod extends Wiretapper {

@@ -14,6 +14,9 @@ import java.security.ProtectionDomain;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 
+import edu.ucla.pls.wiretap.managers.InstructionManager;
+import edu.ucla.pls.wiretap.managers.MethodManager;
+
 /**
  * @author Christian Gram Kalhauge <kalhauge@cs.ucla.edu>
  * The agent holds all the information of the run-time of the program.

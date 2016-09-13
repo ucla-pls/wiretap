@@ -10,10 +10,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 import edu.ucla.pls.wiretap.Agent;
-import edu.ucla.pls.wiretap.Instruction;
-import edu.ucla.pls.wiretap.InstructionManager;
-import edu.ucla.pls.wiretap.MethodManager;
 import edu.ucla.pls.wiretap.WiretapProperties;
+import edu.ucla.pls.wiretap.managers.InstructionManager;
+import edu.ucla.pls.wiretap.managers.MethodManager;
 
 /** The logger logs events to file.
  */
@@ -72,11 +71,11 @@ public class Logger implements Closeable {
   }
 
   private String ppMethod(int id) {
-    return methods.getMethod(id).toString();
+    return methods.get(id).toString();
   }
 
   private String ppInst(int id) {
-    return instructions.getInstruction(id).toString();
+    return instructions.get(id).toString();
   }
 
   private String ppThread(Thread thread) {
@@ -86,6 +85,13 @@ public class Logger implements Closeable {
   private String ppObject(Object object) {
     int id = object == null ? 0 : System.identityHashCode(object);
     return Integer.toHexString(id);
+  }
+
+  private String value = null;
+  /** value acts as a store for the next event. It has the ability
+      to have a value in memory which can then be used after **/
+  public void value(Object o) {
+    value = ppObject(o);
   }
 
   public void enter(int id) {

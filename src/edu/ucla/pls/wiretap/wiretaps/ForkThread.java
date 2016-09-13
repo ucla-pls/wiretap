@@ -1,12 +1,9 @@
 package edu.ucla.pls.wiretap.wiretaps;
 
 import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Type;
 
 import edu.ucla.pls.wiretap.EventType;
 import edu.ucla.pls.wiretap.EventType.Emitter;
-import edu.ucla.pls.wiretap.Instruction;
-import edu.ucla.pls.wiretap.Method;
 import edu.ucla.pls.wiretap.Wiretapper;
 
 public class ForkThread extends Wiretapper {

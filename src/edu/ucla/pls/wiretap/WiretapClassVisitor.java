@@ -10,6 +10,9 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.commons.TryCatchBlockSorter;
 
+import edu.ucla.pls.wiretap.managers.Method;
+import edu.ucla.pls.wiretap.managers.MethodManager;
+
 public class WiretapClassVisitor extends ClassVisitor {
 
   private final String className;
@@ -34,7 +37,7 @@ public class WiretapClassVisitor extends ClassVisitor {
                                    String signature,
                                    String[] exceptions) {
 
-    Method m = methodManager.getMethod(access, className, name, desc, exceptions);
+    Method m = methodManager.put(new Method(access, className, name, desc, exceptions));
 
     MethodVisitor visitor =
         super.visitMethod(access, name, desc, signature, exceptions);

@@ -6,7 +6,12 @@ import java.util.List;
 import org.objectweb.asm.ClassReader$OffsetHandler;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.Type;
+
+import edu.ucla.pls.utils.Pair;
+import edu.ucla.pls.wiretap.managers.Instruction;
+import edu.ucla.pls.wiretap.managers.InstructionManager;
+import edu.ucla.pls.wiretap.managers.Method;
+import edu.ucla.pls.wiretap.managers.MethodManager;
 
 public abstract class Wiretapper {
 
@@ -70,7 +75,11 @@ public abstract class Wiretapper {
     }
 
     public Instruction getInstruction () {
-      return instructions.getInstruction(method, getOffset());
+      return instructions.get(Pair.of(method, getOffset()));
+    }
+
+    public int getInstructionId() {
+      return getInstruction().getId();
     }
 
     public Method getMethod () {
@@ -84,7 +93,7 @@ public abstract class Wiretapper {
 
     public void pushClass() {
       out.visitFieldInsn(GETSTATIC,
-                         getMethod().getClassName(),
+                         getMethod().getOwner(),
                          "class",
                          "Ljava/lang/Class;");
     }

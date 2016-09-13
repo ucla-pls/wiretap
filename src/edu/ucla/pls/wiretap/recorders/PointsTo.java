@@ -9,11 +9,10 @@ import java.io.Writer;
 
 import org.objectweb.asm.Type;
 
-import edu.ucla.pls.wiretap.Agent;
-import edu.ucla.pls.wiretap.InstructionManager;
-import edu.ucla.pls.wiretap.WiretapProperties;
-
 import edu.ucla.pls.utils.IntMapSet;
+import edu.ucla.pls.wiretap.Agent;
+import edu.ucla.pls.wiretap.WiretapProperties;
+import edu.ucla.pls.wiretap.managers.InstructionManager;
 
 public class PointsTo implements Closeable{
 
@@ -64,7 +63,7 @@ public class PointsTo implements Closeable{
       final Class<?> c = o.getClass();
       if (pointsto.add(inst, c)) {
         final String clname = Type.getInternalName(c);
-        final String instname  = instructions.getInstruction(inst).toString();
+        final String instname  = instructions.get(inst).toString();
         synchronized(this) {
           try {
             writer.write(instname);

@@ -5,13 +5,11 @@ import org.objectweb.asm.Opcodes;
 
 import edu.ucla.pls.wiretap.EventType;
 import edu.ucla.pls.wiretap.EventType.Emitter;
-import edu.ucla.pls.wiretap.Instruction;
-import edu.ucla.pls.wiretap.Method;
 import edu.ucla.pls.wiretap.Wiretapper;
 
 public class ReadObject extends Wiretapper {
 
-  EventType read = declareEventType("read", Object.class, int.class);
+  EventType read = declareEventType("read", Object.class, int.class, int.class);
 
   @Override
   public Wiretap createWiretap(MethodVisitor next,
@@ -25,7 +23,7 @@ public class ReadObject extends Wiretapper {
         super.visitInsn(opcode);
 
         if (opcode == Opcodes.AALOAD) {
-          read.log(getInstruction().getId());
+          read.emit(getInstructionId());
         }
       }
 
@@ -41,7 +39,7 @@ public class ReadObject extends Wiretapper {
           switch (opcode) {
           case Opcodes.GETSTATIC:
           case Opcodes.GETFIELD:
-            read.log(getInstruction().getId());
+            read.log(getInstructionId());
           }
         }
       }
