@@ -12,8 +12,13 @@ import java.lang.reflect.Method;
 import java.security.ProtectionDomain;
 
 import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.FieldVisitor;
+import org.objectweb.asm.Opcodes;
 
+import edu.ucla.pls.wiretap.managers.Field;
+import edu.ucla.pls.wiretap.managers.FieldManager;
 import edu.ucla.pls.wiretap.managers.InstructionManager;
 import edu.ucla.pls.wiretap.managers.MethodManager;
 
@@ -27,6 +32,7 @@ public class Agent implements ClassFileTransformer, Closeable {
   private final WiretapProperties properties;
   private final MethodManager methods;
   private final InstructionManager instructions;
+  private final FieldManager fields;
   private final Class<?> recorder;
 
   private BufferedWriter classWriter;
@@ -37,17 +43,20 @@ public class Agent implements ClassFileTransformer, Closeable {
 		this(properties,
          properties.getRecorder(),
          new MethodManager(properties),
-         new InstructionManager(properties));
+         new InstructionManager(properties),
+         new FieldManager(properties));
   }
 
   public Agent (WiretapProperties properties,
                 Class<?> recorder,
                 MethodManager methods,
-                InstructionManager instructions) {
+                InstructionManager instructions,
+                FieldManager fields) {
     this.properties = properties;
     this.methods = methods;
     this.recorder = recorder;
     this.instructions = instructions;
+    this.fields = fields;
   }
 
   private static boolean delete(File f) throws IOException {
@@ -73,6 +82,7 @@ public class Agent implements ClassFileTransformer, Closeable {
       closeRecorder = recorder.getDeclaredMethod("closeRecorder");
       methods.setup();
       instructions.setup();
+      fields.setup();
 
       classWriter = new BufferedWriter(new FileWriter(properties.getClassFile()));
     } catch (IOException e) {
@@ -114,12 +124,15 @@ public class Agent implements ClassFileTransformer, Closeable {
 
   public MethodManager getMethodManager () {
     return this.methods;
-  };
+  }
 
   public InstructionManager getInstructionManager () {
     return this.instructions;
-  };
+  }
 
+  public FieldManager getFieldManager () {
+    return this.fields;
+  }
 
   public void greet() {
     System.err.println("====== Running program with Wiretap ======");
@@ -135,11 +148,26 @@ public class Agent implements ClassFileTransformer, Closeable {
   }
 
   public byte[] transform(ClassLoader loader,
-                          String className,
+                          final String className,
                           Class<?> clazz,
                           ProtectionDomain protectionDomain,
                           byte[] buffer) {
 
+    ClassReader reader = new ClassReader(buffer);
+    reader.accept(new ClassVisitor (Opcodes.ASM5)  {
+
+        public FieldVisitor visitField(int access,
+                                       String name,
+                                       String desc,
+                                       String signature,
+                                       Object value) {
+          // The use of desc over signature, might be a mistake. Note that signature
+          // can be null.
+          Field f = fields.put(new Field(access, className, name, desc, value));
+          return super.visitField(access, name, desc, signature, value);
+        }
+
+      }, 0);
     if (properties.isClassIgnored(className)) {
       return null;
     } else {
@@ -150,13 +178,13 @@ public class Agent implements ClassFileTransformer, Closeable {
         flag |= ClassWriter.COMPUTE_FRAMES;
       }
 
-      ClassReader reader = new ClassReader(buffer);
       ClassWriter writer = new ClassWriter(reader, flag);
       WiretapClassVisitor wiretap =
         new WiretapClassVisitor(writer,
                                 className,
                                 properties.getWiretappers(),
-                                methods);
+                                methods,
+                                fields);
 
 
       try {

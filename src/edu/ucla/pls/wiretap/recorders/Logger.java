@@ -11,6 +11,7 @@ import java.util.Map;
 
 import edu.ucla.pls.wiretap.Agent;
 import edu.ucla.pls.wiretap.WiretapProperties;
+import edu.ucla.pls.wiretap.managers.FieldManager;
 import edu.ucla.pls.wiretap.managers.InstructionManager;
 import edu.ucla.pls.wiretap.managers.MethodManager;
 
@@ -62,12 +63,14 @@ public class Logger implements Closeable {
   private final Writer writer;
   private final MethodManager methods;
   private final InstructionManager instructions;
+  private final FieldManager fields;
 
   public Logger(int id, Writer writer) {
     this.id = id;
     this.writer = writer;
     this.methods = Agent.v().getMethodManager();
     this.instructions = Agent.v().getInstructionManager();
+    this.fields = Agent.v().getFieldManager();
   }
 
   private String ppMethod(int id) {
@@ -87,6 +90,57 @@ public class Logger implements Closeable {
     return Integer.toHexString(id);
   }
 
+  private String ppField(int id) {
+    return fields.get(id).toString();
+  }
+
+  private String ppIndex(int index) {
+    return Integer.toString(index);
+  }
+
+  public void enter(int id) {
+    output("enter", ppMethod(id));
+  }
+
+  public void exit(int id) {
+    output("exit", ppMethod(id));
+  }
+
+  public void fork(Thread thread) {
+    output("fork", ppThread(thread)) ;
+  }
+
+  public void join(Thread thread) {
+    output("join", ppThread(thread));
+  }
+
+  public void read(Object o, int field, int inst) {
+    output("read", ppInst(inst), ppObject(o), ppField(field), value);
+  }
+  public void readarray(Object a, int index, int inst) {
+    output("read", ppInst(inst), ppObject(a), ppIndex(index), value);
+  }
+
+  public void write(Object o, int field, int inst) {
+    output("write", ppInst(inst), ppObject(o), ppField(field), value);
+  }
+
+  public void writearray(Object a, int index, int inst) {
+    output("write", ppInst(inst), ppObject(a), ppIndex(index), value);
+  }
+
+  public void request(Object o, int inst) {
+    output("request", ppInst(inst), ppObject(o));
+  }
+
+  public void release(Object o, int inst) {
+    output("release", ppInst(inst), ppObject(o));
+  }
+
+  public void acquire (Object o, int inst) {
+    output("acquire", ppInst(inst), ppObject(o));
+  }
+
   private String value = null;
   /** value acts as a store for the next event. It has the ability
       to have a value in memory which can then be used after **/
@@ -94,44 +148,36 @@ public class Logger implements Closeable {
     value = ppObject(o);
   }
 
-  public void enter(int id) {
-    write("enter", ppMethod(id));
+  public void value(char v) {
+    value = Character.toString(v);
   }
 
-  public void exit(int id) {
-    write("exit", ppMethod(id));
+  public void value(byte v) {
+    value = Byte.toString(v);
   }
 
-  public void fork(Thread thread) {
-    write("fork", ppThread(thread)) ;
+  public void value(int v) {
+    value = Integer.toString(v);
   }
 
-  public void join(Thread thread) {
-    write("join", ppThread(thread));
+  public void value(short v) {
+    value = Short.toString(v);
   }
 
-  public void read(Object o, int inst) {
-    write("read", ppInst(inst), ppObject(o));
+  public void value(long v) {
+    value = Long.toString(v);
   }
 
-  public void write(Object o, int inst) {
-    write("write", ppInst(inst), ppObject(o));
+  public void value(float v) {
+    value = Float.toString(v);
   }
 
-  public void request(Object o, int inst) {
-    write("request", ppInst(inst), ppObject(o));
-  }
-
-  public void release(Object o, int inst) {
-    write("release", ppInst(inst), ppObject(o));
-  }
-
-  public void acquire (Object o, int inst) {
-    write("acquire", ppInst(inst), ppObject(o));
+  public void value(double v) {
+    value = Double.toString(v);
   }
 
 
-  public void write(String event) {
+  public void output(String event) {
     try {
       writer.write(event);
       writer.write("\n");
@@ -140,7 +186,7 @@ public class Logger implements Closeable {
     }
   }
 
-  public void write(String event, String ... args) {
+  public void output(String event, String ... args) {
     try {
       writer.write(event);
       for (String arg: args) {

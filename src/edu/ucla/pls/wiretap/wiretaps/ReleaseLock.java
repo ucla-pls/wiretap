@@ -38,12 +38,12 @@ public class ReleaseLock extends Wiretapper {
         if (opcode == MONITOREXIT) {
           out.visitInsn(DUP);
           super.visitInsn(opcode);
-          release.consume(getInstruction().getId());
+          release.consume(createInstructionId());
         } else if (opcode == RETURN && getMethod().isSynchronized()) {
           // If the method is synchronized return.
           release.pushRecorder();
           pushContext();
-          release.record(getInstruction().getId());
+          release.record(createInstructionId());
           super.visitInsn(opcode);
         } else {
           super.visitInsn(opcode);
@@ -59,7 +59,7 @@ public class ReleaseLock extends Wiretapper {
 
           release.pushRecorder();
           pushContext();
-          release.record(getInstruction().getId());
+          release.record(createInstructionId());
 
           // Re-throw the exception
           out.visitTypeInsn(CHECKCAST, "java/lang/Throwable" );

@@ -20,7 +20,7 @@ public class RequestLock extends Wiretapper {
       public void visitInsn(int opcode) {
 
         if (opcode == MONITORENTER) {
-          request.log(getInstruction().getId());
+          request.log(createInstructionId());
         }
 
         super.visitInsn(opcode);
@@ -31,7 +31,7 @@ public class RequestLock extends Wiretapper {
         if (getMethod().isSynchronized()) {
           request.pushRecorder();
           pushContext();
-          request.record(getInstruction().getId());
+          request.record(createInstructionId());
         }
 
         // Before any instrumentation has been made.

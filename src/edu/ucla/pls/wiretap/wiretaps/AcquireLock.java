@@ -21,7 +21,7 @@ public class AcquireLock extends Wiretapper {
         if (opcode == MONITORENTER) {
           out.visitInsn(DUP);
           super.visitInsn(opcode);
-          acquire.consume(getInstruction().getId());
+          acquire.consume(createInstructionId());
         } else {
           super.visitInsn(opcode);
         }
@@ -36,7 +36,7 @@ public class AcquireLock extends Wiretapper {
         if (getMethod().isSynchronized()) {
           acquire.pushRecorder();
           pushContext();
-          acquire.record(getInstruction().getId());
+          acquire.record(createInstructionId());
         }
       }
     };

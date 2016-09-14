@@ -26,7 +26,7 @@ public class YieldObject extends Wiretapper {
         super.visitMethodInsn(opcode, owner, name, desc, itf);
 
         if (Type.getReturnType(desc).getSort() == Type.OBJECT) {
-          yield.log(getInstruction().getId());
+          yield.log(createInstructionId());
         }
       }
     };

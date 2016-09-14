@@ -25,7 +25,7 @@ public class WaitLock extends Wiretapper {
       public void logAll() {
         // This method assumes that the Locking object is on the top of the
         // stack, and will leave it on the the top of the stack after: L -> L
-        Integer id = getInstruction().getId();
+        Integer id = createInstructionId();
         out.visitInsn(DUP);
         // Assume that the recorder is the same for all Events.
         request.pushRecorder();

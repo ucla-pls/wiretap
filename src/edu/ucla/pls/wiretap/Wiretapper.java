@@ -8,6 +8,7 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
 import edu.ucla.pls.utils.Pair;
+import edu.ucla.pls.wiretap.managers.FieldManager;
 import edu.ucla.pls.wiretap.managers.Instruction;
 import edu.ucla.pls.wiretap.managers.InstructionManager;
 import edu.ucla.pls.wiretap.managers.Method;
@@ -19,6 +20,7 @@ public abstract class Wiretapper {
 
   protected final InstructionManager instructions = Agent.v().getInstructionManager();
   protected final MethodManager methods = Agent.v().getMethodManager();
+  protected final FieldManager fields = Agent.v().getFieldManager();
 
   public void setOffsetHandler (ClassReader$OffsetHandler offsetHandler) {
     this.offsetHandler = offsetHandler;
@@ -74,12 +76,16 @@ public abstract class Wiretapper {
       this.out = out;
     }
 
-    public Instruction getInstruction () {
-      return instructions.get(Pair.of(method, getOffset()));
+    public Instruction createInstruction() {
+      return instructions.put(new Instruction(method, getOffset()));
     }
 
-    public int getInstructionId() {
-      return getInstruction().getId();
+    public int createInstructionId() {
+      return createInstruction().getId();
+    }
+
+    public int getFieldId(String owner, String name, String desc) {
+      return fields.getField(owner, name, desc).getId();
     }
 
     public Method getMethod () {

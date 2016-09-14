@@ -93,14 +93,13 @@ public class EventType implements Opcodes{
         out.visitInsn(SWAP);
       }
 
-
       // Record args;
       record(args);
     }
 
     public void consume2(Object... args) {
 
-      if (args.length != types.length - 1) {
+      if (args.length != types.length - 2) {
         throw new IllegalArgumentException("The args needs to be one shorter" +
                                            " than the designated types");
       }
@@ -135,7 +134,11 @@ public class EventType implements Opcodes{
       // Add constants
       for (int i = 0; i != len; ++i) {
         if (primitiveTypeCheck(types[i + diff], args[i])) {
-          out.visitLdcInsn(args[i]);
+          if (args[i] == null) {
+            out.visitInsn(ACONST_NULL);
+          } else {
+            out.visitLdcInsn(args[i]);
+          }
         } else {
           throw new IllegalArgumentException("The arg " + i + " is of the wrong type");
         }
@@ -173,6 +176,8 @@ public class EventType implements Opcodes{
         return c == Short.TYPE;
       } else if (o instanceof Boolean) {
         return c == Boolean.TYPE;
+      } else if (o == null) {
+        return c == Object.class;
       } else {
         throw new IllegalArgumentException("Only Constants allowed");
       }
