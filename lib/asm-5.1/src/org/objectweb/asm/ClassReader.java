@@ -2517,7 +2517,7 @@ public class ClassReader {
     private final OffsetHandler offsetHandler = new OffsetHandler();
 
     public OffsetHandler getOffsetHandler () {
-        return this.OffsetHandler;
+        return this.offsetHandler;
     }
 
     public class OffsetHandler {
