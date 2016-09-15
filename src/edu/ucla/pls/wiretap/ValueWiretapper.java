@@ -1,7 +1,10 @@
 //hello
 package edu.ucla.pls.wiretap;
 
+import java.util.HashMap;
+
 import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Type;
 
 import edu.ucla.pls.wiretap.EventType.Emitter;
 
@@ -43,6 +46,10 @@ public abstract class ValueWiretapper extends Wiretapper {
     public final Emitter vFloat;
     public final Emitter vDouble;
 
+    public final Emitter [] emitters;
+
+    public final HashMap<Integer, HashMap<Integer, Emitter>> byOpcode;
+
     public ValueEmitter (MethodVisitor out) {
       vObject = valueObject.getEmitter(out);
       vChar   = valueChar.getEmitter(out);
@@ -52,7 +59,65 @@ public abstract class ValueWiretapper extends Wiretapper {
       vInt    = valueInt.getEmitter(out);
       vFloat  = valueFloat.getEmitter(out);
       vDouble = valueDouble.getEmitter(out);
+
+      emitters = new Emitter [] {
+        vObject, vChar, vByte, vShort, vLong, vInt, vFloat, vDouble
+      };
+
+      byOpcode = new HashMap<Integer, HashMap<Integer, Emitter>>();
     }
 
+    // public final createMap() {
+    //   int [] opcodes = { ILOAD,
+    //                      ISTORE,
+    //                      IALOAD,
+    //                      IASTORE,
+    //                      IADD,
+    //                      ISUB,
+    //                      IMUL,
+    //                      IDIV, IREM, INEG, ISHL, ISHR, IUSHR, IAND, IOR, IXOR, IRETURN };
+    // }
+
+    public Emitter getTypedEmitter(int opcode, int type) {
+      Integer key = Integer.valueOf(type);
+      HashMap<Integer, Emitter> map = byOpcode.get(key);
+      if (map == null) {
+        map = new HashMap<Integer, Emitter>();
+        byOpcode.put(key, map);
+      }
+      key = Integer.valueOf(opcode);
+      Emitter emitter = map.get(key);
+      if (emitter == null) {
+        for (Emitter e: emitters) {
+          if (opcode == e.getType(0).getOpcode(type)) {
+            emitter = e;
+          }
+        }
+        if (emitter != null) {
+          map.put(key, emitter);
+        }
+      }
+      return emitter;
+    }
+
+    public Emitter getTypedEmitter(Type type) {
+      switch(type.getSort()) {
+        case Type.CHAR:    return vChar;
+        case Type.BYTE:    return vByte;
+        case Type.BOOLEAN: return vByte;
+        case Type.SHORT:   return vShort;
+        case Type.INT:     return vInt;
+        case Type.FLOAT:   return vFloat;
+        case Type.LONG:    return vLong;
+        case Type.DOUBLE:  return vDouble;
+        case Type.ARRAY:   return vObject;
+        case Type.OBJECT:  return vObject;
+      }
+      return null;
+    }
+
+    public Emitter getTypedEmitter(String desc) {
+      return getTypedEmitter(Type.getType(desc));
+    }
   }
 }

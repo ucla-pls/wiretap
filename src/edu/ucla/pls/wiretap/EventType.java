@@ -9,6 +9,7 @@ public class EventType implements Opcodes{
   private final String methodName;
   private final Class<?>[] types;
 
+  private final Type [] asmTypes;
   private final String signature;
 
   private String recorder;
@@ -19,11 +20,11 @@ public class EventType implements Opcodes{
     this.methodName = methodName;
     this.types = types;
 
-    final Type[] types_ = new Type[types.length];
+    asmTypes = new Type[types.length];
     for (int i = 0, len = types.length ; i != len; i++) {
-      types_[i] = Type.getType(types[i]);
+      asmTypes[i] = Type.getType(types[i]);
     }
-    signature = Type.getMethodDescriptor(Type.VOID_TYPE, types_);
+    signature = Type.getMethodDescriptor(Type.VOID_TYPE, asmTypes);
   }
 
   public void setRecorder(Class<?> recorder) throws NoSuchMethodException {
@@ -58,29 +59,61 @@ public class EventType implements Opcodes{
       record(args);
     }
 
-    public void log(Object... args) {
+    public Type getType(int index) {
+      return asmTypes[index];
+    }
 
-      if (args.length != types.length - 1) {
-        throw new IllegalArgumentException("The args needs to be one shorter" +
-                                           " than the designated types");
-      }
-
-      // Dublicate the logged object
+    public void dup() {
       if (types[0] == Long.TYPE || types[0] == Double.TYPE) {
         out.visitInsn(DUP2);
       } else {
         out.visitInsn(DUP);
       }
+    }
 
+    public void dupX1() {
+      if (types[0] == Long.TYPE || types[0] == Double.TYPE) {
+        out.visitInsn(DUP2_X1);
+      } else {
+        out.visitInsn(DUP_X1);
+      }
+    }
+
+    public void dupX2() {
+      if (types[0] == Long.TYPE || types[0] == Double.TYPE) {
+        out.visitInsn(DUP2_X2);
+      } else {
+        out.visitInsn(DUP_X2);
+      }
+    }
+
+    public void checkLength(int logged, Object [] args) {
+      if (args.length != types.length - logged) {
+        throw new IllegalArgumentException("The args needs to be " + logged + " shorter" +
+                                           " than the designated types");
+      }
+    }
+
+    public void log(Object... args) {
+      checkLength(1, args);
+      dup();
+      consume(args);
+    }
+
+    public void logX1(Object... args) {
+      checkLength(1, args);
+      dupX1();
+      consume(args);
+    }
+
+    public void logX2(Object... args) {
+      checkLength(1, args);
+      dupX1();
       consume(args);
     }
 
     public void consume(Object... args) {
-
-      if (args.length != types.length - 1) {
-        throw new IllegalArgumentException("The args needs to be one shorter" +
-                                           " than the designated types");
-      }
+      checkLength(1, args);
 
       // Push the recorder
       pushRecorder();
@@ -99,10 +132,7 @@ public class EventType implements Opcodes{
 
     public void consume2(Object... args) {
 
-      if (args.length != types.length - 2) {
-        throw new IllegalArgumentException("The args needs to be one shorter" +
-                                           " than the designated types");
-      }
+      checkLength(2, args);
 
       // Push the recorder
       pushRecorder();
