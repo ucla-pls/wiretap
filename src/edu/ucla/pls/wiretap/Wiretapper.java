@@ -3,7 +3,7 @@ package edu.ucla.pls.wiretap;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.objectweb.asm.ClassReader$OffsetHandler;
+import org.objectweb.asm.ClassReader.OffsetHandler;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
@@ -16,13 +16,13 @@ import edu.ucla.pls.wiretap.managers.MethodManager;
 
 public abstract class Wiretapper {
 
-  private ClassReader$OffsetHandler offsetHandler;
+  private OffsetHandler offsetHandler;
 
   protected final InstructionManager instructions = Agent.v().getInstructionManager();
   protected final MethodManager methods = Agent.v().getMethodManager();
   protected final FieldManager fields = Agent.v().getFieldManager();
 
-  public void setOffsetHandler (ClassReader$OffsetHandler offsetHandler) {
+  public void setOffsetHandler (OffsetHandler offsetHandler) {
     this.offsetHandler = offsetHandler;
   }
 

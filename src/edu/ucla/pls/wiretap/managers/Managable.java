@@ -1,7 +1,5 @@
 package edu.ucla.pls.wiretap.managers;
 
-import java.util.Objects;
-
 public abstract class Managable<D> {
   private int id;
 
@@ -27,8 +25,9 @@ public abstract class Managable<D> {
 
   @Override
   public boolean equals(Object obj) {
-    if (obj instanceof Managable<?>)  {
-      return Objects.equals(((Managable<?>)obj).getDescriptor(), getDescriptor());
+    if (obj instanceof Managable<?>) {
+      Object d = ((Managable<?>)obj).getDescriptor();
+      return d != null && d.equals(getDescriptor());
     } else {
       return false;
     }

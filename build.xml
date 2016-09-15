@@ -6,7 +6,7 @@
   <property name="lib.dir" value="lib" />
 
   <property name="asm.dir" value="${lib.dir}/asm-5.1" />
-  <property name="asm.build.dir" value="${asm.dir}/output/build/" />
+  <property name="asm.build.dir" value="${asm.dir}/output/build/tmp" />
 
   <path id="lib.path.id">
     <pathelement path="${asm.build.dir}" />
@@ -38,6 +38,7 @@
 
   <target name="clean">
     <delete dir="${build.dir}"/>
+    <delete dir="${asm.dir}/output"/>
   </target>
 
 </project>

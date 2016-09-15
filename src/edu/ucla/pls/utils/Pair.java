@@ -1,7 +1,5 @@
 package edu.ucla.pls.utils;
 
-import java.util.Objects;
-
 // Partly stolen from http://stackoverflow.com/questions/156275/what-is-the-equivalent-of-the-c-pairl-r-in-java
 
 public class Pair<A, B> {
@@ -18,14 +16,19 @@ public class Pair<A, B> {
     return new Pair<A, B>(fst, snd);
   }
 
-  public boolean equal(Object o) {
+  @Override
+  public boolean equals(Object o) {
     if (o instanceof Pair) {
       final Pair<?, ?> other = (Pair<?,?>) o;
       return o == this ||
-        ( Objects.equals(fst, other.fst) && Objects.equals(snd, other.snd) );
+        ( equals_(fst, other.fst) && equals_(snd, other.snd) );
     } else {
       return false;
     }
+  }
+
+  private static boolean equals_(Object a, Object b) {
+    return a != null && a.equals(b);
   }
 
   // From boost::hash_combine

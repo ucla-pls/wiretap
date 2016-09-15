@@ -1,7 +1,5 @@
 package edu.ucla.pls.wiretap.managers;
 
-import java.util.Objects;
-
 import org.objectweb.asm.Opcodes;
 
 public class Field extends Managable<String>{
