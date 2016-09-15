@@ -4,13 +4,19 @@
   <property name="build.dir" value="build"/>
   <property name="classes.dir" value="${build.dir}/classes"/>
   <property name="lib.dir" value="lib" />
-  <property name="asm.dir" value="lib/asm-5.1/output/build/" />
+
+  <property name="asm.dir" value="${lib.dir}/asm-5.1" />
+  <property name="asm.build.dir" value="${asm.dir}/output/build/" />
 
   <path id="lib.path.id">
-    <pathelement path="${asm.dir}" />
+    <pathelement path="${asm.build.dir}" />
   </path>
 
-  <target name="compile">
+  <target name="lib">
+    <ant dir="${asm.dir}" target="compile-debug" />
+  </target>
+
+  <target name="compile" depends="lib">
     <mkdir dir="${classes.dir}"/>
     <javac srcdir="${src.dir}"
            includeantruntime="false"
@@ -26,7 +32,7 @@
         <attribute name="Boot-Class-Path" value="${ant.project.name}.jar"/>
       </manifest>
       <fileset dir="${classes.dir}" includes="**/*.class"/>
-      <fileset dir="${asm.dir}" includes="**/*.class"/>
+      <fileset dir="${asm.build.dir}" includes="**/*.class"/>
     </jar>
   </target>
 

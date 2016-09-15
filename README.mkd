@@ -77,7 +77,7 @@ Note: Recorders can be chained if some of the events has to be processed.
 
 ## Building from Source
 
-First navigate to 'lib/asm-5.1/' and run ant. Then run ant in the main repository.
+Run ant in the main repository.
 
 ## Q&A
 
