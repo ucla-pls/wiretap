@@ -32,8 +32,10 @@ public class ReadPrimitive extends ValueWiretapper {
           out.visitInsn(DUP2);
 
           super.visitInsn(opcode);
+
           // log it and push it up 2 in the stack;
           emitter.logX2();
+
           // Consume the array and index
           readarray.consume2(createInstructionId());
         } else {

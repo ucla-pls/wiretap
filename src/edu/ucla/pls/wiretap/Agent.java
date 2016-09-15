@@ -16,6 +16,7 @@ import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.util.CheckClassAdapter;
 
 import edu.ucla.pls.wiretap.managers.Field;
 import edu.ucla.pls.wiretap.managers.FieldManager;
@@ -180,7 +181,7 @@ public class Agent implements ClassFileTransformer, Closeable {
 
       ClassWriter writer = new ClassWriter(reader, flag);
       WiretapClassVisitor wiretap =
-        new WiretapClassVisitor(writer,
+        new WiretapClassVisitor(new CheckClassAdapter(writer),
                                 className,
                                 properties.getWiretappers(),
                                 methods,

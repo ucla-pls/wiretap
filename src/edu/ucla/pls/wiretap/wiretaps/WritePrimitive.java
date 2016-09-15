@@ -22,9 +22,9 @@ public class WritePrimitive extends ValueWiretapper {
 
 			@Override
       public void visitInsn(int opcode) {
-        Emitter emitter = value.getTypedEmitter(opcode, IALOAD);
+        Emitter emitter = value.getTypedEmitter(opcode, ISTORE);
 
-        if (emitter != null && opcode != AALOAD) {
+        if (emitter != null && opcode != AASTORE) {
           // Copy value up 2 in stack.  [, I, V -> A, [, I
           emitter.logX2();
           // Copy the two -> [, I, A, [, I

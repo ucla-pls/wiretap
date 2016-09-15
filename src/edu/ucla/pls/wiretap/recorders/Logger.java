@@ -86,7 +86,12 @@ public class Logger implements Closeable {
   }
 
   private String ppObject(Object object) {
-    int id = object == null ? 0 : System.identityHashCode(object);
+    int id;
+    if (object != null) {
+      id = System.identityHashCode(object);
+    } else {
+      id = 0;
+    }
     return Integer.toHexString(id);
   }
 

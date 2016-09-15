@@ -108,7 +108,7 @@ public class EventType implements Opcodes{
 
     public void logX2(Object... args) {
       checkLength(1, args);
-      dupX1();
+      dupX2();
       consume(args);
     }
 

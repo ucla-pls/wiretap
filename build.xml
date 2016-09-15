@@ -5,6 +5,10 @@
   <property name="classes.dir" value="${build.dir}/classes"/>
   <property name="lib.dir" value="lib" />
 
+  <property name="test.dir" value="test/regression"/>
+  <property name="test.classes.dir" value="${test.dir}/classes"/>
+  <property name="test.src.dir" value="${test.dir}/src"/>
+
   <property name="asm.dir" value="${lib.dir}/asm-5.1" />
   <property name="asm.build.dir" value="${asm.dir}/output/build/tmp" />
 
@@ -21,7 +25,16 @@
     <javac srcdir="${src.dir}"
            includeantruntime="false"
            classpathref="lib.path.id"
+           debug="true" debuglevel="lines,vars,source"
            destdir="${classes.dir}"/>
+  </target>
+
+  <target name="test">
+    <mkdir dir="${test.classes.dir}"/>
+    <javac srcdir="${test.src.dir}"
+           includeantruntime="false"
+           debug="true" debuglevel="lines,vars,source"
+           destdir="${test.classes.dir}"/>
   </target>
 
   <target name="jar" depends="compile">
