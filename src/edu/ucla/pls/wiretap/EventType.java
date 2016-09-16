@@ -14,6 +14,7 @@ public class EventType implements Opcodes{
   private final String signature;
 
   private String recorder;
+  private Type recorderType;
 
 
   public EventType(String methodName, Class<?> [] types) {
@@ -30,7 +31,8 @@ public class EventType implements Opcodes{
   public void setRecorder(Class<?> recorder) throws NoSuchMethodException {
     // Test that method exists.
     recorder.getMethod(methodName, types);
-    this.recorder = Type.getInternalName(recorder);
+    this.recorderType = Type.getType(recorder);
+    this.recorder = recorderType.getInternalName();
   }
 
   public Emitter getEmitter(GeneratorAdapter out) {
@@ -64,26 +66,26 @@ public class EventType implements Opcodes{
     }
 
     public void dup() {
-      if (types[0] == Long.TYPE || types[0] == Double.TYPE) {
-        out.visitInsn(DUP2);
+      if (getType(0).getSize() == 2) {
+        out.dup2();
       } else {
-        out.visitInsn(DUP);
+        out.dup();
       }
     }
 
     public void dupX1() {
-      if (types[0] == Long.TYPE || types[0] == Double.TYPE) {
-        out.visitInsn(DUP2_X1);
+      if (getType(0).getSize() == 2) {
+        out.dup2X1();
       } else {
-        out.visitInsn(DUP_X1);
+        out.dupX1();
       }
     }
 
     public void dupX2() {
-      if (types[0] == Long.TYPE || types[0] == Double.TYPE) {
-        out.visitInsn(DUP2_X2);
+      if (getType(0).getSize() == 2) {
+        out.dup2X2();
       } else {
-        out.visitInsn(DUP_X2);
+        out.dupX2();
       }
     }
 
@@ -119,12 +121,7 @@ public class EventType implements Opcodes{
       pushRecorder();
 
       // Swap the recorder and the logged object.
-      if (types[0] == Long.TYPE || types[0] == Double.TYPE) {
-        out.visitInsn(DUP_X2);
-        out.visitInsn(POP);
-      } else {
-        out.visitInsn(SWAP);
-      }
+      out.swap(recorderType, getType(0));
 
       // Record args;
       record(args);
@@ -143,8 +140,8 @@ public class EventType implements Opcodes{
         throw new IllegalArgumentException("Can't handle Long and Double... yet," +
                                            " so you need to do this by hand");
       } else {
-        out.visitInsn(DUP_X2);
-        out.visitInsn(POP);
+        out.dupX2();
+        out.pop();
       }
 
       // Record args;
