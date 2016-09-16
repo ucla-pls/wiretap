@@ -8,6 +8,7 @@ import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.commons.GeneratorAdapter;
 import org.objectweb.asm.commons.TryCatchBlockSorter;
 
 import edu.ucla.pls.wiretap.managers.FieldManager;
@@ -48,10 +49,11 @@ public class WiretapClassVisitor extends ClassVisitor {
     MethodVisitor visitor =
         super.visitMethod(access, name, desc, signature, exceptions);
     visitor = new TryCatchBlockSorter(visitor, access, name, desc, signature, exceptions);
+    GeneratorAdapter generator = new GeneratorAdapter(visitor, access, name, desc);
 
-    MethodVisitor next = visitor;
+    MethodVisitor next = generator;
     for (Wiretapper wiretapper : wiretappers) {
-      next = wiretapper.wiretap(next, visitor, m);
+      next = wiretapper.wiretap(next, generator, m);
     }
     return next;
   }

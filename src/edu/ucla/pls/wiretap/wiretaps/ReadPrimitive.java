@@ -2,6 +2,7 @@ package edu.ucla.pls.wiretap.wiretaps;
 
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.commons.GeneratorAdapter;
 
 import edu.ucla.pls.wiretap.EventType;
 import edu.ucla.pls.wiretap.EventType.Emitter;
@@ -16,7 +17,7 @@ public class ReadPrimitive extends ValueWiretapper {
 
   @Override
   public Wiretap createWiretap(MethodVisitor next,
-                               final MethodVisitor out,
+                               final GeneratorAdapter out,
                                final ValueEmitter value) {
     final Emitter read = this.read.getEmitter(out);
     final Emitter readarray = this.readarray.getEmitter(out);
@@ -29,7 +30,7 @@ public class ReadPrimitive extends ValueWiretapper {
 
         if (emitter != null && opcode != AALOAD) {
           // Copy array and index
-          out.visitInsn(DUP2);
+          out.dup2();
 
           super.visitInsn(opcode);
 
@@ -63,7 +64,7 @@ public class ReadPrimitive extends ValueWiretapper {
 
           case GETFIELD:
             // Copy object on the stack.  Object -> Object, Object
-            out.visitInsn(DUP);
+            out.dup();
             // Fetch value -> Object, Value
             super.visitFieldInsn(opcode, owner, name, desc);
             // Consume value Object, Value -> Value, Object

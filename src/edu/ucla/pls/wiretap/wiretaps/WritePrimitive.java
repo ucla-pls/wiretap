@@ -2,6 +2,7 @@ package edu.ucla.pls.wiretap.wiretaps;
 
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Type;
+import org.objectweb.asm.commons.GeneratorAdapter;
 
 import edu.ucla.pls.wiretap.EventType;
 import edu.ucla.pls.wiretap.EventType.Emitter;
@@ -14,7 +15,7 @@ public class WritePrimitive extends ValueWiretapper {
 
   @Override
   public Wiretap createWiretap(MethodVisitor next,
-                               final MethodVisitor out,
+                               final GeneratorAdapter out,
                                final ValueEmitter value) {
     final Emitter write = this.write.getEmitter(out);
     final Emitter writearray = this.writearray.getEmitter(out);
@@ -25,17 +26,21 @@ public class WritePrimitive extends ValueWiretapper {
         Emitter emitter = value.getTypedEmitter(opcode, ISTORE);
 
         if (emitter != null && opcode != AASTORE) {
-          // Copy value up 2 in stack.  [, I, V -> A, [, I
+          // Array, Index, Value...
           emitter.logX2();
-          // Copy the two -> [, I, A, [, I
-          Type type = emitter.getType(0);
-          if (type == Type.LONG_TYPE || type == Type.DOUBLE_TYPE) {
+          // Value..., Array, Index
+
+          if (emitter.getType(0).getSize() == 2) {
             out.visitInsn(DUP2_X2);
           } else {
             out.visitInsn(DUP2_X1);
           }
+          // Array, Index, Value..., Array, Index
+
           // Consume value, leaving 2 in the stack for consuming by 'writearray'
           writearray.consume2(createInstructionId());
+
+          // Array, Index, Value...
         }
         super.visitInsn(opcode);
 
@@ -58,17 +63,17 @@ public class WritePrimitive extends ValueWiretapper {
             break;
 
           case PUTFIELD:
-            // Copy value up 1 in stack.  Object, Value -> Value, Object
+            // Object, Value...
             emitter.logX1();
-            // Copy the object -> Object, Value, Object
-            Type type = emitter.getType(0);
-            if (type == Type.LONG_TYPE || type == Type.DOUBLE_TYPE) {
+            // Value..., Object
+            if (emitter.getType(0).getSize() == 2) {
               out.visitInsn(DUP_X2);
             } else {
               out.visitInsn(DUP_X1);
             }
-            // Consume object
+            // Object, Value..., Object
             write.consume(getFieldId(owner, name, desc), createInstructionId());
+            // Object, Value...
             break;
 
           }

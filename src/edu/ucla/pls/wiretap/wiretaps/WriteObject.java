@@ -1,6 +1,7 @@
 package edu.ucla.pls.wiretap.wiretaps;
 
 import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.commons.GeneratorAdapter;
 
 import edu.ucla.pls.wiretap.EventType;
 import edu.ucla.pls.wiretap.EventType.Emitter;
@@ -13,7 +14,7 @@ public class WriteObject extends ValueWiretapper {
 
   @Override
   public Wiretap createWiretap(MethodVisitor next,
-                               final MethodVisitor out,
+                               final GeneratorAdapter out,
                                final ValueEmitter value) {
     final Emitter write = this.write.getEmitter(out);
     final Emitter writearray = this.writearray.getEmitter(out);
@@ -24,11 +25,11 @@ public class WriteObject extends ValueWiretapper {
 
         if (opcode == AASTORE) {
           // Copy value up 2 in stack.  [, I, A -> A, [, I, A
-          out.visitInsn(DUP_X2);
+          out.dupX2();
           // Consume value -> A, [, I
           value.vObject.consume();
           // Copy the two -> [, I, A, [, I
-          out.visitInsn(DUP2_X1);
+          out.dup2X1();
           // Consume value, leaving 2 in the stack for consuming by 'write'
           writearray.consume2(createInstructionId());
         }
@@ -51,11 +52,11 @@ public class WriteObject extends ValueWiretapper {
             break;
           case PUTFIELD:
             // Copy value up 1 in stack.  Object, Value -> Value, Object, Value
-            out.visitInsn(DUP_X1);
+            out.dupX1();
             // Consume value -> Value, Object
             value.vObject.consume();
             // Copy the object -> Object, Value, Object
-            out.visitInsn(DUP_X1);
+            out.dupX1();
             // Consume object
             write.consume(getFieldId(owner, name, desc), createInstructionId());
             break;

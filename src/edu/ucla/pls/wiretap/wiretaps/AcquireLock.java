@@ -1,6 +1,7 @@
 package edu.ucla.pls.wiretap.wiretaps;
 
 import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.commons.GeneratorAdapter;
 
 import edu.ucla.pls.wiretap.EventType;
 import edu.ucla.pls.wiretap.EventType.Emitter;
@@ -12,14 +13,14 @@ public class AcquireLock extends Wiretapper {
 
   @Override
   public Wiretap createWiretap(MethodVisitor next,
-                               MethodVisitor out) {
+                               GeneratorAdapter out) {
     final Emitter acquire = this.acquire.getEmitter(out);
     return new Wiretap(next) {
 
       public void visitInsn(int opcode) {
 
         if (opcode == MONITORENTER) {
-          out.visitInsn(DUP);
+          out.dup();
           super.visitInsn(opcode);
           acquire.consume(createInstructionId());
         } else {

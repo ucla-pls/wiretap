@@ -2,6 +2,7 @@ package edu.ucla.pls.wiretap.wiretaps;
 
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.commons.GeneratorAdapter;
 
 import edu.ucla.pls.wiretap.EventType;
 import edu.ucla.pls.wiretap.EventType.Emitter;
@@ -13,7 +14,7 @@ public class ReleaseLock extends Wiretapper {
 
   @Override
   public Wiretap createWiretap(MethodVisitor next,
-                               final MethodVisitor out) {
+                               final GeneratorAdapter out) {
     final Emitter release = this.release.getEmitter(out);
     return new Wiretap(next) {
       private final Label
@@ -28,7 +29,7 @@ public class ReleaseLock extends Wiretapper {
         // release the lock
         if (getMethod().isSynchronized()) {
           out.visitTryCatchBlock(start, end, end, null);
-          out.visitLabel(start);
+          out.mark(start);
         }
       }
 
@@ -36,7 +37,7 @@ public class ReleaseLock extends Wiretapper {
       public void visitInsn(int opcode) {
 
         if (opcode == MONITOREXIT) {
-          out.visitInsn(DUP);
+          out.dup();
           super.visitInsn(opcode);
           release.consume(createInstructionId());
         } else if (opcode == RETURN && getMethod().isSynchronized()) {
@@ -55,7 +56,7 @@ public class ReleaseLock extends Wiretapper {
       public void visitMaxs(int maxStack, int maxLocals) {
 
         if (getMethod().isSynchronized()) {
-          out.visitLabel(end);
+          out.mark(end);
 
           release.pushRecorder();
           pushContext();
@@ -63,7 +64,7 @@ public class ReleaseLock extends Wiretapper {
 
           // Re-throw the exception
           out.visitTypeInsn(CHECKCAST, "java/lang/Throwable" );
-          out.visitInsn(ATHROW);
+          out.throwException();
         }
         // Before last instrumentation have been made.
         super.visitMaxs(maxStack, maxLocals);

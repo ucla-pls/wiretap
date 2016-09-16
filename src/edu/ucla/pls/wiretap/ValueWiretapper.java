@@ -5,6 +5,7 @@ import java.util.HashMap;
 
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Type;
+import org.objectweb.asm.commons.GeneratorAdapter;
 
 import edu.ucla.pls.wiretap.EventType.Emitter;
 
@@ -19,16 +20,16 @@ public abstract class ValueWiretapper extends Wiretapper {
   EventType valueFloat  = declareEventType("value", float.class);
   EventType valueDouble = declareEventType("value", double.class);
 
-
+  @Override
   public Wiretap createWiretap(MethodVisitor next,
-                               MethodVisitor out
+                               GeneratorAdapter out
                                ) {
     ValueEmitter emitter = new ValueEmitter(out);
     return createWiretap(next, out, emitter);
   }
 
   public abstract Wiretap createWiretap(MethodVisitor next,
-                                        MethodVisitor out,
+                                        GeneratorAdapter out,
                                         ValueEmitter emitter
                                         );
 
@@ -50,7 +51,7 @@ public abstract class ValueWiretapper extends Wiretapper {
 
     public final HashMap<Integer, HashMap<Integer, Emitter>> byOpcode;
 
-    public ValueEmitter (MethodVisitor out) {
+    public ValueEmitter (GeneratorAdapter out) {
       vObject = valueObject.getEmitter(out);
       vChar   = valueChar.getEmitter(out);
       vByte   = valueByte.getEmitter(out);
@@ -66,17 +67,6 @@ public abstract class ValueWiretapper extends Wiretapper {
 
       byOpcode = new HashMap<Integer, HashMap<Integer, Emitter>>();
     }
-
-    // public final createMap() {
-    //   int [] opcodes = { ILOAD,
-    //                      ISTORE,
-    //                      IALOAD,
-    //                      IASTORE,
-    //                      IADD,
-    //                      ISUB,
-    //                      IMUL,
-    //                      IDIV, IREM, INEG, ISHL, ISHR, IUSHR, IAND, IOR, IXOR, IRETURN };
-    // }
 
     public Emitter getTypedEmitter(int opcode, int type) {
       Integer key = Integer.valueOf(type);

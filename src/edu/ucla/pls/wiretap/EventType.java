@@ -3,6 +3,7 @@ package edu.ucla.pls.wiretap;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
+import org.objectweb.asm.commons.GeneratorAdapter;
 
 public class EventType implements Opcodes{
 
@@ -14,7 +15,6 @@ public class EventType implements Opcodes{
 
   private String recorder;
 
-  private MethodVisitor out;
 
   public EventType(String methodName, Class<?> [] types) {
     this.methodName = methodName;
@@ -33,15 +33,15 @@ public class EventType implements Opcodes{
     this.recorder = Type.getInternalName(recorder);
   }
 
-  public Emitter getEmitter(MethodVisitor out) {
+  public Emitter getEmitter(GeneratorAdapter out) {
     return new Emitter(out);
   }
 
   public class Emitter {
 
-    private final MethodVisitor out;
+    private final GeneratorAdapter out;
 
-    public Emitter(MethodVisitor out) {
+    public Emitter(GeneratorAdapter out) {
       this.out = out;
     }
 

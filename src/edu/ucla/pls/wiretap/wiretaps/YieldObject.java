@@ -2,6 +2,7 @@ package edu.ucla.pls.wiretap.wiretaps;
 
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Type;
+import org.objectweb.asm.commons.GeneratorAdapter;
 
 import edu.ucla.pls.wiretap.EventType;
 import edu.ucla.pls.wiretap.EventType.Emitter;
@@ -13,7 +14,7 @@ public class YieldObject extends Wiretapper {
 
   @Override
   public Wiretap createWiretap(MethodVisitor next,
-                               final MethodVisitor out) {
+                               final GeneratorAdapter out) {
     final Emitter yield = this.yield.getEmitter(out);
     return new Wiretap(next) {
 

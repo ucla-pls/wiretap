@@ -1,6 +1,7 @@
 package edu.ucla.pls.wiretap.wiretaps;
 
 import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.commons.GeneratorAdapter;
 
 import edu.ucla.pls.wiretap.EventType;
 import edu.ucla.pls.wiretap.EventType.Emitter;
@@ -12,7 +13,7 @@ public class RequestLock extends Wiretapper {
 
   @Override
   public Wiretap createWiretap(MethodVisitor next,
-                               MethodVisitor out) {
+                               GeneratorAdapter out) {
 
     final Emitter request = this.request.getEmitter(out);
     return new Wiretap(next) {

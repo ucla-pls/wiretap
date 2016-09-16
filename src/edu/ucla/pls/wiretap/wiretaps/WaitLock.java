@@ -1,6 +1,8 @@
 package edu.ucla.pls.wiretap.wiretaps;
 
 import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Type;
+import org.objectweb.asm.commons.GeneratorAdapter;
 
 import edu.ucla.pls.wiretap.EventType;
 import edu.ucla.pls.wiretap.EventType.Emitter;
@@ -14,25 +16,25 @@ public class WaitLock extends Wiretapper {
 
   @Override
   public Wiretap createWiretap(MethodVisitor next,
-                               MethodVisitor out) {
+                               GeneratorAdapter out) {
 
     final Emitter request = this.request.getEmitter(out);
     final Emitter acquire = this.acquire.getEmitter(out);
     final Emitter release = this.release.getEmitter(out);
 
-    return new LocalWiretap(next) {
+    return new Wiretap(next) {
 
       public void logAll() {
         // This method assumes that the Locking object is on the top of the
         // stack, and will leave it on the the top of the stack after: L -> L
         Integer id = createInstructionId();
-        out.visitInsn(DUP);
+        out.dup();
         // Assume that the recorder is the same for all Events.
         request.pushRecorder();
-        out.visitInsn(SWAP);
-        out.visitInsn(DUP2);
+        out.swap();
+        out.dup2();
         release.record(id);
-        out.visitInsn(DUP2);
+        out.dup2();
         request.record(id);
         acquire.record(id);
       }
@@ -44,30 +46,26 @@ public class WaitLock extends Wiretapper {
                                   boolean itf) {
 
         if (name.equals("wait") && owner.equals("java/lang/Object")) {
-
           if (desc.equals("()V")) {
             logAll();
           } else if (desc.equals("(J)V")) {
-            out.visitInsn(DUP2_X1);  // L,J -> J,L,J
-            out.visitInsn(POP2);     // J,L,J -> J,L
-
+            out.swap(Type.LONG_TYPE, Type.INT_TYPE);
             logAll();
+            out.swap(Type.INT_TYPE, Type.LONG_TYPE);
 
-            out.visitInsn(DUP_X2);  // J,L -> L,J,L
-            out.visitInsn(POP);     // J,L,J -> J,L
           } else if (desc.equals("(JI)V")) {
-            int freeLocal = getFreeLocal();
-            out.visitInsn(DUP_X2);              // -> L,I,J,I
-            out.visitInsn(POP);                 // -> L,I,J
-            out.visitVarInsn(LSTORE, freeLocal);  // -> L,I
-            out.visitInsn(SWAP);                // -> I,L
+            int freeLocal = out.newLocal(Type.LONG_TYPE);
+            // Lock, Long, Long2, Int
+            out.swap(Type.LONG_TYPE, Type.INT_TYPE);
+            out.storeLocal(freeLocal);
+            out.swap();
+            // Int, Lock
 
             logAll();
 
-            out.visitInsn(SWAP);                // -> L,I
-            out.visitVarInsn(LLOAD, freeLocal);   // -> L,I,J
-            out.visitInsn(DUP2_X1);             // -> L,J,I,J
-            out.visitInsn(POP2);                // -> L,J,I,J
+            out.swap();
+            out.loadLocal(freeLocal);
+            out.swap(Type.INT_TYPE, Type.LONG_TYPE);
           }
         }
         super.visitMethodInsn(opcode, owner, name, desc, itf);

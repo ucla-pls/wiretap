@@ -6,6 +6,7 @@ import java.util.List;
 import org.objectweb.asm.ClassReader.OffsetHandler;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.commons.GeneratorAdapter;
 
 import edu.ucla.pls.utils.Pair;
 import edu.ucla.pls.wiretap.managers.FieldManager;
@@ -45,7 +46,7 @@ public abstract class Wiretapper {
   }
 
   public Wiretap wiretap(MethodVisitor next,
-                         MethodVisitor out,
+                         GeneratorAdapter out,
                          Method method) {
     Wiretap tap = createWiretap(next, out);
     tap.setMethod(method);
@@ -55,14 +56,14 @@ public abstract class Wiretapper {
 
 
   public abstract Wiretap createWiretap(MethodVisitor next,
-                                        MethodVisitor out
+                                        GeneratorAdapter out
                                         );
 
 
   public abstract class Wiretap extends MethodVisitor implements Opcodes {
 
     private Method method;
-    protected MethodVisitor out;
+    protected GeneratorAdapter out;
 
     public Wiretap(MethodVisitor next) {
       super(Opcodes.ASM5, next);
@@ -72,7 +73,7 @@ public abstract class Wiretapper {
       this.method = method;
     }
 
-    public void setOut (MethodVisitor out) {
+    public void setOut (GeneratorAdapter out) {
       this.out = out;
     }
 
@@ -92,11 +93,6 @@ public abstract class Wiretapper {
       return method;
     }
 
-    public void pushThis() {
-      // Load this
-      out.visitVarInsn(ALOAD, 0);
-    }
-
     public void pushClass() {
       out.visitFieldInsn(GETSTATIC,
                          getMethod().getOwner(),
@@ -108,52 +104,8 @@ public abstract class Wiretapper {
       if (getMethod().isStatic()) {
         pushClass();
       } else {
-        pushThis();
+        out.loadThis();
       }
-    }
-
-  }
-
-  public abstract class LocalWiretap extends Wiretap {
-    private int max;
-    // We might need a bigger array;
-    private int[] movedTo = new int[100];
-
-    public LocalWiretap (MethodVisitor next) {
-      super(next);
-    }
-
-    public int getFreeLocal() {
-      int freeVar = ++max;
-      movedTo[freeVar] = -1;
-      return freeVar;
-    }
-
-    @Override
-    public void visitCode() {
-      max = getMethod().getNumberOfArgumentLocals();
-      super.visitCode();
-    }
-
-    @Override
-    public void visitVarInsn(int opcode, int var) {
-      if (var > max) {
-        max = var;
-      }
-
-      if (movedTo[var] == -1) {
-        movedTo[var] = getFreeLocal();
-      } else if (movedTo[var] == 0) {
-        movedTo[var] = var;
-      }
-
-      super.visitVarInsn(opcode, movedTo[var]);
-    }
-
-
-    @Override
-    public void visitMaxs(int maxStack, int maxLocals) {
-      super.visitMaxs(maxStack, max);
     }
 
   }
