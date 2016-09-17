@@ -5,7 +5,10 @@ import java.util.HashMap;
 
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Type;
+<<<<<<< HEAD
 import org.objectweb.asm.commons.GeneratorAdapter;
+=======
+>>>>>>> f2fdf19... Add ReadPrimitive and WritePrimitive
 
 import edu.ucla.pls.wiretap.EventType.Emitter;
 
@@ -51,7 +54,11 @@ public abstract class ValueWiretapper extends Wiretapper {
 
     public final HashMap<Integer, HashMap<Integer, Emitter>> byOpcode;
 
+<<<<<<< HEAD
     public ValueEmitter (GeneratorAdapter out) {
+=======
+    public ValueEmitter (MethodVisitor out) {
+>>>>>>> f2fdf19... Add ReadPrimitive and WritePrimitive
       vObject = valueObject.getEmitter(out);
       vChar   = valueChar.getEmitter(out);
       vByte   = valueByte.getEmitter(out);
@@ -68,6 +75,20 @@ public abstract class ValueWiretapper extends Wiretapper {
       byOpcode = new HashMap<Integer, HashMap<Integer, Emitter>>();
     }
 
+<<<<<<< HEAD
+=======
+    // public final createMap() {
+    //   int [] opcodes = { ILOAD,
+    //                      ISTORE,
+    //                      IALOAD,
+    //                      IASTORE,
+    //                      IADD,
+    //                      ISUB,
+    //                      IMUL,
+    //                      IDIV, IREM, INEG, ISHL, ISHR, IUSHR, IAND, IOR, IXOR, IRETURN };
+    // }
+
+>>>>>>> f2fdf19... Add ReadPrimitive and WritePrimitive
     public Emitter getTypedEmitter(int opcode, int type) {
       Integer key = Integer.valueOf(type);
       HashMap<Integer, Emitter> map = byOpcode.get(key);

@@ -70,6 +70,7 @@ public class Manager<D,M extends Managable<D>> implements Closeable {
     try {
       writer = new BufferedWriter(new FileWriter(out));
     } catch (IOException e) {
+      System.err.println("Could not open file-writer");
       e.printStackTrace();
       System.exit(-1);
     }

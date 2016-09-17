@@ -7,6 +7,10 @@ import org.objectweb.asm.commons.GeneratorAdapter;
 import edu.ucla.pls.wiretap.EventType;
 import edu.ucla.pls.wiretap.EventType.Emitter;
 import edu.ucla.pls.wiretap.ValueWiretapper;
+<<<<<<< HEAD
+import edu.ucla.pls.wiretap.managers.Field;
+=======
+>>>>>>> f2fdf19... Add ReadPrimitive and WritePrimitive
 
 public class ReadObject extends ValueWiretapper {
 
@@ -49,13 +53,16 @@ public class ReadObject extends ValueWiretapper {
                                  String desc) {
 
         if (desc.charAt(0) == 'L' || desc.charAt(0) == '[') {
+          Field f = getField(owner, name, desc);
+          // Ignore final fields, they do not contribute to synchronization.
+          if (! f.isFinal()) {
           switch (opcode) {
 
           case GETSTATIC:
             // Log the written value. Ignore everything else on the stack.
             super.visitFieldInsn(opcode, owner, name, desc);
             value.vObject.log();
-            read.emit(null, getFieldId(owner, name, desc), createInstructionId());
+            read.emit(null, f.getId(), createInstructionId());
             return;
 
           case GETFIELD:
@@ -67,9 +74,10 @@ public class ReadObject extends ValueWiretapper {
             // Consume value Object, Value -> Value, Object, Value
             value.vObject.consume();
             // Consume the object
-            read.consume(getFieldId(owner, name, desc), createInstructionId());
+            read.consume(f.getId(), createInstructionId());
             return;
 
+          }
           }
         }
 

@@ -6,6 +6,7 @@ import org.objectweb.asm.commons.GeneratorAdapter;
 import edu.ucla.pls.wiretap.EventType;
 import edu.ucla.pls.wiretap.EventType.Emitter;
 import edu.ucla.pls.wiretap.ValueWiretapper;
+import edu.ucla.pls.wiretap.managers.Field;
 
 public class WriteObject extends ValueWiretapper {
 
@@ -43,23 +44,28 @@ public class WriteObject extends ValueWiretapper {
                                  String name,
                                  String desc) {
 
-        if (desc.charAt(0) == 'L' || desc.charAt(0) == '[') {
-          switch (opcode) {
-          case PUTSTATIC:
-            // Log the written value. Ignore everything else on the stack.
-            value.vObject.log();
-            write.emit(null, getFieldId(owner, name, desc), createInstructionId());
-            break;
-          case PUTFIELD:
-            // Copy value up 1 in stack.  Object, Value -> Value, Object, Value
-            out.dupX1();
-            // Consume value -> Value, Object
-            value.vObject.consume();
-            // Copy the object -> Object, Value, Object
-            out.dupX1();
-            // Consume object
-            write.consume(getFieldId(owner, name, desc), createInstructionId());
-            break;
+        if ((desc.charAt(0) == 'L' || desc.charAt(0) == '[') ) {
+          // in some inner classes this$0 is used as value.
+          // Do not log final fields. It make no sense for synchronization.
+          Field f = getField(owner, name, desc);
+          if (! f.isFinal()) {
+            switch (opcode) {
+            case PUTSTATIC:
+              // Log the written value. Ignore everything else on the stack.
+              value.vObject.log();
+              write.emit(null, f.getId(), createInstructionId());
+              break;
+            case PUTFIELD:
+              // Copy value up 1 in stack.  Object, Value -> Value, Object, Value
+              out.dupX1();
+              // Consume value -> Value, Object
+              value.vObject.consume();
+              // Copy the object -> Object, Value, Object
+              out.dupX1();
+              // Consume object
+              write.consume(f.getId(), createInstructionId());
+              break;
+            }
           }
         }
         super.visitFieldInsn(opcode, owner, name, desc);

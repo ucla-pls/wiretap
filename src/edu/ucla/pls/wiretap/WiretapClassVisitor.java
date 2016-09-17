@@ -22,6 +22,8 @@ public class WiretapClassVisitor extends ClassVisitor {
   private final FieldManager fieldManager;
   private final List<Wiretapper> wiretappers;
 
+  private int version;
+
   public WiretapClassVisitor(ClassVisitor visitor,
                              String className,
                              List<Wiretapper> wiretappers,
@@ -36,7 +38,18 @@ public class WiretapClassVisitor extends ClassVisitor {
     Collections.reverse(this.wiretappers);
   }
 
-  public MethodVisitor visitMethod(int access,
+  @Override
+  public void visit(int version,
+                    int access,
+                    String name,
+                    String signature,
+                    String superName,
+                    String[] interfaces) {
+    this.version = version;
+    super.visit(version, access, name, signature, superName, interfaces);
+	}
+
+	public MethodVisitor visitMethod(int access,
                                    String name,
                                    String desc,
                                    String signature,
@@ -53,7 +66,7 @@ public class WiretapClassVisitor extends ClassVisitor {
 
     MethodVisitor next = generator;
     for (Wiretapper wiretapper : wiretappers) {
-      next = wiretapper.wiretap(next, generator, m);
+      next = wiretapper.wiretap(next, generator, m, version);
     }
     return next;
   }
@@ -62,6 +75,6 @@ public class WiretapClassVisitor extends ClassVisitor {
     for (Wiretapper tapper: wiretappers) {
       tapper.setOffsetHandler(reader.getOffsetHandler());
     }
-    reader.accept(this, 0);
+    reader.accept(this, ClassReader.EXPAND_FRAMES);
   }
 }

@@ -44,4 +44,8 @@ public class Field extends Managable<String>{
     return (access & Opcodes.ACC_STATIC) != 0;
   }
 
+  public boolean isFinal() {
+    return (access & Opcodes.ACC_FINAL) != 0;
+  }
+
 }

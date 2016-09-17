@@ -31,7 +31,9 @@ public class Logger implements Closeable {
   }
 
   public synchronized static void closeRecorder() throws IOException {
+    System.out.println("Closing recorders");
     for (Logger logger: loggers.values()) {
+      System.out.println("Closing " + logger);
       logger.close();
     }
   }
@@ -71,6 +73,10 @@ public class Logger implements Closeable {
     this.methods = Agent.v().getMethodManager();
     this.instructions = Agent.v().getInstructionManager();
     this.fields = Agent.v().getFieldManager();
+  }
+
+  public String toString() {
+    return "Logger_" + this.id;
   }
 
   private String ppMethod(int id) {

@@ -6,6 +6,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
 import java.lang.reflect.Method;
@@ -87,6 +89,7 @@ public class Agent implements ClassFileTransformer, Closeable {
 
       classWriter = new BufferedWriter(new FileWriter(properties.getClassFile()));
     } catch (IOException e) {
+      System.err.println("Some IO error occured");
       e.printStackTrace();
       System.exit(-1);
     } catch (Exception e) {
@@ -181,7 +184,7 @@ public class Agent implements ClassFileTransformer, Closeable {
 
       ClassWriter writer = new ClassWriter(reader, flag);
       WiretapClassVisitor wiretap =
-        new WiretapClassVisitor(new CheckClassAdapter(writer),
+        new WiretapClassVisitor(writer,
                                 className,
                                 properties.getWiretappers(),
                                 methods,
@@ -191,6 +194,7 @@ public class Agent implements ClassFileTransformer, Closeable {
       try {
         wiretap.readFrom(reader);
       } catch (Exception e) {
+        System.err.println("Could not read from reader");
         e.printStackTrace();
         System.exit(-1);
       }
@@ -199,6 +203,24 @@ public class Agent implements ClassFileTransformer, Closeable {
 
       if (properties.doDumpClassFiles()) {
         dumpClassFile(className, bytes);
+      }
+
+      // Test
+      StringWriter sw = new StringWriter();
+      PrintWriter pw = new PrintWriter(sw);
+      try {
+        CheckClassAdapter.verify(new ClassReader(bytes), loader, false, pw);
+        String result = sw.toString();
+        if (result.length() != 0) {
+          System.err.println("Test Failed");
+          System.err.println(result);
+          System.exit(-1);
+        }
+      } catch (Exception e) {
+        System.err.println("Test Failed");
+        System.err.println(sw.toString());
+        e.printStackTrace();
+        System.exit(-1);
       }
 
       return bytes;
@@ -218,8 +240,16 @@ public class Agent implements ClassFileTransformer, Closeable {
 
   private void dumpClassFile(String className, byte[] bytes) {
     String package_ = className.split("/[^/]+$")[0];
-    String classId = className.substring(package_.length() + 1);
-    File packageFolder = new File(properties.getClassFilesFolder().getValue(), package_);
+    String classId;
+    File packageFolder;
+    if (package_.equals(className)) {
+      package_ = "";
+      classId = className;
+      packageFolder = properties.getClassFilesFolder().getValue();
+    } else {
+      classId = className.substring(package_.length() + 1);
+      packageFolder = new File(properties.getClassFilesFolder().getValue(), package_);
+    }
     packageFolder.mkdirs();
 
     File classFile = new File(packageFolder, classId + ".class");

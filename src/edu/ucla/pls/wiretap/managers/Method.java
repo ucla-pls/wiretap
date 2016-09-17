@@ -30,6 +30,10 @@ public class Method extends Managable<String> {
     return owner;
   }
 
+  public Type getOwnerType () {
+    return Type.getObjectType(owner);
+  }
+
   public String getDescriptor() {
     return descriptor;
   }

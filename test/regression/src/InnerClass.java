@@ -26,7 +26,12 @@ public class InnerClass {
   }
 
   public static void main(String[] args) {
+    setup();
+  }
+
+  public static synchronized void setup () {
     InnerClass i = new InnerClass();
+    Class<?> clazz = InnerClass.class;
     System.out.println(i.getInner().getX());
   }
 }

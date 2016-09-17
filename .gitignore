@@ -1,3 +1,4 @@
 /build
 _wiretap/
 hs_err_pid*
+*.class

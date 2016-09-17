@@ -64,28 +64,65 @@ public class EventType implements Opcodes{
     public Type getType(int index) {
       return asmTypes[index];
     }
+<<<<<<< HEAD
 
-    public void dup() {
-      if (getType(0).getSize() == 2) {
-        out.dup2();
-      } else {
-        out.dup();
+    public void checkLength(int logged, Object [] args) {
+      if (args.length != types.length - logged) {
+        throw new IllegalArgumentException("The args needs to be " + logged + " shorter" +
+                                           " than the designated types");
       }
     }
 
-    public void dupX1() {
+    public void log(Object... args) {
+      checkLength(1, args);
+      if (getType(0).getSize() == 2) {
+        out.dup2();
+=======
+
+    public void dup() {
+      if (types[0] == Long.TYPE || types[0] == Double.TYPE) {
+        out.visitInsn(DUP2);
+>>>>>>> f2fdf19... Add ReadPrimitive and WritePrimitive
+      } else {
+        out.dup();
+      }
+<<<<<<< HEAD
+      consume(args);
+    }
+
+    public void logX1(Object... args) {
+      checkLength(1, args);
       if (getType(0).getSize() == 2) {
         out.dup2X1();
       } else {
         out.dupX1();
       }
+      consume(args);
     }
 
-    public void dupX2() {
+    public void logX2(Object... args) {
+      checkLength(1, args);
       if (getType(0).getSize() == 2) {
         out.dup2X2();
       } else {
         out.dupX2();
+      }
+=======
+    }
+
+    public void dupX1() {
+      if (types[0] == Long.TYPE || types[0] == Double.TYPE) {
+        out.visitInsn(DUP2_X1);
+      } else {
+        out.visitInsn(DUP_X1);
+      }
+    }
+
+    public void dupX2() {
+      if (types[0] == Long.TYPE || types[0] == Double.TYPE) {
+        out.visitInsn(DUP2_X2);
+      } else {
+        out.visitInsn(DUP_X2);
       }
     }
 
@@ -110,7 +147,8 @@ public class EventType implements Opcodes{
 
     public void logX2(Object... args) {
       checkLength(1, args);
-      dupX2();
+      dupX1();
+>>>>>>> f2fdf19... Add ReadPrimitive and WritePrimitive
       consume(args);
     }
 
@@ -121,7 +159,7 @@ public class EventType implements Opcodes{
       pushRecorder();
 
       // Swap the recorder and the logged object.
-      out.swap(recorderType, getType(0));
+      out.swap(getType(0), recorderType);
 
       // Record args;
       record(args);
