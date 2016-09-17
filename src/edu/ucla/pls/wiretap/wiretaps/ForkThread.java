@@ -23,7 +23,7 @@ public class ForkThread extends Wiretapper {
                                   String desc,
                                   boolean itf) {
 
-        if (name.equals("start") && desc.equals("()V")) {
+        if (name.equals("start") && desc.equals("()V") && owner.equals("java/lang/Thread")) {
           fork.log();
         }
 

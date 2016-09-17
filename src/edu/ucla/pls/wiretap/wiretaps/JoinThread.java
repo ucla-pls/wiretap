@@ -25,7 +25,7 @@ public class JoinThread extends Wiretapper {
                                   boolean itf) {
 
 
-        if (name.equals("join") && desc.equals("()V")) {
+        if (name.equals("join") && desc.equals("()V") && owner.equals("java/lang/Thread")) {
           out.dup();
 
           super.visitMethodInsn(opcode, owner, name, desc, itf);
