@@ -7,10 +7,7 @@ import org.objectweb.asm.commons.GeneratorAdapter;
 import edu.ucla.pls.wiretap.EventType;
 import edu.ucla.pls.wiretap.EventType.Emitter;
 import edu.ucla.pls.wiretap.ValueWiretapper;
-<<<<<<< HEAD
 import edu.ucla.pls.wiretap.managers.Field;
-=======
->>>>>>> f2fdf19... Add ReadPrimitive and WritePrimitive
 
 public class ReadObject extends ValueWiretapper {
 
