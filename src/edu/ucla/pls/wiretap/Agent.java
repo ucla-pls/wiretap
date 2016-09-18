@@ -139,9 +139,11 @@ public class Agent implements ClassFileTransformer, Closeable {
   }
 
   public void greet() {
-    System.err.println("====== Running program with Wiretap ======");
-    properties.list(System.err);
-    System.err.println("==========================================");
+    if (properties.isVerbose()) {
+      System.err.println("====== Running program with Wiretap ======");
+      properties.list(System.err);
+      System.err.println("==========================================");
+    }
   }
 
   static double getVersion () {
@@ -175,7 +177,9 @@ public class Agent implements ClassFileTransformer, Closeable {
     if (properties.isClassIgnored(className)) {
       return null;
     } else {
-      logClass(className, buffer);
+      if (properties.isVerbose()) {
+        logClass(className, buffer);
+      }
 
       int flag = ClassWriter.COMPUTE_MAXS;
       if (getVersion() >= 1.7) {
