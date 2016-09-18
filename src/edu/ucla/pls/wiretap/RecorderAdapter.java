@@ -29,14 +29,25 @@ public class RecorderAdapter extends GeneratorAdapter{
     this(recorder, Opcodes.ASM5, mv, access, name, desc);
   }
 
-  public void pushRecorder() {
+  @Override
+  public void visitCode() {
+    // In case that it has not been loaded at this point. do it.
+    if (local == -1) {
+      local = newLocal(recorderType);
+      invokeStatic(recorderType, recorderMethod);
+      storeLocal(local);
+    }
+    super.visitCode();
+	}
+
+	public void pushRecorder() {
     if (local == -1) {
       local = newLocal(recorderType);
       invokeStatic(recorderType, recorderMethod);
       dup();
       storeLocal(local);
     } else {
-      loadLocal(local);
+      loadLocal(local, recorderType);
     }
   }
 
