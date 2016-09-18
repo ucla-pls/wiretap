@@ -2,10 +2,10 @@ package edu.ucla.pls.wiretap.wiretaps;
 
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.commons.GeneratorAdapter;
 
 import edu.ucla.pls.wiretap.EventType;
 import edu.ucla.pls.wiretap.EventType.Emitter;
+import edu.ucla.pls.wiretap.RecorderAdapter;
 import edu.ucla.pls.wiretap.ValueWiretapper;
 import edu.ucla.pls.wiretap.managers.Field;
 
@@ -16,7 +16,7 @@ public class ReadObject extends ValueWiretapper {
 
   @Override
   public Wiretap createWiretap(MethodVisitor next,
-                               final GeneratorAdapter out,
+                               final RecorderAdapter out,
                                final ValueEmitter value) {
     final Emitter read = this.read.getEmitter(out);
     final Emitter readarray = this.readarray.getEmitter(out);

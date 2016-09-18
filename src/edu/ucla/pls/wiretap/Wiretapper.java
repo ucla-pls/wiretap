@@ -47,7 +47,7 @@ public abstract class Wiretapper {
   }
 
   public Wiretap wiretap(MethodVisitor next,
-                         GeneratorAdapter out,
+                         RecorderAdapter out,
                          Method method,
                          int version) {
     Wiretap tap = createWiretap(next, out);
@@ -59,14 +59,14 @@ public abstract class Wiretapper {
 
 
   public abstract Wiretap createWiretap(MethodVisitor next,
-                                        GeneratorAdapter out
+                                        RecorderAdapter out
                                         );
 
 
   public abstract class Wiretap extends MethodVisitor implements Opcodes {
 
     private Method method;
-    protected GeneratorAdapter out;
+    protected RecorderAdapter out;
     private int version;
 
     public Wiretap(MethodVisitor next) {
@@ -81,7 +81,7 @@ public abstract class Wiretapper {
       this.version = version;
     }
 
-    public void setOut (GeneratorAdapter out) {
+    public void setOut (RecorderAdapter out) {
       this.out = out;
     }
 

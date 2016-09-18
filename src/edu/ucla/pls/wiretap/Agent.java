@@ -186,9 +186,9 @@ public class Agent implements ClassFileTransformer, Closeable {
       WiretapClassVisitor wiretap =
         new WiretapClassVisitor(writer,
                                 className,
+                                properties.getRecorder(),
                                 properties.getWiretappers(),
-                                methods,
-                                fields);
+                                methods);
 
 
       try {

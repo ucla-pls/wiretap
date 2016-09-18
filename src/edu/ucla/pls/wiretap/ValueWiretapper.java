@@ -5,7 +5,6 @@ import java.util.HashMap;
 
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Type;
-import org.objectweb.asm.commons.GeneratorAdapter;
 
 import edu.ucla.pls.wiretap.EventType.Emitter;
 
@@ -22,14 +21,14 @@ public abstract class ValueWiretapper extends Wiretapper {
 
   @Override
   public Wiretap createWiretap(MethodVisitor next,
-                               GeneratorAdapter out
+                               RecorderAdapter out
                                ) {
     ValueEmitter emitter = new ValueEmitter(out);
     return createWiretap(next, out, emitter);
   }
 
   public abstract Wiretap createWiretap(MethodVisitor next,
-                                        GeneratorAdapter out,
+                                        RecorderAdapter out,
                                         ValueEmitter emitter
                                         );
 
@@ -51,7 +50,7 @@ public abstract class ValueWiretapper extends Wiretapper {
 
     public final HashMap<Integer, HashMap<Integer, Emitter>> byOpcode;
 
-    public ValueEmitter (GeneratorAdapter out) {
+    public ValueEmitter (RecorderAdapter out) {
       vObject = valueObject.getEmitter(out);
       vChar   = valueChar.getEmitter(out);
       vByte   = valueByte.getEmitter(out);

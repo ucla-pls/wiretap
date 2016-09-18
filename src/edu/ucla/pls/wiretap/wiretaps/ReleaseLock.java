@@ -6,6 +6,7 @@ import org.objectweb.asm.commons.GeneratorAdapter;
 
 import edu.ucla.pls.wiretap.EventType;
 import edu.ucla.pls.wiretap.EventType.Emitter;
+import edu.ucla.pls.wiretap.RecorderAdapter;
 import edu.ucla.pls.wiretap.Wiretapper;
 
 public class ReleaseLock extends Wiretapper {
@@ -14,7 +15,7 @@ public class ReleaseLock extends Wiretapper {
 
   @Override
   public Wiretap createWiretap(MethodVisitor next,
-                               final GeneratorAdapter out) {
+                               final RecorderAdapter out) {
     final Emitter release = this.release.getEmitter(out);
     return new Wiretap(next) {
       private final Label
@@ -42,7 +43,7 @@ public class ReleaseLock extends Wiretapper {
           release.consume(createInstructionId());
         } else if (opcode == RETURN && getMethod().isSynchronized()) {
           // If the method is synchronized return.
-          release.pushRecorder();
+          out.pushRecorder();
           pushContext();
           release.record(createInstructionId());
           super.visitInsn(opcode);
@@ -58,7 +59,7 @@ public class ReleaseLock extends Wiretapper {
         if (getMethod().isSynchronized()) {
           out.mark(end);
 
-          release.pushRecorder();
+          out.pushRecorder();
           pushContext();
           release.record(createInstructionId());
 

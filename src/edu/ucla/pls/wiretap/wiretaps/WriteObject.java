@@ -5,6 +5,7 @@ import org.objectweb.asm.commons.GeneratorAdapter;
 
 import edu.ucla.pls.wiretap.EventType;
 import edu.ucla.pls.wiretap.EventType.Emitter;
+import edu.ucla.pls.wiretap.RecorderAdapter;
 import edu.ucla.pls.wiretap.ValueWiretapper;
 import edu.ucla.pls.wiretap.managers.Field;
 
@@ -15,7 +16,7 @@ public class WriteObject extends ValueWiretapper {
 
   @Override
   public Wiretap createWiretap(MethodVisitor next,
-                               final GeneratorAdapter out,
+                               final RecorderAdapter out,
                                final ValueEmitter value) {
     final Emitter write = this.write.getEmitter(out);
     final Emitter writearray = this.writearray.getEmitter(out);

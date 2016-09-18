@@ -2,10 +2,10 @@ package edu.ucla.pls.wiretap.wiretaps;
 
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.commons.GeneratorAdapter;
 
 import edu.ucla.pls.wiretap.EventType;
 import edu.ucla.pls.wiretap.EventType.Emitter;
+import edu.ucla.pls.wiretap.RecorderAdapter;
 import edu.ucla.pls.wiretap.Wiretapper;
 
 public class JoinThread extends Wiretapper {
@@ -14,7 +14,7 @@ public class JoinThread extends Wiretapper {
 
   @Override
   public Wiretap createWiretap(MethodVisitor next,
-                               final GeneratorAdapter out) {
+                               final RecorderAdapter out) {
     final Emitter join = this.join.getEmitter(out);
     return new Wiretap(next) {
 

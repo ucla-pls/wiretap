@@ -2,10 +2,10 @@ package edu.ucla.pls.wiretap.wiretaps;
 
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Type;
-import org.objectweb.asm.commons.GeneratorAdapter;
 
 import edu.ucla.pls.wiretap.EventType;
 import edu.ucla.pls.wiretap.EventType.Emitter;
+import edu.ucla.pls.wiretap.RecorderAdapter;
 import edu.ucla.pls.wiretap.Wiretapper;
 
 public class WaitLock extends Wiretapper {
@@ -16,7 +16,7 @@ public class WaitLock extends Wiretapper {
 
   @Override
   public Wiretap createWiretap(MethodVisitor next,
-                               GeneratorAdapter out) {
+                               RecorderAdapter out) {
 
     final Emitter request = this.request.getEmitter(out);
     final Emitter acquire = this.acquire.getEmitter(out);
@@ -30,7 +30,7 @@ public class WaitLock extends Wiretapper {
         Integer id = createInstructionId();
         out.dup();
         // Assume that the recorder is the same for all Events.
-        request.pushRecorder();
+        out.pushRecorder();
         out.swap();
         out.dup2();
         release.record(id);

@@ -11,7 +11,6 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.commons.GeneratorAdapter;
 import org.objectweb.asm.commons.TryCatchBlockSorter;
 
-import edu.ucla.pls.wiretap.managers.FieldManager;
 import edu.ucla.pls.wiretap.managers.Method;
 import edu.ucla.pls.wiretap.managers.MethodManager;
 
@@ -19,21 +18,21 @@ public class WiretapClassVisitor extends ClassVisitor {
 
   private final String className;
   private final MethodManager methodManager;
-  private final FieldManager fieldManager;
   private final List<Wiretapper> wiretappers;
+  private final Class<?> recorder;
 
   private int version;
 
   public WiretapClassVisitor(ClassVisitor visitor,
                              String className,
+                             Class<?> recorder,
                              List<Wiretapper> wiretappers,
-                             MethodManager methodManager,
-                             FieldManager fieldManager
+                             MethodManager methodManager
                              ) {
     super(Opcodes.ASM5, visitor);
     this.className = className;
     this.methodManager = methodManager;
-    this.fieldManager = fieldManager;
+    this.recorder = recorder;
     this.wiretappers = new ArrayList<Wiretapper>(wiretappers);
     Collections.reverse(this.wiretappers);
   }
@@ -62,7 +61,7 @@ public class WiretapClassVisitor extends ClassVisitor {
     MethodVisitor visitor =
         super.visitMethod(access, name, desc, signature, exceptions);
     visitor = new TryCatchBlockSorter(visitor, access, name, desc, signature, exceptions);
-    GeneratorAdapter generator = new GeneratorAdapter(visitor, access, name, desc);
+    RecorderAdapter generator = new RecorderAdapter(recorder, visitor, access, name, desc);
 
     MethodVisitor next = generator;
     for (Wiretapper wiretapper : wiretappers) {

@@ -35,15 +35,15 @@ public class EventType implements Opcodes{
     this.recorder = recorderType.getInternalName();
   }
 
-  public Emitter getEmitter(GeneratorAdapter out) {
+  public Emitter getEmitter(RecorderAdapter out) {
     return new Emitter(out);
   }
 
   public class Emitter {
 
-    private final GeneratorAdapter out;
+    private final RecorderAdapter out;
 
-    public Emitter(GeneratorAdapter out) {
+    public Emitter(RecorderAdapter out) {
       this.out = out;
     }
 
@@ -55,7 +55,7 @@ public class EventType implements Opcodes{
       }
 
       // pushRecorder onto the stack
-      pushRecorder();
+      out.pushRecorder();
 
       // Record.
       record(args);
@@ -107,7 +107,7 @@ public class EventType implements Opcodes{
       checkLength(1, args);
 
       // Push the recorder
-      pushRecorder();
+      out.pushRecorder();
 
       // Swap the recorder and the logged object.
       out.swap(getType(0), recorderType);
@@ -121,7 +121,7 @@ public class EventType implements Opcodes{
       checkLength(2, args);
 
       // Push the recorder
-      pushRecorder();
+      out.pushRecorder();
 
       // Swap the recorder and the logged object.
       if (types[0] == Long.TYPE || types[0] == Double.TYPE ||
@@ -166,13 +166,6 @@ public class EventType implements Opcodes{
                           false);
     }
 
-    /** Pushes the recoder onto the stack */
-    public void pushRecorder() {
-      out.visitMethodInsn(INVOKESTATIC,
-                          recorder, "getRecorder",
-                          "()L" + recorder + ";", false);
-    }
-
     private boolean primitiveTypeCheck(Class<?> c, Object o) {
       if (o instanceof Integer) {
         return c == Integer.TYPE;
@@ -198,6 +191,5 @@ public class EventType implements Opcodes{
         throw new IllegalArgumentException("Only Constants allowed");
       }
     }
-
   }
 }
