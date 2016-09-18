@@ -64,11 +64,10 @@ public class RecorderAdapter extends GeneratorAdapter{
 
   public void pushContext() {
     if (method.isStatic()) {
-      if (version < Opcodes.V1_5) {
+      if ((version & 0xFFFF) < Opcodes.V1_5) {
         push(method.getOwner().replace('/', '.'));
         invokeStatic(CLASS_TYPE, FOR_NAME);
       } else {
-        System.err.println(version);
         push(method.getOwnerType());
       }
     } else {
