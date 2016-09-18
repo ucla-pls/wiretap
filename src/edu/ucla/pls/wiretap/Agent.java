@@ -215,13 +215,11 @@ public class Agent implements ClassFileTransformer, Closeable {
           if (result.length() != 0) {
             System.err.println("Test Failed");
             System.err.println(result);
-            System.exit(-1);
           }
         } catch (Exception e) {
           System.err.println("Test Failed");
           System.err.println(sw.toString());
           e.printStackTrace();
-          System.exit(-1);
         }
       }
 
