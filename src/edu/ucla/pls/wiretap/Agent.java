@@ -205,22 +205,24 @@ public class Agent implements ClassFileTransformer, Closeable {
         dumpClassFile(className, bytes);
       }
 
-      // Test
-      StringWriter sw = new StringWriter();
-      PrintWriter pw = new PrintWriter(sw);
-      try {
-        CheckClassAdapter.verify(new ClassReader(bytes), loader, false, pw);
-        String result = sw.toString();
-        if (result.length() != 0) {
+      if (properties.doVerifyTransformation()) {
+        // Test
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+        try {
+          CheckClassAdapter.verify(new ClassReader(bytes), loader, false, pw);
+          String result = sw.toString();
+          if (result.length() != 0) {
+            System.err.println("Test Failed");
+            System.err.println(result);
+            System.exit(-1);
+          }
+        } catch (Exception e) {
           System.err.println("Test Failed");
-          System.err.println(result);
+          System.err.println(sw.toString());
+          e.printStackTrace();
           System.exit(-1);
         }
-      } catch (Exception e) {
-        System.err.println("Test Failed");
-        System.err.println(sw.toString());
-        e.printStackTrace();
-        System.exit(-1);
       }
 
       return bytes;

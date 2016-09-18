@@ -82,6 +82,11 @@ public class WiretapProperties extends Properties {
     return getClassFilesFolder().hasValue();
   }
 
+  public boolean doVerifyTransformation() {
+    return getBoolean("verify", false);
+  }
+
+
   public List<Wiretapper> getWiretappers() {
     if (wiretappers == null) {
 
@@ -178,6 +183,15 @@ public class WiretapProperties extends Properties {
       return def;
     } else {
       return new File(value);
+    }
+  }
+
+  public boolean getBoolean(String key, boolean def) {
+    String value = getProperty(key);
+    if (value == null) {
+      return def;
+    } else {
+      return Boolean.parseBoolean(value);
     }
   }
 
