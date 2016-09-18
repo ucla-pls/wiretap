@@ -86,6 +86,10 @@ public class WiretapProperties extends Properties {
     return getBoolean("verify", false);
   }
 
+  public boolean isVerbose() {
+    return getBoolean("verbose", false);
+  }
+
 
   public List<Wiretapper> getWiretappers() {
     if (wiretappers == null) {
