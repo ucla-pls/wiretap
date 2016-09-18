@@ -34,6 +34,18 @@ public class Method extends Managable<String> {
     return Type.getObjectType(owner);
   }
 
+  public String getName () {
+    return this.name;
+  }
+
+  public int getAccess () {
+    return this.access;
+  }
+
+  public String getDesc () {
+    return this.desc;
+  }
+
   public String getDescriptor() {
     return descriptor;
   }

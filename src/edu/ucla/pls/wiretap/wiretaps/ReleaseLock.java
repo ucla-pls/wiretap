@@ -44,7 +44,7 @@ public class ReleaseLock extends Wiretapper {
         } else if (opcode == RETURN && getMethod().isSynchronized()) {
           // If the method is synchronized return.
           out.pushRecorder();
-          pushContext();
+          out.pushContext();
           release.record(createInstructionId());
           super.visitInsn(opcode);
         } else {
@@ -60,7 +60,7 @@ public class ReleaseLock extends Wiretapper {
           out.mark(end);
 
           out.pushRecorder();
-          pushContext();
+          out.pushContext();
           release.record(createInstructionId());
 
           // Re-throw the exception

@@ -61,11 +61,12 @@ public class WiretapClassVisitor extends ClassVisitor {
     MethodVisitor visitor =
         super.visitMethod(access, name, desc, signature, exceptions);
     visitor = new TryCatchBlockSorter(visitor, access, name, desc, signature, exceptions);
-    RecorderAdapter generator = new RecorderAdapter(recorder, visitor, access, name, desc);
+
+    RecorderAdapter generator = new RecorderAdapter(recorder, version, visitor, m);
 
     MethodVisitor next = generator;
     for (Wiretapper wiretapper : wiretappers) {
-      next = wiretapper.wiretap(next, generator, m, version);
+      next = wiretapper.wiretap(next, generator, m);
     }
     return next;
   }

@@ -48,12 +48,11 @@ public abstract class Wiretapper {
 
   public Wiretap wiretap(MethodVisitor next,
                          RecorderAdapter out,
-                         Method method,
-                         int version) {
+                         Method method
+                         ) {
     Wiretap tap = createWiretap(next, out);
     tap.setMethod(method);
     tap.setOut(out);
-    tap.setVersion(version);
     return tap;
   }
 
@@ -67,7 +66,6 @@ public abstract class Wiretapper {
 
     private Method method;
     protected RecorderAdapter out;
-    private int version;
 
     public Wiretap(MethodVisitor next) {
       super(Opcodes.ASM5, next);
@@ -75,10 +73,6 @@ public abstract class Wiretapper {
 
     public void setMethod (Method method) {
       this.method = method;
-    }
-
-    public void setVersion (int version) {
-      this.version = version;
     }
 
     public void setOut (RecorderAdapter out) {
@@ -103,22 +97,6 @@ public abstract class Wiretapper {
 
     public Method getMethod () {
       return method;
-    }
-
-    private final Type CLASS_TYPE = Type.getType(Class.class);
-    private final org.objectweb.asm.commons.Method FOR_NAME =
-      new org.objectweb.asm.commons.Method("forName", "(Ljava/lang/String;)Ljava/lang/Class;");
-    public void pushContext() {
-      if (getMethod().isStatic()) {
-        if (version < V1_5) {
-          out.push(method.getOwner().replace('/', '.'));
-          out.invokeStatic(CLASS_TYPE, FOR_NAME);
-        } else {
-          out.push(method.getOwnerType());
-        }
-      } else {
-        out.loadThis();
-      }
     }
 
   }
