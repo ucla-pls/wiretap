@@ -44,7 +44,8 @@ public class BinaryLogger implements Closeable {
       int id = loggers.size();
       File file = new File(logfolder, String.format("%06d.log", id));
       try {
-        OutputStream writer = new BufferedOutputStream(new FileOutputStream(file));
+        OutputStream writer = new BufferedOutputStream(new FileOutputStream(file),
+                                                       32768);
         logger = new BinaryLogger(id, writer);
         loggers.put(thread, logger);
       } catch (IOException e) {
@@ -163,7 +164,7 @@ public class BinaryLogger implements Closeable {
     read(a, index, inst);
   }
 
-  public void write(Object o, int field, int inst) {
+  public final void write(Object o, int field, int inst) {
     int offset = 0;
     event[offset++] = (byte) (WRITE + valueType);
     offset = writeInt(inst, event, offset);
@@ -173,7 +174,7 @@ public class BinaryLogger implements Closeable {
     output(offset + valueSize);
   }
 
-  public void writearray(Object a, int index, int inst) {
+  public final void writearray(Object a, int index, int inst) {
     write(a, index, inst);
   }
 
@@ -211,9 +212,9 @@ public class BinaryLogger implements Closeable {
 
   public final void value(short v) {
     int offset = 0;
-    value[offset++] = (byte)(v >>> 8);
-    value[offset++] = (byte)(v);
-    valueSize = offset;
+    value[0] = (byte)(v >>> 8);
+    value[1] = (byte)(v);
+    valueSize = 2;
     valueType = SHORT_TYPE;
   }
 
