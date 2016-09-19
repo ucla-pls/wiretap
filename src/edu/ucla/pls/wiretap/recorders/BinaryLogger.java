@@ -2,7 +2,6 @@ package edu.ucla.pls.wiretap.recorders;
 
 import java.io.BufferedOutputStream;
 import java.io.Closeable;
-import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -10,6 +9,7 @@ import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
 
+import edu.ucla.pls.wiretap.Formatter;
 import edu.ucla.pls.wiretap.WiretapProperties;
 
 /** The logger logs events to file.
@@ -42,7 +42,7 @@ public class BinaryLogger implements Closeable {
     BinaryLogger logger = loggers.get(thread);
     if (logger == null) {
       int id = loggers.size();
-      File file = new File(logfolder, String.format("%06d.log", id));
+      File file = new File(logfolder, Formatter.format(id, 10, 6) + ".log");
       try {
         OutputStream writer = new BufferedOutputStream(new FileOutputStream(file),
                                                        32768);
@@ -80,13 +80,7 @@ public class BinaryLogger implements Closeable {
   }
 
   private final int ppObject(Object object) {
-    int id;
-    if (object != null) {
-      id = System.identityHashCode(object);
-    } else {
-      id = 0;
-    }
-    return id;
+    return object != null ? System.identityHashCode(object) : 0;
   }
 
   public static final byte FORK = 1;

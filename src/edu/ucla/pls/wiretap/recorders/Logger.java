@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import edu.ucla.pls.wiretap.Agent;
+import edu.ucla.pls.wiretap.Formatter;
 import edu.ucla.pls.wiretap.WiretapProperties;
 import edu.ucla.pls.wiretap.managers.FieldManager;
 import edu.ucla.pls.wiretap.managers.InstructionManager;
@@ -45,8 +46,10 @@ public class Logger implements Closeable {
     Logger logger = loggers.get(thread);
     if (logger == null) {
       int id = loggers.size();
-      File file = new File(logfolder, String.format("%06d.log", id));
       try {
+        String name = Formatter.format(id, 10, 6);
+        System.out.println(name);
+        File file = new File(logfolder, name + ".log");
         BufferedWriter writer = new BufferedWriter(new FileWriter(file));
         logger = new Logger(id, writer);
         loggers.put(thread, logger);
