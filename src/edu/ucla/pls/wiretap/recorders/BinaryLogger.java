@@ -91,7 +91,7 @@ public class BinaryLogger implements Closeable {
   public static final byte ACQUIRE = 5;
 
   public static final byte READ = 6;
-  public static final byte WRITE = 14;
+  public static final byte WRITE = 7;
 
   public static final int writeInt(int value, byte [] array, int offset) {
     array[offset++] = (byte)(value >>> 24);
@@ -107,14 +107,14 @@ public class BinaryLogger implements Closeable {
     } catch (Exception e) {}
   }
 
-  public final void fork(Thread thread) {
+  public final void fork(Thread thread, int inst) {
     int offset = 0;
     event[offset++] = FORK;
     offset = writeInt(ppThread(thread), event, offset);
     output(offset);
   }
 
-  public final void join(Thread thread) {
+  public final void join(Thread thread, int inst) {
     int offset = 0;
     event[offset++] = JOIN;
     offset = writeInt(ppThread(thread), event, offset);
@@ -147,7 +147,7 @@ public class BinaryLogger implements Closeable {
 
   public final void read(Object o, int field, int inst) {
     int offset = 0;
-    event[offset++] = (byte) (READ + valueType);
+    event[offset++] = (byte) (READ | valueType);
     offset = writeInt(inst, event, offset);
     offset = writeInt(ppObject(o), event, offset);
     offset = writeInt(field, event, offset);
@@ -160,7 +160,7 @@ public class BinaryLogger implements Closeable {
 
   public final void write(Object o, int field, int inst) {
     int offset = 0;
-    event[offset++] = (byte) (WRITE + valueType);
+    event[offset++] = (byte) (WRITE | valueType );
     offset = writeInt(inst, event, offset);
     offset = writeInt(ppObject(o), event, offset);
     offset = writeInt(field, event, offset);
@@ -173,13 +173,13 @@ public class BinaryLogger implements Closeable {
   }
 
   public static final byte BYTE_TYPE   = 0;
-  public static final byte CHAR_TYPE   = 1;
-  public static final byte SHORT_TYPE  = 2;
-  public static final byte INT_TYPE    = 3;
-  public static final byte LONG_TYPE   = 4;
-  public static final byte FLOAT_TYPE  = 5;
-  public static final byte DOUBLE_TYPE = 6;
-  public static final byte OBJECT_TYPE = 7;
+  public static final byte CHAR_TYPE   = 1 <<< 4;
+  public static final byte SHORT_TYPE  = 2 <<< 4;
+  public static final byte INT_TYPE    = 3 <<< 4;
+  public static final byte LONG_TYPE   = 4 <<< 4;
+  public static final byte FLOAT_TYPE  = 5 <<< 4;
+  public static final byte DOUBLE_TYPE = 6 <<< 4;
+  public static final byte OBJECT_TYPE = 7 <<< 4;
 
   private byte[] value = new byte [8];
   private int valueSize;

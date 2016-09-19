@@ -9,7 +9,7 @@ import edu.ucla.pls.wiretap.Wiretapper;
 
 public class ForkThread extends Wiretapper {
 
-  EventType fork = declareEventType("fork", Thread.class);
+  EventType fork = declareEventType("fork", Thread.class, int.class);
 
   @Override
   public Wiretap createWiretap(MethodVisitor next,
@@ -24,7 +24,7 @@ public class ForkThread extends Wiretapper {
                                   boolean itf) {
 
         if (name.equals("start") && desc.equals("()V") && owner.equals("java/lang/Thread")) {
-          fork.log();
+          fork.log(createInstructionId());
         }
 
         super.visitMethodInsn(opcode, owner, name, desc, itf);
