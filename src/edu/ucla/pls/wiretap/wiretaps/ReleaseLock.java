@@ -41,7 +41,7 @@ public class ReleaseLock extends Wiretapper {
           out.dup();
           super.visitInsn(opcode);
           release.consume(createInstructionId());
-        } else if (opcode == RETURN && getMethod().isSynchronized()) {
+        } else if (opcode <= RETURN && opcode >= IRETURN && getMethod().isSynchronized()) {
           // If the method is synchronized return.
           out.pushRecorder();
           out.pushContext();

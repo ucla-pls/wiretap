@@ -32,8 +32,7 @@ public class ExitMethod extends Wiretapper {
 
       @Override
       public void visitInsn(int opcode) {
-
-        if (opcode == RETURN) {
+        if (opcode <= RETURN && opcode >= IRETURN) {
           exit.emit(getMethod().getId());
         }
         super.visitInsn(opcode);

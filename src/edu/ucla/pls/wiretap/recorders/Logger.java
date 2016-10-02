@@ -48,7 +48,6 @@ public class Logger implements Closeable {
       int id = loggers.size();
       try {
         String name = Formatter.format(id, 10, 6);
-        System.out.println(name);
         File file = new File(logfolder, name + ".log");
         BufferedWriter writer = new BufferedWriter(new FileWriter(file));
         logger = new Logger(id, writer);

@@ -177,6 +177,13 @@ public class Agent implements ClassFileTransformer, Closeable {
     if (properties.isClassIgnored(className)) {
       return null;
     } else {
+      try {
+        classWriter.write(className);
+        classWriter.write("\n");
+      } catch (IOException e) {
+        //Silent exception;
+      }
+
       if (properties.isVerbose()) {
         logClass(className, buffer);
       }
@@ -234,12 +241,6 @@ public class Agent implements ClassFileTransformer, Closeable {
   private void logClass(String className, byte[] bytes)  {
     System.err.println("Class '" + className + "' has " + bytes.length + " bytes.");
 
-    try {
-      classWriter.write(className);
-      classWriter.write("\n");
-    } catch (IOException e) {
-      //Silent exception;
-    }
   }
 
   private void dumpClassFile(String className, byte[] bytes) {
