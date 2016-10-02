@@ -87,8 +87,8 @@ public class BinaryLogger implements Closeable {
   public static final byte JOIN = 2;
 
   public static final byte REQUEST = 3;
-  public static final byte RELEASE = 4;
-  public static final byte ACQUIRE = 5;
+  public static final byte ACQUIRE = 4;
+  public static final byte RELEASE = 5;
 
   public static final byte READ = 6;
   public static final byte WRITE = 7;
@@ -110,6 +110,7 @@ public class BinaryLogger implements Closeable {
   public final void fork(Thread thread, int inst) {
     int offset = 0;
     event[offset++] = FORK;
+    offset = writeInt(inst, event, offset);
     offset = writeInt(ppThread(thread), event, offset);
     output(offset);
   }
@@ -117,6 +118,7 @@ public class BinaryLogger implements Closeable {
   public final void join(Thread thread, int inst) {
     int offset = 0;
     event[offset++] = JOIN;
+    offset = writeInt(inst, event, offset);
     offset = writeInt(ppThread(thread), event, offset);
     output(offset);
   }
@@ -173,13 +175,13 @@ public class BinaryLogger implements Closeable {
   }
 
   public static final byte BYTE_TYPE   = 0;
-  public static final byte CHAR_TYPE   = 1 <<< 4;
-  public static final byte SHORT_TYPE  = 2 <<< 4;
-  public static final byte INT_TYPE    = 3 <<< 4;
-  public static final byte LONG_TYPE   = 4 <<< 4;
-  public static final byte FLOAT_TYPE  = 5 <<< 4;
-  public static final byte DOUBLE_TYPE = 6 <<< 4;
-  public static final byte OBJECT_TYPE = 7 <<< 4;
+  public static final byte CHAR_TYPE   = (1 << 4);
+  public static final byte SHORT_TYPE  = (2 << 4);
+  public static final byte INT_TYPE    = (3 << 4);
+  public static final byte LONG_TYPE   = (4 << 4);
+  public static final byte FLOAT_TYPE  = (5 << 4);
+  public static final byte DOUBLE_TYPE = (6 << 4);
+  public static final byte OBJECT_TYPE = (7 << 4);
 
   private byte[] value = new byte [8];
   private int valueSize;
