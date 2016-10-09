@@ -63,6 +63,7 @@ public class BinaryLogger implements Closeable {
 
   private final int id;
   private final OutputStream writer;
+  private final static boolean writeInstruction = true;
 
   private final byte [] event = new byte[MAX_SIZE];
 
@@ -110,7 +111,9 @@ public class BinaryLogger implements Closeable {
   public final void fork(Thread thread, int inst) {
     int offset = 0;
     event[offset++] = FORK;
-    offset = writeInt(inst, event, offset);
+    if (writeInstruction) {
+      offset = writeInt(inst, event, offset);
+    }
     offset = writeInt(ppThread(thread), event, offset);
     output(offset);
   }
@@ -118,7 +121,9 @@ public class BinaryLogger implements Closeable {
   public final void join(Thread thread, int inst) {
     int offset = 0;
     event[offset++] = JOIN;
-    offset = writeInt(inst, event, offset);
+    if (writeInstruction) {
+      offset = writeInt(inst, event, offset);
+    }
     offset = writeInt(ppThread(thread), event, offset);
     output(offset);
   }
@@ -126,7 +131,9 @@ public class BinaryLogger implements Closeable {
   public final void request(Object o, int inst) {
     int offset = 0;
     event[offset++] = REQUEST;
-    offset = writeInt(inst, event, offset);
+    if (writeInstruction) {
+      offset = writeInt(inst, event, offset);
+    }
     offset = writeInt(ppObject(o), event, offset);
     output(offset);
   }
@@ -134,7 +141,9 @@ public class BinaryLogger implements Closeable {
   public final void release(Object o, int inst) {
     int offset = 0;
     event[offset++] = RELEASE;
-    offset = writeInt(inst, event, offset);
+    if (writeInstruction) {
+      offset = writeInt(inst, event, offset);
+    }
     offset = writeInt(ppObject(o), event, offset);
     output(offset);
   }
@@ -142,7 +151,9 @@ public class BinaryLogger implements Closeable {
   public final void acquire (Object o, int inst) {
     int offset = 0;
     event[offset++] = ACQUIRE;
-    offset = writeInt(inst, event, offset);
+    if (writeInstruction) {
+      offset = writeInt(inst, event, offset);
+    }
     offset = writeInt(ppObject(o), event, offset);
     output(offset);
   }
@@ -150,7 +161,9 @@ public class BinaryLogger implements Closeable {
   public final void read(Object o, int field, int inst) {
     int offset = 0;
     event[offset++] = (byte) (READ | valueType);
-    offset = writeInt(inst, event, offset);
+    if (writeInstruction) {
+      offset = writeInt(inst, event, offset);
+    }
     offset = writeInt(ppObject(o), event, offset);
     offset = writeInt(field, event, offset);
     System.arraycopy(value, 0, event, offset, valueSize);
@@ -163,7 +176,9 @@ public class BinaryLogger implements Closeable {
   public final void write(Object o, int field, int inst) {
     int offset = 0;
     event[offset++] = (byte) (WRITE | valueType );
-    offset = writeInt(inst, event, offset);
+    if (writeInstruction) {
+      offset = writeInt(inst, event, offset);
+    }
     offset = writeInt(ppObject(o), event, offset);
     offset = writeInt(field, event, offset);
     System.arraycopy(value, 0, event, offset, valueSize);
