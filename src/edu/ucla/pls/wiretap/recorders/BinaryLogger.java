@@ -24,18 +24,45 @@ public class BinaryLogger implements Closeable {
 
   private static File logfolder;
 
-  private static final AtomicInteger syncState = new AtomicInteger();
+  // Because of the logic system this variable does not even have to be volatile.
+  private static int tick = 0;
+  private static final AtomicInteger totalOrderId = new AtomicInteger();
+
   private static final AtomicInteger loggerId = new AtomicInteger();
+
+  private static Thread synchThread;
 
   public static void setupRecorder(WiretapProperties properties) {
     logfolder = properties.getLogFolder();
     logfolder.mkdirs();
+
+    final long synchtime = properties.getSynchTime();
+    if (synchtime > 0) {
+      synchThread = new Thread(new Runnable () {
+          public void run ()  {
+            try {
+              while (!Thread.currentThread().isInterrupted()) {
+                Thread.sleep(synchtime);
+                tick = tick + 1;
+              }
+            }
+            catch (InterruptedException e) {
+              System.out.println("Error " + e.getMessage());
+              e.printStackTrace();
+            }
+          }
+      });
+    }
   }
 
   public static void closeRecorder() throws IOException {
-    System.out.println("Closing recorders");
+    if (synchThread != null) {
+      System.err.println("Interrupting Synch Thread");
+      synchThread.interrupt();
+    }
+    System.err.println("Closing recorders");
     for (BinaryLogger logger: loggers.values()) {
-      System.out.println("Closing " + logger);
+      System.err.println("Closing " + logger);
       logger.close();
     }
   }
@@ -83,14 +110,15 @@ public class BinaryLogger implements Closeable {
     return "Logger_" + this.id;
   }
 
-  private final int ppThread(Thread thread) {
+  private static final int ppThread(Thread thread) {
     return getBinaryLogger(thread).getId();
   }
 
-  private final int ppObject(Object object) {
+  private static final int ppObject(Object object) {
     return object != null ? System.identityHashCode(object) : 0;
   }
 
+  public static final byte SYNC = 1;
   public static final byte FORK = 1;
   public static final byte JOIN = 2;
 
@@ -112,6 +140,13 @@ public class BinaryLogger implements Closeable {
   public final void output(int size) {
     try {
       writer.write(event, 0, size);
+      int localTick = tick;
+      if (localTick != lastSync) {
+        event [0] = SYNC;
+        int offset = writeInt(totalOrderId.getAndIncrement(), event, 1);
+        writer.write(event, 0, offset);
+        lastSync = localTick;
+      }
     } catch (Exception e) {}
   }
 
@@ -196,14 +231,14 @@ public class BinaryLogger implements Closeable {
     write(a, index, inst);
   }
 
-  public static final byte BYTE_TYPE   = 0;
-  public static final byte CHAR_TYPE   = (1 << 4);
-  public static final byte SHORT_TYPE  = (2 << 4);
-  public static final byte INT_TYPE    = (3 << 4);
-  public static final byte LONG_TYPE   = (4 << 4);
-  public static final byte FLOAT_TYPE  = (5 << 4);
-  public static final byte DOUBLE_TYPE = (6 << 4);
-  public static final byte OBJECT_TYPE = (7 << 4);
+  public static final int BYTE_TYPE   = 0;
+  public static final int CHAR_TYPE   = (1 << 4);
+  public static final int SHORT_TYPE  = (2 << 4);
+  public static final int INT_TYPE    = (3 << 4);
+  public static final int LONG_TYPE   = (4 << 4);
+  public static final int FLOAT_TYPE  = (5 << 4);
+  public static final int DOUBLE_TYPE = (6 << 4);
+  public static final int OBJECT_TYPE = (7 << 4);
 
   private byte[] value = new byte [8];
   private int valueSize;
@@ -229,7 +264,6 @@ public class BinaryLogger implements Closeable {
   }
 
   public final void value(short v) {
-    int offset = 0;
     value[0] = (byte)(v >>> 8);
     value[1] = (byte)(v);
     valueSize = 2;

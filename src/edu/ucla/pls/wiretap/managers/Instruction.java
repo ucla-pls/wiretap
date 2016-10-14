@@ -7,7 +7,7 @@ public class Instruction extends Managable<Pair<Method, Integer>> {
   private final Pair<Method, Integer> descriptor;
 
   public Instruction (Method method, Integer offset) {
-    descriptor = new Pair(method, offset);
+    descriptor = new Pair<Method, Integer>(method, offset);
   }
 
   public Method getMethod() {

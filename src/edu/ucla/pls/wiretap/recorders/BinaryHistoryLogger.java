@@ -11,7 +11,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 
-import edu.ucla.pls.wiretap.Formatter;
 import edu.ucla.pls.wiretap.WiretapProperties;
 
 /** The logger logs events to file.
@@ -219,7 +218,6 @@ public class BinaryHistoryLogger implements Closeable {
   }
 
   public final void value(short v) {
-    int offset = 2;
     value[0] = (byte)(v >>> 8);
     value[1] = (byte)(v);
     valueSize = 2;

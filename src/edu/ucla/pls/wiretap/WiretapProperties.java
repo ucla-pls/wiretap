@@ -62,6 +62,10 @@ public class WiretapProperties extends Properties {
     return getFile("fieldfile", _default);
   }
 
+  public long getSynchTime() {
+    return getLong("synchtime", 1000);
+  }
+
   public Collection<String> getIgnoredPrefixes() {
     if (ignoredPrefixes == null) {
       ignoredPrefixes = getList("ignoredprefixes", Arrays.asList("java", "sun", "edu/ucla/pls/wiretap"));
@@ -201,6 +205,15 @@ public class WiretapProperties extends Properties {
       return def;
     } else {
       return Boolean.parseBoolean(value);
+    }
+  }
+
+  public long getLong(String key, long def) {
+    String value = getProperty(key);
+    if (value == null) {
+      return def;
+    } else {
+      return Long.parseLong(value);
     }
   }
 

@@ -6,8 +6,6 @@ import java.util.List;
 import org.objectweb.asm.ClassReader.OffsetHandler;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.Type;
-import org.objectweb.asm.commons.GeneratorAdapter;
 
 import edu.ucla.pls.wiretap.managers.Field;
 import edu.ucla.pls.wiretap.managers.FieldManager;

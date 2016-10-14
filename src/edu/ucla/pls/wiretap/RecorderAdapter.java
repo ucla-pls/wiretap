@@ -7,7 +7,6 @@ import org.objectweb.asm.commons.GeneratorAdapter;
 //import org.objectweb.asm.commons.Method;
 
 import edu.ucla.pls.wiretap.managers.Method;
-import edu.ucla.pls.wiretap.managers.MethodManager;
 
 public class RecorderAdapter extends GeneratorAdapter{
 
