@@ -37,6 +37,11 @@ public class WiretapProperties extends Properties {
     return getFile("logfolder", _default);
   }
 
+  public File getHistoryFile() {
+    final File _default = new File (getOutFolder(), "wiretap.hist");
+    return getFile("historyfile", _default);
+  }
+
   public File getClassFile() {
     final File _default = new File (getOutFolder(), "classes.txt");
     return getFile("classfile", _default);

@@ -1,9 +1,7 @@
 package edu.ucla.pls.wiretap;
 
-import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
-import org.objectweb.asm.commons.GeneratorAdapter;
 
 public class EventType implements Opcodes{
 

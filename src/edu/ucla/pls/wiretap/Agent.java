@@ -169,7 +169,7 @@ public class Agent implements ClassFileTransformer, Closeable {
                                        Object value) {
           // The use of desc over signature, might be a mistake. Note that signature
           // can be null.
-          Field f = fields.put(new Field(access, className, name, desc, value));
+          fields.put(new Field(access, className, name, desc, value));
           return super.visitField(access, name, desc, signature, value);
         }
 
