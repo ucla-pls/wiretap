@@ -9,6 +9,9 @@ import java.io.OutputStream;
 import java.util.Map;
 
 import java.util.concurrent.atomic.AtomicInteger;
+
+import com.sun.org.apache.xerces.internal.jaxp.validation.ErrorHandlerAdaptor;
+
 import java.util.concurrent.ConcurrentHashMap;
 
 import edu.ucla.pls.wiretap.Formatter;
@@ -37,7 +40,6 @@ public class BinaryLogger implements Closeable {
     logfolder = properties.getLogFolder();
     logfolder.mkdirs();
 
-    System.out.println("BinaryLogger setup with " + logfolder);
     System.err.println("BinaryLogger setup with " + logfolder);
 
     final long synchtime = properties.getSynchTime();
@@ -50,9 +52,11 @@ public class BinaryLogger implements Closeable {
               while (running) {
                 Thread.sleep(synchtime);
                 tick = tick + 1;
-                running = false;
+                // if loggers is empty, then the program hasn't runned
+                running = loggers.isEmpty();
                 for(Thread l: loggers.keySet()) {
-                  running |= l.isAlive();
+                  boolean isAlive = l.isAlive();
+                  running |= isAlive;
                 }
               }
             }
@@ -126,7 +130,7 @@ public class BinaryLogger implements Closeable {
     return object != null ? System.identityHashCode(object) : 0;
   }
 
-  public static final byte SYNC = 1;
+  public static final byte SYNC = 0;
   public static final byte FORK = 1;
   public static final byte JOIN = 2;
 
@@ -150,9 +154,10 @@ public class BinaryLogger implements Closeable {
       writer.write(event, 0, size);
       int localTick = tick;
       if (localTick != lastSync) {
-        event [0] = SYNC;
+        event[0] = SYNC;
         int order = totalOrderId.getAndIncrement();
-        int offset = writeInt(order, event, 1);
+        int offset = writeInt(-1, event, 1);
+        offset = writeInt(order, event, offset);
         writer.write(event, 0, offset);
         lastSync = localTick;
       }
@@ -226,7 +231,7 @@ public class BinaryLogger implements Closeable {
 
   public final void write(Object o, int field, int inst) {
     int offset = 0;
-    event[offset++] = (byte) (WRITE | valueType );
+    event[offset++] = (byte) (WRITE | valueType);
     if (WRITE_INSTRUCTIONS) {
       offset = writeInt(inst, event, offset);
     }

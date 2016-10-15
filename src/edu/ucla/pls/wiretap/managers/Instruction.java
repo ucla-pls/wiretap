@@ -4,10 +4,10 @@ import edu.ucla.pls.utils.Pair;
 
 public class Instruction extends Managable<Pair<Method, Integer>> {
 
-  private final Pair<Method, Integer> descriptor;
+  private final InstructionDescriptor descriptor;
 
   public Instruction (Method method, Integer offset) {
-    descriptor = new Pair<Method, Integer>(method, offset);
+    descriptor = new InstructionDescriptor(method, offset);
   }
 
   public Method getMethod() {
@@ -18,17 +18,28 @@ public class Instruction extends Managable<Pair<Method, Integer>> {
     return descriptor.snd;
   }
 
-  public Pair<Method, Integer> getDescriptor() {
+  public InstructionDescriptor getDescriptor() {
     return descriptor;
   }
 
   @Override
   public String toString() {
-    final StringBuilder b = new StringBuilder();
-    b.append(descriptor.fst);
-    b.append("!");
-    b.append(descriptor.snd);
-    return b.toString();
+    return descriptor.toString();
   }
 
+  class InstructionDescriptor extends Pair<Method, Integer> {
+
+    public InstructionDescriptor (Method m, Integer offset) {
+      super(m, offset);
+    }
+    @Override
+    public String toString() {
+      final StringBuilder b = new StringBuilder();
+      b.append(fst);
+      b.append("!");
+      b.append(snd);
+      return b.toString();
+    }
+
+  }
 }

@@ -116,14 +116,16 @@ public class Agent implements ClassFileTransformer, Closeable {
   }
 
   public void close () throws IOException {
-    classWriter.close();
-    methods.close();
     try {
       closeRecorder.invoke(null);
     } catch (Exception e) {
       System.err.println("Could not close recorder");
       e.printStackTrace();
     }
+    classWriter.close();
+    methods.close();
+    instructions.close();
+    fields.close();
   }
 
   public MethodManager getMethodManager () {
