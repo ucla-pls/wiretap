@@ -33,25 +33,33 @@ public class BinaryLogger implements Closeable {
   private static Thread synchThread;
 
   public static void setupRecorder(WiretapProperties properties) {
+
     logfolder = properties.getLogFolder();
     logfolder.mkdirs();
+
+    System.out.println("BinaryLogger setup with " + logfolder);
+    System.err.println("BinaryLogger setup with " + logfolder);
 
     final long synchtime = properties.getSynchTime();
     if (synchtime > 0) {
       synchThread = new Thread(new Runnable () {
           public void run ()  {
             try {
-              while (!Thread.currentThread().isInterrupted()) {
+              System.err.println("Synchronizing every " + synchtime + " millis.");
+              boolean running = true;
+              while (running) {
                 Thread.sleep(synchtime);
                 tick = tick + 1;
+                running = false;
+                for(Thread l: loggers.keySet()) {
+                  running |= l.isAlive();
+                }
               }
             }
-            catch (InterruptedException e) {
-              System.out.println("Error " + e.getMessage());
-              e.printStackTrace();
-            }
+            catch (InterruptedException e) { return; }
           }
       });
+      synchThread.start();
     }
   }
 
@@ -143,7 +151,8 @@ public class BinaryLogger implements Closeable {
       int localTick = tick;
       if (localTick != lastSync) {
         event [0] = SYNC;
-        int offset = writeInt(totalOrderId.getAndIncrement(), event, 1);
+        int order = totalOrderId.getAndIncrement();
+        int offset = writeInt(order, event, 1);
         writer.write(event, 0, offset);
         lastSync = localTick;
       }
