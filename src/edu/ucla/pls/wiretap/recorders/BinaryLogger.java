@@ -158,7 +158,7 @@ public class BinaryLogger implements Closeable {
       if (localTick != lastSync) {
         event[0] = SYNC;
         int order = totalOrderId.getAndIncrement();
-        int offset = writeInt(order, event, -1);
+        int offset = writeInt(order, event, 1);
         writer.write(event, 0, offset);
         lastSync = localTick;
       }
