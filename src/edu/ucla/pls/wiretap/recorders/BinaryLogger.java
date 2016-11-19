@@ -1,133 +1,75 @@
 package edu.ucla.pls.wiretap.recorders;
 
-import java.io.BufferedOutputStream;
 import java.io.Closeable;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.Map;
 
-import java.util.concurrent.atomic.AtomicInteger;
+public abstract class BinaryLogger implements Closeable {
 
-import com.sun.org.apache.xerces.internal.jaxp.validation.ErrorHandlerAdaptor;
-
-import java.util.concurrent.ConcurrentHashMap;
-
-import edu.ucla.pls.wiretap.Formatter;
-import edu.ucla.pls.wiretap.WiretapProperties;
-
-/** The logger logs events to file.
- */
-
-public class BinaryLogger implements Closeable {
-
-  private static final Map<Thread, BinaryLogger> loggers =
-    new ConcurrentHashMap<Thread, BinaryLogger>();
-
-  private static File logfolder;
-
-  // Because of the logic system this variable does not even have to be volatile.
-  private static int tick = 0;
-  private static final AtomicInteger totalOrderId = new AtomicInteger();
-  private static final AtomicInteger loggerId = new AtomicInteger();
-
-  private static Thread synchThread;
-
-  public static void setupRecorder(WiretapProperties properties) {
-
-    logfolder = properties.getLogFolder();
-    logfolder.mkdirs();
-
-    System.err.println("BinaryLogger setup with " + logfolder);
-
-    final long synchtime = properties.getSynchTime();
-    if (synchtime > 0) {
-      synchThread = new Thread(new Runnable () {
-          public void run ()  {
-            try {
-              System.err.println("Synchronizing every " + synchtime + " millis.");
-              boolean running = true;
-              while (running) {
-                Thread.sleep(synchtime);
-                tick = tick + 1;
-                // if loggers is empty, then the program hasn't runned
-                running = loggers.isEmpty();
-                for(Thread l: loggers.keySet()) {
-                  boolean isAlive = l.isAlive();
-                  running |= isAlive;
-                }
-              }
-            }
-            catch (InterruptedException e) { return; }
-          }
-      });
-      synchThread.start();
-    }
+  public static final int writeInt(int value, byte [] array, int offset) {
+    array[offset]     = (byte)(value >>> 24);
+    array[offset + 1] = (byte)(value >>> 16);
+    array[offset + 2] = (byte)(value >>> 8);
+    array[offset + 3] = (byte)(value);
+    return offset + 4;
   }
 
-  public static void closeRecorder() throws IOException {
-    if (synchThread != null) {
-      System.err.println("Interrupting Synch Thread");
-      synchThread.interrupt();
-    }
-    System.err.println("Closing recorders");
-    for (BinaryLogger logger: loggers.values()) {
-      System.err.println("Closing " + logger);
-      logger.close();
-    }
-  }
+  /** out contains the output stream. All the events will
+      be written to this stream. */
+  protected final OutputStream out;
 
-  /** getLogger, returns the correct log for this thread. If no log exists
-      create a new. getLogger is thread-safe but also slow, so call as little as
-      possible. */
-  public static BinaryLogger getBinaryLogger(Thread thread) {
-    BinaryLogger logger = loggers.get(thread);
-    if (logger == null) {
-      int id = loggerId.getAndIncrement();
-      File file = new File(logfolder, Formatter.format(id, 10, 6) + ".log");
-      try {
-        OutputStream writer =
-          new BufferedOutputStream(new FileOutputStream(file), 32768);
-        logger = new BinaryLogger(id, writer);
-        loggers.put(thread, logger);
-      } catch (IOException e) {
-        e.printStackTrace();
-      }
-    }
-    return logger;
-  }
+  /** contains the event. */
+  protected final byte[] event;
 
-  public static BinaryLogger getRecorder() {
-    return getBinaryLogger(Thread.currentThread());
-  }
+  /** the current offset in the event. */
+  protected int offset = 0;
 
-  public static final int MAX_SIZE = 21;
+  public final int id;
 
-  private final int id;
-  protected final OutputStream writer;
+  public boolean running = false;
 
-  protected int offset;
-
-  protected final byte [] event = new byte [MAX_SIZE];
-
-  private int lastSync = 0;
-
-  public BinaryLogger(int id, OutputStream writer) {
+  public BinaryLogger(OutputStream out, byte[] event, int id) {
     this.id = id;
-    this.writer = writer;
+    this.out = out;
+    this.event = event;
+  }
+
+  public abstract BinaryLogger fromThread(Thread thread);
+
+  public void postOutput() {};
+
+  public final int getId() {
+    return id;
   }
 
   public String toString() {
     return "Logger_" + this.id;
   }
 
-  private static final int ppThread(Thread thread) {
-    return getBinaryLogger(thread).getId();
+  public final void write(int value) {
+    byte[] _event = this.event;
+    int _offset = this.offset;
+    _event[_offset]     = (byte)(value >>> 24);
+    _event[_offset + 1] = (byte)(value >>> 16);
+    _event[_offset + 2] = (byte)(value >>> 8);
+    _event[_offset + 3] = (byte)(value);
+    this.offset = _offset;
   }
 
-  private static final int ppObject(Object object) {
+  public static int objectToInt(Object object) {
     return object != null ? System.identityHashCode(object) : 0;
+  }
+
+  public final void write(Object object) {
+    write(objectToInt(object));
+  }
+
+  private final void output() {
+    try {
+      out.write(event, 0, offset);
+      offset = 0;
+    } catch (IOException e) {}
+    postOutput();
   }
 
   public static final byte SYNC = 0;
@@ -144,86 +86,91 @@ public class BinaryLogger implements Closeable {
   public static final byte BEGIN = 8;
   public static final byte END = 9;
 
-  public static final int writeInt(int value, byte [] array, int offset) {
-    array[offset ] = (byte)(value >>> 24);
-    array[offset + 1] = (byte)(value >>> 16);
-    array[offset + 2] = (byte)(value >>> 8);
-    array[offset + 3] = (byte)(value);
-    return offset + 4;
-  }
 
-  public void output(int size) {
-    try {
-      writer.write(event, 0, size);
-      int localTick = tick;
-      if (localTick != lastSync) {
-        event[0] = SYNC;
-        int order = totalOrderId.getAndIncrement();
-        int offset = writeInt(order, event, 1);
-        writer.write(event, 0, offset);
-        lastSync = localTick;
-      }
-    } catch (Exception e) {}
+  public final void sync(int order) {
+    event[offset] = SYNC;
+    write(order);
+    output();
   }
 
   public final void fork(Thread thread, int inst) {
-    int offset = 0;
+    BinaryLogger logger = fromThread(thread);
     event[offset++] = FORK;
-    offset = writeInt(ppThread(thread), event, offset);
-    output(offset);
+    write(logger.id);
+    output();
+    logger.begin();
   }
 
   public final void join(Thread thread, int inst) {
-    int offset = 0;
+    BinaryLogger logger = fromThread(thread);
+    logger.end();
     event[offset++] = JOIN;
-    offset = writeInt(ppThread(thread), event, offset);
-    output(offset);
+    write(logger.id);
+    output();
   }
 
   public final void request(Object o, int inst) {
-    int offset = 0;
     event[offset++] = REQUEST;
-    offset = writeInt(ppObject(o), event, offset);
-    output(offset);
+    write(o);
+    output();
   }
 
   public final void release(Object o, int inst) {
-    int offset = 0;
     event[offset++] = RELEASE;
-    offset = writeInt(ppObject(o), event, offset);
-    output(offset);
+    write(o);
+    output();
   }
 
   public final void acquire (Object o, int inst) {
-    int offset = 0;
     event[offset++] = ACQUIRE;
-    offset = writeInt(ppObject(o), event, offset);
-    output(offset);
+    write(o);
+    output();
   }
 
   public final void read(Object o, int field, int inst) {
-    int offset = 0;
     event[offset++] = (byte) (READ | valueType);
-    offset = writeInt(ppObject(o), event, offset);
-    offset = writeInt(field, event, offset);
-    System.arraycopy(value, 0, event, offset, valueSize);
-    output(offset + valueSize);
+    write(o);
+    write(field);
+    offset += valueSize;
+    output();
   }
   public final void readarray(Object a, int index, int inst) {
     read(a, index, inst);
   }
 
   public final void write(Object o, int field, int inst) {
-    int offset = 0;
     event[offset++] = (byte) (WRITE | valueType);
-    offset = writeInt(ppObject(o), event, offset);
-    offset = writeInt(field, event, offset);
-    System.arraycopy(value, 0, event, offset, valueSize);
-    output(offset + valueSize);
+    write(o);
+    write(field);
+    offset += valueSize;
+    output();
   }
 
   public final void writearray(Object a, int index, int inst) {
     write(a, index, inst);
+  }
+
+  public final void begin() {
+    synchronized (this) {
+      event[offset] = BEGIN;
+      running = true;
+      output();
+    }
+  }
+
+  public final void end() {
+    synchronized (this) {
+      if (running) {
+        running = false;
+        event[offset] = END;
+        output();
+      }
+    }
+  }
+
+  @Override
+	public void close() throws IOException {
+    out.close();
   }
 
   public static final int BYTE_TYPE   = 0;
@@ -235,50 +182,53 @@ public class BinaryLogger implements Closeable {
   public static final int DOUBLE_TYPE = (6 << 4);
   public static final int OBJECT_TYPE = (7 << 4);
 
-  private byte[] value = new byte [8];
   private int valueSize;
   private byte valueType;
 
-  /** value acts as a store for the next event. It has the ability
-      to have a value in memory which can then be used after **/
-  public final void value(Object o) {
-    valueSize = writeInt(ppObject(o), value, 0);
-    valueType = OBJECT_TYPE;
-  }
-
   public final void value(byte v) {
-    event[0] = v;
+    int _offset = this.offset + 9;
+    byte[] _event = this.event;
+    _event[_offset] = v;
     valueSize = 1;
     valueType = BYTE_TYPE;
   }
 
   public final void value(char v) {
-    event[0] = (byte) v;
-    valueSize = 1;
+    value((byte) v);
     valueType = CHAR_TYPE;
   }
 
   public final void value(short v) {
-    value[0] = (byte)(v >>> 8);
-    value[1] = (byte)(v);
+    int _offset = this.offset + 9;
+    byte[] _event = this.event;
+    _event[_offset + 0] = (byte)(v >>> 8);
+    _event[_offset + 1] = (byte)(v);
     valueSize = 2;
     valueType = SHORT_TYPE;
   }
 
   public final void value(int v) {
-    valueSize = writeInt(v, value, 0);
+    int _offset = this.offset + 9;
+    byte[] _event = this.event;
+    _event[_offset + 0] = (byte)(v >>> 24);
+    _event[_offset + 1] = (byte)(v >>> 16);
+    _event[_offset + 2] = (byte)(v >>> 8);
+    _event[_offset + 3] = (byte)(v);
+    valueSize = 4;
     valueType = INT_TYPE;
   }
 
   public final void value(long v) {
-    value[0] = (byte)(v >>> 52);
-    value[1] = (byte)(v >>> 48);
-    value[2] = (byte)(v >>> 40);
-    value[3] = (byte)(v >>> 32);
-    value[4] = (byte)(v >>> 24);
-    value[5] = (byte)(v >>> 16);
-    value[6] = (byte)(v >>> 8);
-    value[7] = (byte)(v);
+    int _offset = this.offset + 9;
+    byte[] _event = this.event;
+    _event[_offset + 0] = (byte)(v >>> 52);
+    _event[_offset + 1] = (byte)(v >>> 48);
+    _event[_offset + 2] = (byte)(v >>> 40);
+    _event[_offset + 3] = (byte)(v >>> 32);
+    _event[_offset + 4] = (byte)(v >>> 24);
+    _event[_offset + 5] = (byte)(v >>> 16);
+    _event[_offset + 6] = (byte)(v >>> 8);
+    _event[_offset + 7] = (byte)(v);
     valueSize = 8;
     valueType = LONG_TYPE;
   }
@@ -293,13 +243,11 @@ public class BinaryLogger implements Closeable {
     valueType = DOUBLE_TYPE;
   }
 
-  public int getId() {
-    return id;
-  }
-
-  @Override
-  public void close() throws IOException {
-    writer.close();
+  /** value acts as a store for the next event. It has the ability
+      to have a value in memory which can then be used after **/
+  public final void value(Object o) {
+    value(objectToInt(o));
+    valueType = OBJECT_TYPE;
   }
 
 }
