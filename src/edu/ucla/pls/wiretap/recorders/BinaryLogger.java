@@ -30,7 +30,6 @@ public class BinaryLogger implements Closeable {
   // Because of the logic system this variable does not even have to be volatile.
   private static int tick = 0;
   private static final AtomicInteger totalOrderId = new AtomicInteger();
-
   private static final AtomicInteger loggerId = new AtomicInteger();
 
   private static Thread synchThread;
@@ -106,9 +105,11 @@ public class BinaryLogger implements Closeable {
   public static final int MAX_SIZE = 21;
 
   private final int id;
-  private final OutputStream writer;
+  protected final OutputStream writer;
 
-  private final byte [] event = new byte[MAX_SIZE];
+  protected int offset;
+
+  protected final byte [] event = new byte [MAX_SIZE];
 
   private int lastSync = 0;
 
@@ -144,14 +145,14 @@ public class BinaryLogger implements Closeable {
   public static final byte END = 9;
 
   public static final int writeInt(int value, byte [] array, int offset) {
-    array[offset++] = (byte)(value >>> 24);
-    array[offset++] = (byte)(value >>> 16);
-    array[offset++] = (byte)(value >>> 8);
-    array[offset++] = (byte)(value);
-    return offset;
+    array[offset ] = (byte)(value >>> 24);
+    array[offset + 1] = (byte)(value >>> 16);
+    array[offset + 2] = (byte)(value >>> 8);
+    array[offset + 3] = (byte)(value);
+    return offset + 4;
   }
 
-  public final void output(int size) {
+  public void output(int size) {
     try {
       writer.write(event, 0, size);
       int localTick = tick;
