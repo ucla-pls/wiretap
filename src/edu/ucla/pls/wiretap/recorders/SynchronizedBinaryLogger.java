@@ -1,7 +1,6 @@
 package edu.ucla.pls.wiretap.recorders;
 
 import java.io.BufferedOutputStream;
-import java.io.Closeable;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -9,8 +8,6 @@ import java.io.OutputStream;
 import java.util.Map;
 
 import java.util.concurrent.atomic.AtomicInteger;
-
-import com.sun.org.apache.xerces.internal.jaxp.validation.ErrorHandlerAdaptor;
 
 import java.util.concurrent.ConcurrentHashMap;
 

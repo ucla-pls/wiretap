@@ -10,7 +10,7 @@ import edu.ucla.pls.wiretap.managers.Method;
 
 public class RecorderAdapter extends GeneratorAdapter{
 
-  private final Class<?> recorder;
+  //private final Class<?> recorder;
   private final Type recorderType;
   private final org.objectweb.asm.commons.Method recorderMethod;
 
@@ -27,7 +27,7 @@ public class RecorderAdapter extends GeneratorAdapter{
                          ) {
     super(Opcodes.ASM5, mv, m.getAccess(), m.getName(), m.getDesc());
     this.version = version;
-    this.recorder = recorder;
+    //this.recorder = recorder;
     this.recorderType = Type.getType(recorder);
     this.recorderMethod =
       new org.objectweb.asm.commons.Method("getRecorder", recorderType, new Type [0]);

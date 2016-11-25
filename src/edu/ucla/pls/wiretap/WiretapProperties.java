@@ -108,6 +108,9 @@ public class WiretapProperties extends Properties {
               "EnterMethod",
               "ExitMethod",
 
+              "OrderWrite",
+              "OrderRead",
+
               "ReadObject",
               "ReadPrimitive",
               "WriteObject",

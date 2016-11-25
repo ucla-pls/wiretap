@@ -1,7 +1,6 @@
 package edu.ucla.pls.wiretap.recorders;
 
 import java.io.BufferedOutputStream;
-import java.io.Closeable;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -9,8 +8,11 @@ import java.io.OutputStream;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-
+import edu.ucla.pls.utils.ConcurrentOutputStream;
 import edu.ucla.pls.wiretap.WiretapProperties;
 
 /** The logger logs events to file.
@@ -28,8 +30,9 @@ public class BinaryHistoryLogger extends BinaryLogger {
   public static void setupRecorder(WiretapProperties properties) {
     File historyFile = properties.getHistoryFile();
     try {
+      OutputStream s = new FileOutputStream(historyFile);
       globalWriter =
-        new BufferedOutputStream(new FileOutputStream(historyFile), 32768);
+        new ConcurrentOutputStream(new BufferedOutputStream(s, 32768));
     } catch (IOException e) {
       e.printStackTrace();
       System.exit(-1);
@@ -68,6 +71,7 @@ public class BinaryHistoryLogger extends BinaryLogger {
 
   public BinaryHistoryLogger(int id) {
     super(BinaryHistoryLogger.globalWriter, new byte[MAX_SIZE], id);
+    offset = 0;
     write(id);
     write(order++);
   }
@@ -76,6 +80,26 @@ public class BinaryHistoryLogger extends BinaryLogger {
   public void postOutput() {
     offset = 4;
     write(order++);
+  }
+
+  private final ReadWriteLock totalorder = new ReentrantReadWriteLock();
+  private final Lock readlock = totalorder.readLock();
+  private final Lock writelock = totalorder.writeLock();
+
+  public final void prewrite () {
+    writelock.lock();
+  }
+
+  public final void postwrite () {
+    writelock.unlock();
+  }
+
+  public final void preread () {
+    readlock.lock();
+  }
+
+  public final void postread () {
+    readlock.unlock();
   }
 
 	@Override

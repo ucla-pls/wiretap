@@ -3,6 +3,7 @@ package edu.ucla.pls.wiretap.recorders;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Arrays;
 
 public abstract class BinaryLogger implements Closeable {
 
@@ -36,7 +37,9 @@ public abstract class BinaryLogger implements Closeable {
 
   public abstract BinaryLogger fromThread(Thread thread);
 
-  public void postOutput() {};
+  public void postOutput() {
+    offset = 0;
+  };
 
   public final int getId() {
     return id;
@@ -53,7 +56,7 @@ public abstract class BinaryLogger implements Closeable {
     _event[_offset + 1] = (byte)(value >>> 16);
     _event[_offset + 2] = (byte)(value >>> 8);
     _event[_offset + 3] = (byte)(value);
-    this.offset = _offset;
+    this.offset = _offset + 4;
   }
 
   public static int objectToInt(Object object) {
@@ -67,8 +70,8 @@ public abstract class BinaryLogger implements Closeable {
   private final void output() {
     try {
       out.write(event, 0, offset);
-      offset = 0;
-    } catch (IOException e) {}
+    } catch (IOException e) {
+    }
     postOutput();
   }
 
@@ -152,7 +155,7 @@ public abstract class BinaryLogger implements Closeable {
 
   public final void begin() {
     synchronized (this) {
-      event[offset] = BEGIN;
+      event[offset++] = BEGIN;
       running = true;
       output();
     }
@@ -162,7 +165,7 @@ public abstract class BinaryLogger implements Closeable {
     synchronized (this) {
       if (running) {
         running = false;
-        event[offset] = END;
+        event[offset++] = END;
         output();
       }
     }
