@@ -83,11 +83,20 @@ public abstract class BinaryLogger implements Closeable {
   public static final byte ACQUIRE = 4;
   public static final byte RELEASE = 5;
 
-  public static final byte READ = 6;
-  public static final byte WRITE = 7;
+  public static final byte BEGIN = 6;
+  public static final byte END = 7;
 
-  public static final byte BEGIN = 8;
-  public static final byte END = 9;
+  public static final byte BRANCH = 8;
+  public static final byte PHI = 9;
+
+  public static final byte ENTER = 10;
+  public static final byte EXIT  = 11;
+
+  public static final byte READ = 12;
+  public static final byte WRITE = 13;
+
+  public static final byte READARRAY = 14;
+  public static final byte WRITEARRAY = 15;
 
 
   public final void sync(int order) {
@@ -138,7 +147,11 @@ public abstract class BinaryLogger implements Closeable {
     output();
   }
   public final void readarray(Object a, int index, int inst) {
-    read(a, index, inst);
+    event[offset++] = (byte) (READARRAY | valueType);
+    write(a);
+    write(index);
+    offset += valueSize;
+    output();
   }
 
   public final void write(Object o, int field, int inst) {
@@ -150,7 +163,11 @@ public abstract class BinaryLogger implements Closeable {
   }
 
   public final void writearray(Object a, int index, int inst) {
-    write(a, index, inst);
+    event[offset++] = (byte) (WRITEARRAY | valueType);
+    write(a);
+    write(index);
+    offset += valueSize;
+    output();
   }
 
   public final void begin() {
