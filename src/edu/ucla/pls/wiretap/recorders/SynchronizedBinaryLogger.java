@@ -104,7 +104,7 @@ public class SynchronizedBinaryLogger extends BinaryLogger {
   private int lastSync = 0;
 
   public SynchronizedBinaryLogger(OutputStream out, int id) {
-    super(out, new byte[MAX_SIZE], id);
+    super(out, new byte[MAX_SIZE], id, null);
   }
 
   @Override

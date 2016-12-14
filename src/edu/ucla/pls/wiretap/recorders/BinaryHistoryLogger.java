@@ -25,10 +25,12 @@ public class BinaryHistoryLogger extends BinaryLogger {
 
   private static OutputStream globalWriter;
 
+  private static File instFolder;
   private static final AtomicInteger loggerId = new AtomicInteger();
 
   public static void setupRecorder(WiretapProperties properties) {
     File historyFile = properties.getHistoryFile();
+    instFolder = properties.getInstFolder();
     try {
       OutputStream s = new FileOutputStream(historyFile);
       globalWriter =
@@ -55,8 +57,16 @@ public class BinaryHistoryLogger extends BinaryLogger {
     BinaryHistoryLogger logger = loggers.get(thread);
     if (logger == null) {
       int id = loggerId.getAndIncrement();
-      logger = new BinaryHistoryLogger(id);
-      loggers.put(thread, logger);
+      try {
+        File instfile = new File(instFolder, "" + id);
+        OutputStream s = new FileOutputStream(instfile);
+        s = new ConcurrentOutputStream(new BufferedOutputStream(s, 32768));
+        logger = new BinaryHistoryLogger(id, s);
+        loggers.put(thread, logger);
+      } catch (IOException e) {
+        e.printStackTrace();
+        System.exit(-1);
+      }
     }
     return logger;
   }
@@ -69,8 +79,8 @@ public class BinaryHistoryLogger extends BinaryLogger {
 
   public int order = 0;
 
-  public BinaryHistoryLogger(int id) {
-    super(BinaryHistoryLogger.globalWriter, new byte[MAX_SIZE], id);
+  public BinaryHistoryLogger(int id, OutputStream instLogger) {
+    super(BinaryHistoryLogger.globalWriter, new byte[MAX_SIZE], id, instLogger);
     offset = 0;
     write(id);
     write(order++);

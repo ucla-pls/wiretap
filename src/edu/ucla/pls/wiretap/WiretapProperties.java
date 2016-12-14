@@ -42,6 +42,15 @@ public class WiretapProperties extends Properties {
     return getFile("historyfile", _default);
   }
 
+  public File getInstFolder() {
+    final File _default = new File (getOutFolder(), "instructions");
+    final File folder = getFile("instfolder", _default);
+    if (! folder.exists()) {
+      folder.mkdirs();
+    }
+    return folder;
+  }
+
   public File getClassFile() {
     final File _default = new File (getOutFolder(), "classes.txt");
     return getFile("classfile", _default);
