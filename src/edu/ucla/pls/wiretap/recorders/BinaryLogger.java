@@ -117,7 +117,7 @@ public abstract class BinaryLogger implements Closeable {
     event[offset] = SYNC;
     write(order);
     output();
-    logInstruction(0);
+    logInstruction(-1);
   }
 
   public final void fork(Thread thread, int inst) {
@@ -199,7 +199,7 @@ public abstract class BinaryLogger implements Closeable {
       event[offset++] = BEGIN;
       running = true;
       output();
-      logInstruction(0);
+      logInstruction(-1);
     }
   }
 
@@ -209,7 +209,7 @@ public abstract class BinaryLogger implements Closeable {
         running = false;
         event[offset++] = END;
         output();
-        logInstruction(0);
+        logInstruction(-1);
       }
     }
   }

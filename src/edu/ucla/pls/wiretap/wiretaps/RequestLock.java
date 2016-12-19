@@ -32,7 +32,7 @@ public class RequestLock extends Wiretapper {
         if (getMethod().isSynchronized()) {
           out.pushRecorder();
           out.pushContext();
-          request.record(createInstructionId());
+          request.record(createOffsetlessInstructionId());
         }
 
         // Before any instrumentation has been made.

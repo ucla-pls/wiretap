@@ -60,7 +60,7 @@ public class ReleaseLock extends Wiretapper {
 
           out.pushRecorder();
           out.pushContext();
-          release.record(createInstructionId());
+          release.record(createOffsetlessInstructionId());
 
           // Re-throw the exception
           out.visitTypeInsn(CHECKCAST, "java/lang/Throwable" );

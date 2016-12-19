@@ -120,6 +120,7 @@ public class BinaryHistoryLogger extends BinaryLogger {
   @Override
   public void close() throws IOException {
     end();
+    super.close();
   }
 
 }

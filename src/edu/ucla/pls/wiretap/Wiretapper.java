@@ -81,8 +81,16 @@ public abstract class Wiretapper {
       return instructions.put(new Instruction(method, getOffset()));
     }
 
+    public Instruction createOffsetlessInstruction() {
+      return instructions.put(new Instruction(method, -1));
+    }
+
     public int createInstructionId() {
       return createInstruction().getId();
+    }
+
+    public int createOffsetlessInstructionId() {
+      return createOffsetlessInstruction().getId();
     }
 
     public int getFieldId(String owner, String name, String desc) {

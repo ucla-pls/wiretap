@@ -27,8 +27,8 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
  * THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Changes made by UCLA is in the bottom of the file, and in the readCode
- * method, clearly marked with an UCLA tag.
+ * Changes made by UCLA is in the bottom of the file, and in the readCode and
+ * readMethod method, clearly marked with an UCLA tag.
  *
  *
  */
@@ -1018,6 +1018,7 @@ public class ClassReader {
 
         // visits the method code
         if (code != 0) {
+            /* UCLA */ offsetHandler.setOffset(-1);
             mv.visitCode();
             readCode(mv, context, code);
         }
