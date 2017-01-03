@@ -127,6 +127,8 @@ public class WiretapProperties extends Properties {
 
               "YieldObject",
 
+              "Branch",
+
               "AcquireLock",
               "ReleaseLock",
               "RequestLock",

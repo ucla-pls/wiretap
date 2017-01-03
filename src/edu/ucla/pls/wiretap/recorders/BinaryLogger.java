@@ -120,6 +120,12 @@ public abstract class BinaryLogger implements Closeable {
     logInstruction(-1);
   }
 
+  public final void branch(int inst) {
+    event[offset++] = BRANCH;
+    output();
+    logInstruction(inst);
+  }
+
   public final void fork(Thread thread, int inst) {
     BinaryLogger logger = fromThread(thread);
     event[offset++] = FORK;
