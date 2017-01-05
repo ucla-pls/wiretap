@@ -81,9 +81,10 @@ public abstract class BinaryLogger implements Closeable {
     write(objectToInt(object));
   }
 
-  private final void output() {
+  private final void output(int inst) {
     try {
       out.write(event, 0, offset);
+      logInstruction(inst);
     } catch (IOException e) {
     }
     postOutput();
@@ -112,27 +113,19 @@ public abstract class BinaryLogger implements Closeable {
   public static final byte READARRAY = 14;
   public static final byte WRITEARRAY = 15;
 
-
   public final void sync(int order) {
     event[offset] = SYNC;
     write(order);
-    output();
-    logInstruction(-1);
+    output(-1);
   }
 
-  public final void branch(int inst) {
-    event[offset++] = BRANCH;
-    output();
-    logInstruction(inst);
-  }
 
   public final void fork(Thread thread, int inst) {
     BinaryLogger logger = fromThread(thread);
     event[offset++] = FORK;
     write(logger.id);
-    output();
+    output(inst);
     logger.begin();
-    logInstruction(inst);
   }
 
   public final void join(Thread thread, int inst) {
@@ -140,29 +133,25 @@ public abstract class BinaryLogger implements Closeable {
     logger.end();
     event[offset++] = JOIN;
     write(logger.id);
-    output();
-    logInstruction(inst);
+    output(inst);
   }
 
   public final void request(Object o, int inst) {
     event[offset++] = REQUEST;
     write(o);
-    output();
-    logInstruction(inst);
+    output(inst);
   }
 
   public final void release(Object o, int inst) {
     event[offset++] = RELEASE;
     write(o);
-    output();
-    logInstruction(inst);
+    output(inst);
   }
 
   public final void acquire (Object o, int inst) {
     event[offset++] = ACQUIRE;
     write(o);
-    output();
-    logInstruction(inst);
+    output(inst);
   }
 
   public final void read(Object o, int field, int inst) {
@@ -170,16 +159,14 @@ public abstract class BinaryLogger implements Closeable {
     write(o);
     write(field);
     offset += valueSize;
-    output();
-    logInstruction(inst);
+    output(inst);
   }
   public final void readarray(Object a, int index, int inst) {
     event[offset++] = (byte) (READARRAY | valueType);
     write(a);
     write(index);
     offset += valueSize;
-    output();
-    logInstruction(inst);
+    output(inst);
   }
 
   public final void write(Object o, int field, int inst) {
@@ -187,8 +174,7 @@ public abstract class BinaryLogger implements Closeable {
     write(o);
     write(field);
     offset += valueSize;
-    output();
-    logInstruction(inst);
+    output(inst);
   }
 
   public final void writearray(Object a, int index, int inst) {
@@ -196,16 +182,14 @@ public abstract class BinaryLogger implements Closeable {
     write(a);
     write(index);
     offset += valueSize;
-    output();
-    logInstruction(inst);
+    output(inst);
   }
 
   public final void begin() {
     synchronized (this) {
       event[offset++] = BEGIN;
       running = true;
-      output();
-      logInstruction(-1);
+      output(-1);
     }
   }
 
@@ -214,10 +198,21 @@ public abstract class BinaryLogger implements Closeable {
       if (running) {
         running = false;
         event[offset++] = END;
-        output();
-        logInstruction(-1);
+        output(-1);
       }
     }
+  }
+
+  public final void branch(int inst) {
+    event[offset++] = BRANCH;
+    output(inst);
+  }
+
+  public final void enter(Object o, int methodId) {
+    event[offset++] = ENTER;
+    write(o);
+    write(methodId);
+    output(-1);
   }
 
   @Override

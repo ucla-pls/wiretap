@@ -58,6 +58,10 @@ public class Method extends Managable<String> {
     return (access & Opcodes.ACC_STATIC) != 0;
   }
 
+  public boolean isConstructor() {
+    return this.name.equals("<init>");
+  }
+
   public Type[] getArgumentTypes () {
     return Type.getArgumentTypes(desc);
   }
