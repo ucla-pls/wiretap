@@ -34,6 +34,18 @@ public class Method extends Managable<String> {
     return Type.getObjectType(owner);
   }
 
+  public String getName () {
+    return this.name;
+  }
+
+  public int getAccess () {
+    return this.access;
+  }
+
+  public String getDesc () {
+    return this.desc;
+  }
+
   public String getDescriptor() {
     return descriptor;
   }
@@ -46,9 +58,18 @@ public class Method extends Managable<String> {
     return (access & Opcodes.ACC_STATIC) != 0;
   }
 
+  public boolean isConstructor() {
+    return this.name.equals("<init>");
+  }
+
   public Type[] getArgumentTypes () {
     return Type.getArgumentTypes(desc);
   }
+
+  public String [] getExceptions () {
+    return this.exceptions;
+  };
+
 
   public int getNumberOfArgumentLocals() {
     return getArgumentTypes().length + (isStatic() ? 1: 0);

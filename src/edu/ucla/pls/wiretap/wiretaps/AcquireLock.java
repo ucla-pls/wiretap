@@ -36,8 +36,8 @@ public class AcquireLock extends Wiretapper {
         // After other instrumentations has run.
         if (getMethod().isSynchronized()) {
           out.pushRecorder();
-          pushContext();
-          acquire.record(createInstructionId());
+          out.pushContext();
+          acquire.record(createOffsetlessInstructionId());
         }
       }
     };

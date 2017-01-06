@@ -2,7 +2,6 @@ package edu.ucla.pls.wiretap.wiretaps;
 
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.commons.GeneratorAdapter;
 
 import edu.ucla.pls.wiretap.EventType;
 import edu.ucla.pls.wiretap.EventType.Emitter;
@@ -41,10 +40,10 @@ public class ReleaseLock extends Wiretapper {
           out.dup();
           super.visitInsn(opcode);
           release.consume(createInstructionId());
-        } else if (opcode == RETURN && getMethod().isSynchronized()) {
+        } else if (opcode <= RETURN && opcode >= IRETURN && getMethod().isSynchronized()) {
           // If the method is synchronized return.
           out.pushRecorder();
-          pushContext();
+          out.pushContext();
           release.record(createInstructionId());
           super.visitInsn(opcode);
         } else {
@@ -60,8 +59,8 @@ public class ReleaseLock extends Wiretapper {
           out.mark(end);
 
           out.pushRecorder();
-          pushContext();
-          release.record(createInstructionId());
+          out.pushContext();
+          release.record(createOffsetlessInstructionId());
 
           // Re-throw the exception
           out.visitTypeInsn(CHECKCAST, "java/lang/Throwable" );

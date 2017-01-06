@@ -35,6 +35,14 @@ public class Field extends Managable<String>{
     return name;
   }
 
+  public String getDesc () {
+    return this.desc;
+  }
+
+  public Object getValue () {
+    return this.value;
+  }
+
   @Override
   public String getDescriptor() {
     return descriptor;

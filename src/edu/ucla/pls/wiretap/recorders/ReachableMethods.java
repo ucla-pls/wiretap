@@ -44,7 +44,7 @@ public class ReachableMethods implements Closeable{
     this.writer = writer;
   }
 
-  public void enter(int id) {
+  public void enter(Object obj, int id) {
     if (visitedMethods.add(id)) {
       final String desc = handler.get(id).getDescriptor();
       synchronized (this) {

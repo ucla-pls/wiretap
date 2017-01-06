@@ -37,6 +37,20 @@ public class WiretapProperties extends Properties {
     return getFile("logfolder", _default);
   }
 
+  public File getHistoryFile() {
+    final File _default = new File (getOutFolder(), "wiretap.hist");
+    return getFile("historyfile", _default);
+  }
+
+  public File getInstFolder() {
+    final File _default = new File (getOutFolder(), "instructions");
+    final File folder = getFile("instfolder", _default);
+    if (! folder.exists()) {
+      folder.mkdirs();
+    }
+    return folder;
+  }
+
   public File getClassFile() {
     final File _default = new File (getOutFolder(), "classes.txt");
     return getFile("classfile", _default);
@@ -55,6 +69,14 @@ public class WiretapProperties extends Properties {
   public File getFieldFile() {
     final File _default = new File (getOutFolder(), "fields.txt");
     return getFile("fieldfile", _default);
+  }
+
+  public long getSynchTime() {
+    return getLong("synchtime", 1000);
+  }
+
+  public long getLoggingDepth() {
+    return getLong("loggingdepth", -1);
   }
 
   public Collection<String> getIgnoredPrefixes() {
@@ -90,7 +112,6 @@ public class WiretapProperties extends Properties {
     return getBoolean("verbose", false);
   }
 
-
   public List<Wiretapper> getWiretappers() {
     if (wiretappers == null) {
 
@@ -99,12 +120,17 @@ public class WiretapProperties extends Properties {
               "EnterMethod",
               "ExitMethod",
 
+              "OrderWrite",
+              "OrderRead",
+
               "ReadObject",
               "ReadPrimitive",
               "WriteObject",
               "WritePrimitive",
 
               "YieldObject",
+
+              "Branch",
 
               "AcquireLock",
               "ReleaseLock",
@@ -196,6 +222,15 @@ public class WiretapProperties extends Properties {
       return def;
     } else {
       return Boolean.parseBoolean(value);
+    }
+  }
+
+  public long getLong(String key, long def) {
+    String value = getProperty(key);
+    if (value == null) {
+      return def;
+    } else {
+      return Long.parseLong(value);
     }
   }
 

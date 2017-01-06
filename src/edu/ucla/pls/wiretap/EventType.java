@@ -1,9 +1,7 @@
 package edu.ucla.pls.wiretap;
 
-import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
-import org.objectweb.asm.commons.GeneratorAdapter;
 
 public class EventType implements Opcodes{
 
@@ -47,24 +45,24 @@ public class EventType implements Opcodes{
       this.out = out;
     }
 
-    public void emit(Object ... args) {
-
-      if (args.length != types.length) {
-        throw new IllegalArgumentException("The args needs to be same length " +
-                                           " as the designated types");
-      }
-
-      // pushRecorder onto the stack
-      out.pushRecorder();
-
-      // Record.
-      record(args);
-    }
 
     public Type getType(int index) {
       return asmTypes[index];
     }
 
+    /** Emits a single event with no knowledge of the current stack.
+     */
+    public void emit(Object ... args) {
+      if (args.length != types.length) {
+        throw new IllegalArgumentException("The args needs to be same length " +
+                                           " as the designated types");
+      }
+      // pushRecorder onto the stack
+      out.pushRecorder();
+      // Record.
+      record(args);
+    }
+    /** Logs the top value at the stack without consuming it. */
     public void log(Object... args) {
       checkLength(1, args);
       if (getType(0).getSize() == 2) {
@@ -101,8 +99,8 @@ public class EventType implements Opcodes{
                                            " than the designated types");
       }
     }
-
-
+    /** Consumes a single event from the stack and emit the event to the recorder
+     */
     public void consume(Object... args) {
       checkLength(1, args);
 
@@ -140,8 +138,8 @@ public class EventType implements Opcodes{
     /**
      * record the current stack to the recorder. This method assumes that objects
      * not in the constants given to the method is already on the stack. Record
-     * will therefor check that the constants matches the types from the end.
-     *
+     * will therefore check that the constants matches the types from the end
+     * to the beginning.
      */
     public void record(Object... args) {
 

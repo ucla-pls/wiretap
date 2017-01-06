@@ -1,237 +1,282 @@
 package edu.ucla.pls.wiretap.recorders;
 
-import java.io.BufferedOutputStream;
 import java.io.Closeable;
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Arrays;
 
-import edu.ucla.pls.wiretap.WiretapProperties;
+public abstract class BinaryLogger implements Closeable {
 
-/** The logger logs events to file.
- */
-
-public class BinaryLogger implements Closeable {
-
-  private static final Map<Thread, BinaryLogger> loggers =
-    new HashMap<Thread, BinaryLogger>();
-
-  private static File logfolder;
-
-  public static void setupRecorder(WiretapProperties properties) {
-    logfolder = properties.getLogFolder();
-    logfolder.mkdirs();
+  public static final int writeInt(int value, byte [] array, int offset) {
+    array[offset]     = (byte)(value >>> 24);
+    array[offset + 1] = (byte)(value >>> 16);
+    array[offset + 2] = (byte)(value >>> 8);
+    array[offset + 3] = (byte)(value);
+    return offset + 4;
   }
 
-  public synchronized static void closeRecorder() throws IOException {
-    System.out.println("Closing recorders");
-    for (BinaryLogger logger: loggers.values()) {
-      System.out.println("Closing " + logger);
-      logger.close();
-    }
-  }
+  /** out contains the output stream. All the events will
+      be written to this stream. */
+  protected final OutputStream out;
 
-  /** getLogger, returns the correct log for this thread. If no log exists
-      create a new. getLogger is thread-safe but also slow, so call as little as
-      possible. */
-  public synchronized static BinaryLogger getBinaryLogger(Thread thread) {
-    BinaryLogger logger = loggers.get(thread);
-    if (logger == null) {
-      int id = loggers.size();
-      File file = new File(logfolder, String.format("%06d.log", id));
-      try {
-        OutputStream writer = new BufferedOutputStream(new FileOutputStream(file),
-                                                       32768);
-        logger = new BinaryLogger(id, writer);
-        loggers.put(thread, logger);
-      } catch (IOException e) {
-        e.printStackTrace();
-      }
-    }
-    return logger;
-  }
+  /** contains the event. */
+  protected final byte[] event;
 
-  public static BinaryLogger getRecorder() {
-    return getBinaryLogger(Thread.currentThread());
-  }
+  /** the current offset in the event. */
+  protected int offset = 0;
 
-  public static final int MAX_SIZE = 21;
+  public final int id;
+  public boolean running = false;
 
-  private final int id;
-  private final OutputStream writer;
+  private final OutputStream logInst;
 
-  private final byte [] event = new byte[MAX_SIZE];
-
-  public BinaryLogger(int id, OutputStream writer) {
+  public BinaryLogger(OutputStream out, byte[] event, int id, OutputStream logInst) {
     this.id = id;
-    this.writer = writer;
+    this.out = out;
+    this.event = event;
+    this.logInst = logInst;
+  }
+
+  public abstract BinaryLogger fromThread(Thread thread);
+
+  public void postOutput() {
+    offset = 0;
+  };
+
+  public final int getId() {
+    return id;
   }
 
   public String toString() {
     return "Logger_" + this.id;
   }
 
-  private final int ppThread(Thread thread) {
-    return getBinaryLogger(thread).getId();
-  }
-
-  private final int ppObject(Object object) {
-    int id;
-    if (object != null) {
-      id = System.identityHashCode(object);
-    } else {
-      id = 0;
+  private final void logInstruction(int inst) {
+    if (logInst != null) {
+      try {
+        byte[] bytes = new byte[4];
+        writeInt(inst, bytes, 0);
+        logInst.write(bytes);
+      } catch (IOException e) {
+        throw new RuntimeException(e);
+      }
     }
-    return id;
   }
 
+  public final void write(int value) {
+    byte[] _event = this.event;
+    int _offset = this.offset;
+    _event[_offset]     = (byte)(value >>> 24);
+    _event[_offset + 1] = (byte)(value >>> 16);
+    _event[_offset + 2] = (byte)(value >>> 8);
+    _event[_offset + 3] = (byte)(value);
+    this.offset = _offset + 4;
+  }
+
+  public static int objectToInt(Object object) {
+    return object != null ? System.identityHashCode(object) : 0;
+  }
+
+  public final void write(Object object) {
+    write(objectToInt(object));
+  }
+
+  private final void output(int inst) {
+    try {
+      out.write(event, 0, offset);
+      logInstruction(inst);
+    } catch (IOException e) {
+    }
+    postOutput();
+  }
+
+  public static final byte SYNC = 0;
   public static final byte FORK = 1;
   public static final byte JOIN = 2;
 
   public static final byte REQUEST = 3;
-  public static final byte RELEASE = 4;
-  public static final byte ACQUIRE = 5;
+  public static final byte ACQUIRE = 4;
+  public static final byte RELEASE = 5;
 
-  public static final byte READ = 6;
-  public static final byte WRITE = 14;
+  public static final byte BEGIN = 6;
+  public static final byte END = 7;
 
-  public static final int writeInt(int value, byte [] array, int offset) {
-    array[offset++] = (byte)(value >>> 24);
-    array[offset++] = (byte)(value >>> 16);
-    array[offset++] = (byte)(value >>> 8);
-    array[offset++] = (byte)(value);
-    return offset;
+  public static final byte BRANCH = 8;
+  public static final byte PHI = 9;
+
+  public static final byte ENTER = 10;
+  public static final byte EXIT  = 11;
+
+  public static final byte READ = 12;
+  public static final byte WRITE = 13;
+
+  public static final byte READARRAY = 14;
+  public static final byte WRITEARRAY = 15;
+
+  public final void sync(int order) {
+    event[offset] = SYNC;
+    write(order);
+    output(-1);
   }
 
-  public final void output(int size) {
-    try {
-      writer.write(event, 0, size);
-    } catch (Exception e) {}
-  }
 
-  public final void fork(Thread thread) {
-    int offset = 0;
+  public final void fork(Thread thread, int inst) {
+    BinaryLogger logger = fromThread(thread);
     event[offset++] = FORK;
-    offset = writeInt(ppThread(thread), event, offset);
-    output(offset);
+    write(logger.id);
+    output(inst);
+    logger.begin();
   }
 
-  public final void join(Thread thread) {
-    int offset = 0;
+  public final void join(Thread thread, int inst) {
+    BinaryLogger logger = fromThread(thread);
+    logger.end();
     event[offset++] = JOIN;
-    offset = writeInt(ppThread(thread), event, offset);
-    output(offset);
+    write(logger.id);
+    output(inst);
   }
 
   public final void request(Object o, int inst) {
-    int offset = 0;
     event[offset++] = REQUEST;
-    offset = writeInt(inst, event, offset);
-    offset = writeInt(ppObject(o), event, offset);
-    output(offset);
+    write(o);
+    output(inst);
   }
 
   public final void release(Object o, int inst) {
-    int offset = 0;
     event[offset++] = RELEASE;
-    offset = writeInt(inst, event, offset);
-    offset = writeInt(ppObject(o), event, offset);
-    output(offset);
+    write(o);
+    output(inst);
   }
 
   public final void acquire (Object o, int inst) {
-    int offset = 0;
     event[offset++] = ACQUIRE;
-    offset = writeInt(inst, event, offset);
-    offset = writeInt(ppObject(o), event, offset);
-    output(offset);
+    write(o);
+    output(inst);
   }
 
   public final void read(Object o, int field, int inst) {
-    int offset = 0;
-    event[offset++] = (byte) (READ + valueType);
-    offset = writeInt(inst, event, offset);
-    offset = writeInt(ppObject(o), event, offset);
-    offset = writeInt(field, event, offset);
-    System.arraycopy(value, 0, event, offset, valueSize);
-    output(offset + valueSize);
+    event[offset++] = (byte) (READ | valueType);
+    write(o);
+    write(field);
+    offset += valueSize;
+    output(inst);
   }
   public final void readarray(Object a, int index, int inst) {
-    read(a, index, inst);
+    event[offset++] = (byte) (READARRAY | valueType);
+    write(a);
+    write(index);
+    offset += valueSize;
+    output(inst);
   }
 
   public final void write(Object o, int field, int inst) {
-    int offset = 0;
-    event[offset++] = (byte) (WRITE + valueType);
-    offset = writeInt(inst, event, offset);
-    offset = writeInt(ppObject(o), event, offset);
-    offset = writeInt(field, event, offset);
-    System.arraycopy(value, 0, event, offset, valueSize);
-    output(offset + valueSize);
+    event[offset++] = (byte) (WRITE | valueType);
+    write(o);
+    write(field);
+    offset += valueSize;
+    output(inst);
   }
 
   public final void writearray(Object a, int index, int inst) {
-    write(a, index, inst);
+    event[offset++] = (byte) (WRITEARRAY | valueType);
+    write(a);
+    write(index);
+    offset += valueSize;
+    output(inst);
   }
 
-  public static final byte BYTE_TYPE   = 0;
-  public static final byte CHAR_TYPE   = 1;
-  public static final byte SHORT_TYPE  = 2;
-  public static final byte INT_TYPE    = 3;
-  public static final byte LONG_TYPE   = 4;
-  public static final byte FLOAT_TYPE  = 5;
-  public static final byte DOUBLE_TYPE = 6;
-  public static final byte OBJECT_TYPE = 7;
+  public final void begin() {
+    synchronized (this) {
+      event[offset++] = BEGIN;
+      running = true;
+      output(-1);
+    }
+  }
 
-  private byte[] value = new byte [8];
+  public final void end() {
+    synchronized (this) {
+      if (running) {
+        running = false;
+        event[offset++] = END;
+        output(-1);
+      }
+    }
+  }
+
+  public final void branch(int inst) {
+    event[offset++] = BRANCH;
+    output(inst);
+  }
+
+  public final void enter(Object o, int methodId) {
+    event[offset++] = ENTER;
+    write(o);
+    write(methodId);
+    output(-1);
+  }
+
+  @Override
+	public void close() throws IOException {
+    out.close();
+    logInst.close();
+  }
+
+  public static final int BYTE_TYPE   = 0;
+  public static final int CHAR_TYPE   = (1 << 4);
+  public static final int SHORT_TYPE  = (2 << 4);
+  public static final int INT_TYPE    = (3 << 4);
+  public static final int LONG_TYPE   = (4 << 4);
+  public static final int FLOAT_TYPE  = (5 << 4);
+  public static final int DOUBLE_TYPE = (6 << 4);
+  public static final int OBJECT_TYPE = (7 << 4);
+
   private int valueSize;
   private byte valueType;
 
-  /** value acts as a store for the next event. It has the ability
-      to have a value in memory which can then be used after **/
-  public final void value(Object o) {
-    valueSize = writeInt(ppObject(o), value, 0);
-    valueType = OBJECT_TYPE;
-  }
-
   public final void value(byte v) {
-    event[0] = v;
+    int _offset = this.offset + 9;
+    byte[] _event = this.event;
+    _event[_offset] = v;
     valueSize = 1;
     valueType = BYTE_TYPE;
   }
 
   public final void value(char v) {
-    event[0] = (byte) v;
-    valueSize = 1;
+    value((byte) v);
     valueType = CHAR_TYPE;
   }
 
   public final void value(short v) {
-    int offset = 0;
-    value[0] = (byte)(v >>> 8);
-    value[1] = (byte)(v);
+    int _offset = this.offset + 9;
+    byte[] _event = this.event;
+    _event[_offset + 0] = (byte)(v >>> 8);
+    _event[_offset + 1] = (byte)(v);
     valueSize = 2;
     valueType = SHORT_TYPE;
   }
 
   public final void value(int v) {
-    valueSize = writeInt(v, value, 0);
+    int _offset = this.offset + 9;
+    byte[] _event = this.event;
+    _event[_offset + 0] = (byte)(v >>> 24);
+    _event[_offset + 1] = (byte)(v >>> 16);
+    _event[_offset + 2] = (byte)(v >>> 8);
+    _event[_offset + 3] = (byte)(v);
+    valueSize = 4;
     valueType = INT_TYPE;
   }
 
   public final void value(long v) {
-    value[0] = (byte)(v >>> 52);
-    value[1] = (byte)(v >>> 48);
-    value[2] = (byte)(v >>> 40);
-    value[3] = (byte)(v >>> 32);
-    value[4] = (byte)(v >>> 24);
-    value[5] = (byte)(v >>> 16);
-    value[6] = (byte)(v >>> 8);
-    value[7] = (byte)(v);
+    int _offset = this.offset + 9;
+    byte[] _event = this.event;
+    _event[_offset + 0] = (byte)(v >>> 52);
+    _event[_offset + 1] = (byte)(v >>> 48);
+    _event[_offset + 2] = (byte)(v >>> 40);
+    _event[_offset + 3] = (byte)(v >>> 32);
+    _event[_offset + 4] = (byte)(v >>> 24);
+    _event[_offset + 5] = (byte)(v >>> 16);
+    _event[_offset + 6] = (byte)(v >>> 8);
+    _event[_offset + 7] = (byte)(v);
     valueSize = 8;
     valueType = LONG_TYPE;
   }
@@ -246,13 +291,11 @@ public class BinaryLogger implements Closeable {
     valueType = DOUBLE_TYPE;
   }
 
-  public int getId() {
-    return id;
-  }
-
-  @Override
-  public void close() throws IOException {
-    writer.close();
+  /** value acts as a store for the next event. It has the ability
+      to have a value in memory which can then be used after **/
+  public final void value(Object o) {
+    value(objectToInt(o));
+    valueType = OBJECT_TYPE;
   }
 
 }

@@ -11,6 +11,15 @@ public abstract class Maybe <T> {
       return new Just<T>(object);
     }
   }
+
+  public static <T> Maybe<T> just(T object) {
+    return new Just <T> (object);
+  }
+
+  public static <T> Maybe<T> nothing() {
+    return new Nothing<T>();
+  }
+
 }
 
 class Just <T> extends Maybe<T> {

@@ -116,14 +116,16 @@ public class Agent implements ClassFileTransformer, Closeable {
   }
 
   public void close () throws IOException {
-    classWriter.close();
-    methods.close();
     try {
       closeRecorder.invoke(null);
     } catch (Exception e) {
       System.err.println("Could not close recorder");
       e.printStackTrace();
     }
+    classWriter.close();
+    methods.close();
+    instructions.close();
+    fields.close();
   }
 
   public MethodManager getMethodManager () {
@@ -169,7 +171,7 @@ public class Agent implements ClassFileTransformer, Closeable {
                                        Object value) {
           // The use of desc over signature, might be a mistake. Note that signature
           // can be null.
-          Field f = fields.put(new Field(access, className, name, desc, value));
+          fields.put(new Field(access, className, name, desc, value));
           return super.visitField(access, name, desc, signature, value);
         }
 
@@ -177,6 +179,13 @@ public class Agent implements ClassFileTransformer, Closeable {
     if (properties.isClassIgnored(className)) {
       return null;
     } else {
+      try {
+        classWriter.write(className);
+        classWriter.write("\n");
+      } catch (IOException e) {
+        //Silent exception;
+      }
+
       if (properties.isVerbose()) {
         logClass(className, buffer);
       }
@@ -219,13 +228,11 @@ public class Agent implements ClassFileTransformer, Closeable {
           if (result.length() != 0) {
             System.err.println("Test Failed");
             System.err.println(result);
-            System.exit(-1);
           }
         } catch (Exception e) {
           System.err.println("Test Failed");
           System.err.println(sw.toString());
           e.printStackTrace();
-          System.exit(-1);
         }
       }
 
@@ -236,12 +243,6 @@ public class Agent implements ClassFileTransformer, Closeable {
   private void logClass(String className, byte[] bytes)  {
     System.err.println("Class '" + className + "' has " + bytes.length + " bytes.");
 
-    try {
-      classWriter.write(className);
-      classWriter.write("\n");
-    } catch (IOException e) {
-      //Silent exception;
-    }
   }
 
   private void dumpClassFile(String className, byte[] bytes) {

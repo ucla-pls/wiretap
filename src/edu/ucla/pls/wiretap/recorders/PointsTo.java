@@ -16,8 +16,6 @@ import edu.ucla.pls.wiretap.managers.InstructionManager;
 
 public class PointsTo implements Closeable{
 
-  private static final int INITIAL_CAP = 1024;
-
   private static PointsTo instance;
 
   public static void setupRecorder (WiretapProperties properties) {

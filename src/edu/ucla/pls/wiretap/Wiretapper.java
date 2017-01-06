@@ -6,8 +6,6 @@ import java.util.List;
 import org.objectweb.asm.ClassReader.OffsetHandler;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.Type;
-import org.objectweb.asm.commons.GeneratorAdapter;
 
 import edu.ucla.pls.wiretap.managers.Field;
 import edu.ucla.pls.wiretap.managers.FieldManager;
@@ -48,12 +46,11 @@ public abstract class Wiretapper {
 
   public Wiretap wiretap(MethodVisitor next,
                          RecorderAdapter out,
-                         Method method,
-                         int version) {
+                         Method method
+                         ) {
     Wiretap tap = createWiretap(next, out);
     tap.setMethod(method);
     tap.setOut(out);
-    tap.setVersion(version);
     return tap;
   }
 
@@ -67,7 +64,6 @@ public abstract class Wiretapper {
 
     private Method method;
     protected RecorderAdapter out;
-    private int version;
 
     public Wiretap(MethodVisitor next) {
       super(Opcodes.ASM5, next);
@@ -75,10 +71,6 @@ public abstract class Wiretapper {
 
     public void setMethod (Method method) {
       this.method = method;
-    }
-
-    public void setVersion (int version) {
-      this.version = version;
     }
 
     public void setOut (RecorderAdapter out) {
@@ -89,8 +81,16 @@ public abstract class Wiretapper {
       return instructions.put(new Instruction(method, getOffset()));
     }
 
+    public Instruction createOffsetlessInstruction() {
+      return instructions.put(new Instruction(method, -1));
+    }
+
     public int createInstructionId() {
       return createInstruction().getId();
+    }
+
+    public int createOffsetlessInstructionId() {
+      return createOffsetlessInstruction().getId();
     }
 
     public int getFieldId(String owner, String name, String desc) {
@@ -103,22 +103,6 @@ public abstract class Wiretapper {
 
     public Method getMethod () {
       return method;
-    }
-
-    private final Type CLASS_TYPE = Type.getType(Class.class);
-    private final org.objectweb.asm.commons.Method FOR_NAME =
-      new org.objectweb.asm.commons.Method("forName", "(Ljava/lang/String;)Ljava/lang/Class;");
-    public void pushContext() {
-      if (getMethod().isStatic()) {
-        if (version < V1_5) {
-          out.push(method.getOwner().replace('/', '.'));
-          out.invokeStatic(CLASS_TYPE, FOR_NAME);
-        } else {
-          out.push(method.getOwnerType());
-        }
-      } else {
-        out.loadThis();
-      }
     }
 
   }
