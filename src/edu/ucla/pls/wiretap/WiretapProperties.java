@@ -75,6 +75,10 @@ public class WiretapProperties extends Properties {
     return getLong("synchtime", 1000);
   }
 
+  public long getLoggingDepth() {
+    return getLong("loggingdepth", -1);
+  }
+
   public Collection<String> getIgnoredPrefixes() {
     if (ignoredPrefixes == null) {
       ignoredPrefixes = getList("ignoredprefixes", Arrays.asList("java", "sun", "edu/ucla/pls/wiretap"));
@@ -107,7 +111,6 @@ public class WiretapProperties extends Properties {
   public boolean isVerbose() {
     return getBoolean("verbose", false);
   }
-
 
   public List<Wiretapper> getWiretappers() {
     if (wiretappers == null) {

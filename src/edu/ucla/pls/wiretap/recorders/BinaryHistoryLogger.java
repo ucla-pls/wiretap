@@ -8,6 +8,7 @@ import java.io.OutputStream;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -26,11 +27,17 @@ public class BinaryHistoryLogger extends BinaryLogger {
   private static OutputStream globalWriter;
 
   private static File instFolder;
+  private static long loggingDepth;
+  private static AtomicLong counter;
   private static final AtomicInteger loggerId = new AtomicInteger();
 
   public static void setupRecorder(WiretapProperties properties) {
     File historyFile = properties.getHistoryFile();
     instFolder = properties.getInstFolder();
+    long loggingDepth = properties.getLoggingDepth();
+    if (loggingDepth > 0) {
+      counter = new AtomicLong(loggingDepth);
+    }
     try {
       OutputStream s = new FileOutputStream(historyFile);
       globalWriter =
@@ -90,6 +97,10 @@ public class BinaryHistoryLogger extends BinaryLogger {
   public void postOutput() {
     offset = 4;
     write(order++);
+    if (counter != null && counter.getAndDecrement() <= 0) {
+      System.err.println("Reached maximal depth.");
+      System.exit(1);
+    }
   }
 
   private final ReadWriteLock totalorder = new ReentrantReadWriteLock();
