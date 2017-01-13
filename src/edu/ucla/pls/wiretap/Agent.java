@@ -106,7 +106,8 @@ public class Agent implements ClassFileTransformer, Closeable {
             mainThread.join(2000);
             System.err.println("Closing agent");
             Agent.v().close();
-            System.err.println("Agent closed");
+            System.err.println("Agent closed... Halting system.");
+            Runtime.getRuntime().halt(1);
           } catch (Exception e) {
             System.err.println("Could not close agent");
             e.printStackTrace();
