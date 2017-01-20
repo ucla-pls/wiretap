@@ -14,6 +14,7 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import edu.ucla.pls.utils.ConcurrentOutputStream;
+import edu.ucla.pls.wiretap.Closer;
 import edu.ucla.pls.wiretap.WiretapProperties;
 
 /** The logger logs events to file.
@@ -27,7 +28,6 @@ public class BinaryHistoryLogger extends BinaryLogger {
   private static OutputStream globalWriter;
 
   private static File instFolder;
-  private static long loggingDepth;
   private static AtomicLong counter;
   private static final AtomicInteger loggerId = new AtomicInteger();
 
@@ -49,12 +49,12 @@ public class BinaryHistoryLogger extends BinaryLogger {
   }
 
   public synchronized static void closeRecorder() throws IOException {
-    System.out.println("Closing recorders");
+    System.out.println("Closing loggers...");
     for (BinaryHistoryLogger logger: loggers.values()) {
-      System.err.println("Closing " + logger);
-      logger.close();
+      Closer.close(logger.toString(), logger, 1000);
     }
-    globalWriter.close();
+    System.out.println("Done closing loggers...");
+    Closer.close("the global writer", globalWriter, 100);
   }
 
   /** getLogger, returns the correct log for this thread. If no log exists
