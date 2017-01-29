@@ -49,14 +49,13 @@ public class WaitLock extends Wiretapper {
           if (desc.equals("()V")) {
             logAll();
           } else if (desc.equals("(J)V")) {
-            out.swap(Type.LONG_TYPE, Type.INT_TYPE);
-            logAll();
             out.swap(Type.INT_TYPE, Type.LONG_TYPE);
-
+            logAll();
+            out.swap(Type.LONG_TYPE, Type.INT_TYPE);
           } else if (desc.equals("(JI)V")) {
             int freeLocal = out.newLocal(Type.LONG_TYPE);
             // Lock, Long, Long2, Int
-            out.swap(Type.LONG_TYPE, Type.INT_TYPE);
+            out.swap(Type.INT_TYPE, Type.LONG_TYPE);
             out.storeLocal(freeLocal);
             out.swap();
             // Int, Lock
@@ -65,7 +64,7 @@ public class WaitLock extends Wiretapper {
 
             out.swap();
             out.loadLocal(freeLocal);
-            out.swap(Type.INT_TYPE, Type.LONG_TYPE);
+            out.swap(Type.LONG_TYPE, Type.INT_TYPE);
           }
         }
         super.visitMethodInsn(opcode, owner, name, desc, itf);
