@@ -20,7 +20,7 @@ public class OrderWrite extends Wiretapper {
 
       @Override
       public void visitInsn(int opcode) {
-        if (AASTORE >= opcode && opcode < AASTORE + 8) {
+        if (IASTORE <= opcode && opcode < IASTORE + 8) {
           prewrite.emit();
           super.visitInsn(opcode);
           postwrite.emit();
@@ -35,7 +35,7 @@ public class OrderWrite extends Wiretapper {
                                  String name,
                                  String desc) {
         Field f = getField(owner, name, desc);
-        if (!f.isFinal()) {
+        if (!f.isFinal() && (opcode == PUTSTATIC || opcode == PUTFIELD)) {
           prewrite.emit();
           super.visitFieldInsn(opcode, owner, name, desc);
           postwrite.emit();

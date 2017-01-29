@@ -20,7 +20,7 @@ public class OrderRead extends Wiretapper {
 
       @Override
       public void visitInsn(int opcode) {
-        if (AALOAD >= opcode && opcode < AALOAD + 8) {
+        if (IALOAD <= opcode && opcode < IALOAD + 8) {
           preread.emit();
           super.visitInsn(opcode);
           postread.emit();
@@ -35,7 +35,7 @@ public class OrderRead extends Wiretapper {
                                  String name,
                                  String desc) {
         Field f = getField(owner, name, desc);
-        if (!f.isFinal()) {
+        if (!f.isFinal() && (opcode == GETSTATIC || opcode == GETFIELD)) {
           preread.emit();
           super.visitFieldInsn(opcode, owner, name, desc);
           postread.emit();
