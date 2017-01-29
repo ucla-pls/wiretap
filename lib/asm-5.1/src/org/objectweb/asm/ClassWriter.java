@@ -1716,7 +1716,9 @@ public class ClassWriter extends ClassVisitor {
             c = Class.forName(type1.replace('/', '.'), false, classLoader);
             d = Class.forName(type2.replace('/', '.'), false, classLoader);
         } catch (Exception e) {
-            throw new RuntimeException(e.toString());
+          System.err.println(e);
+          System.err.println("Choosing 'java/lang/Object' as the common super class.. this might lead to problems.");
+          return "java/lang/Object";
         }
         if (c.isAssignableFrom(d)) {
             return type1;
