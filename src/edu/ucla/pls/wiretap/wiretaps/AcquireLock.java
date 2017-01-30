@@ -29,17 +29,6 @@ public class AcquireLock extends Wiretapper {
 
       }
 
-      public void visitCode() {
-
-        super.visitCode();
-
-        // After other instrumentations has run.
-        if (getMethod().isSynchronized()) {
-          out.pushRecorder();
-          out.pushContext();
-          acquire.record(createOffsetlessInstructionId());
-        }
-      }
     };
   }
 }

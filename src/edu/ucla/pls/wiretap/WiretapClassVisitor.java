@@ -7,11 +7,12 @@ import java.util.List;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Opcodes;
+import static org.objectweb.asm.Opcodes.*;
 import org.objectweb.asm.commons.TryCatchBlockSorter;
 
 import edu.ucla.pls.wiretap.managers.Method;
 import edu.ucla.pls.wiretap.managers.MethodManager;
+
 
 public class WiretapClassVisitor extends ClassVisitor {
 
@@ -28,7 +29,7 @@ public class WiretapClassVisitor extends ClassVisitor {
                              List<Wiretapper> wiretappers,
                              MethodManager methodManager
                              ) {
-    super(Opcodes.ASM5, visitor);
+    super(ASM5, visitor);
     this.className = className;
     this.methodManager = methodManager;
     this.recorder = recorder;
@@ -45,30 +46,44 @@ public class WiretapClassVisitor extends ClassVisitor {
                     String[] interfaces) {
     this.version = version;
     super.visit(version, access, name, signature, superName, interfaces);
-	}
+  }
 
-	public MethodVisitor visitMethod(int access,
+  public MethodVisitor visitMethod(int access,
                                    String name,
                                    String desc,
                                    String signature,
                                    String[] exceptions) {
+    MethodVisitor visitor;
 
     // The use of desc over signature, might be a mistake. Note that signature
     // can be null.
     Method m = methodManager.put(new Method(access, className, name, desc, exceptions));
 
-    MethodVisitor visitor =
-        super.visitMethod(access, name, desc, signature, exceptions);
+
+    if (m.isSynchronized()) {
+      access -= ACC_SYNCHRONIZED;
+    }
+
+    visitor = super.visitMethod(access, name, desc, signature, exceptions);
     visitor = new TryCatchBlockSorter(visitor, access, name, desc, signature, exceptions);
+     visitor = wiretap(m, new RecorderAdapter(recorder, version, visitor, m));
 
-    RecorderAdapter generator = new RecorderAdapter(recorder, version, visitor, m);
+    if (m.isSynchronized()) {
+      visitor = new SynchronizedUnfolder(version, visitor, access, m);
+    }
 
+    return visitor;
+
+  }
+
+  private MethodVisitor wiretap(Method m, RecorderAdapter generator) {
     MethodVisitor next = generator;
     for (Wiretapper wiretapper : wiretappers) {
       next = wiretapper.wiretap(next, generator, m);
     }
     return next;
   }
+
 
   public void readFrom(ClassReader reader) {
     for (Wiretapper tapper: wiretappers) {

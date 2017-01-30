@@ -26,18 +26,6 @@ public class RequestLock extends Wiretapper {
 
         super.visitInsn(opcode);
       }
-
-      public void visitCode() {
-
-        if (getMethod().isSynchronized()) {
-          out.pushRecorder();
-          out.pushContext();
-          request.record(createOffsetlessInstructionId());
-        }
-
-        // Before any instrumentation has been made.
-        super.visitCode();
-      }
     };
   }
 }
