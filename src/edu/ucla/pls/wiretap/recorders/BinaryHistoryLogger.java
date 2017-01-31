@@ -10,8 +10,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import edu.ucla.pls.utils.ConcurrentOutputStream;
 import edu.ucla.pls.wiretap.Closer;
@@ -102,24 +101,26 @@ public class BinaryHistoryLogger extends BinaryLogger {
       System.exit(1);
     }
   }
-
-  private final ReadWriteLock totalorder = new ReentrantReadWriteLock();
-  private final Lock readlock = totalorder.readLock();
-  private final Lock writelock = totalorder.writeLock();
+  private final Lock readlock = new ReentrantLock();
+  private final Lock writelock = readlock;
 
   public final void prewrite () {
+    Thread t = Thread.currentThread();
     writelock.lock();
   }
 
   public final void postwrite () {
+    Thread t = Thread.currentThread();
     writelock.unlock();
   }
 
   public final void preread () {
+    Thread t = Thread.currentThread();
     readlock.lock();
   }
 
   public final void postread () {
+    Thread t = Thread.currentThread();
     readlock.unlock();
   }
 

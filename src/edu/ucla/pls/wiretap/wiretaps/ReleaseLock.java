@@ -1,6 +1,5 @@
 package edu.ucla.pls.wiretap.wiretaps;
 
-import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 
 import edu.ucla.pls.wiretap.EventType;
@@ -21,8 +20,8 @@ public class ReleaseLock extends Wiretapper {
       public void visitInsn(int opcode) {
         if (opcode == MONITOREXIT) {
           out.dup();
-          super.visitInsn(opcode);
           release.consume(createInstructionId());
+          super.visitInsn(opcode);
         } else {
           super.visitInsn(opcode);
         }
