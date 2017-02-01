@@ -187,7 +187,7 @@ public class Agent implements ClassFileTransformer, Closeable {
           try {
             fields.put(f);
           } catch (Exception e) {
-            System.err.println("Warn: trying to add, this field again: " + f);
+            System.err.println("Warn: trying to add this field again: " + f);
           }
           return super.visitField(access, name, desc, signature, value);
         }
