@@ -183,11 +183,17 @@ public class Agent implements ClassFileTransformer, Closeable {
                                        Object value) {
           // The use of desc over signature, might be a mistake. Note that signature
           // can be null.
-          fields.put(new Field(access, className, name, desc, value));
+          Field f = new Field(access, className, name, desc, value);
+          try {
+            fields.put(f);
+          } catch (Exception e) {
+            System.err.println("Warn: trying to add, this field again: " + f);
+          }
           return super.visitField(access, name, desc, signature, value);
         }
 
       }, 0);
+
     if (properties.isClassIgnored(className)) {
       return null;
     } else {

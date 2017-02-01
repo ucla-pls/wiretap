@@ -78,11 +78,11 @@ public abstract class Wiretapper {
     }
 
     public Instruction createInstruction() {
-      return instructions.put(new Instruction(method, getOffset()));
+      return instructions.getDefault(new Instruction(method, getOffset()));
     }
 
     public Instruction createOffsetlessInstruction() {
-      return instructions.put(new Instruction(method, -1));
+      return instructions.getDefault(new Instruction(method, -1));
     }
 
     public int createInstructionId() {

@@ -38,6 +38,10 @@ public class Manager<D,M extends Managable<D>> implements Closeable {
   public synchronized M put(M managable) {
     managable.setId(managables.size());
     D desc = managable.getDescriptor();
+    M m2 = lookup.get(desc);
+    if (m2 != null) {
+      throw new RuntimeException("Could not add " + managable + ", it does already exist " + m2);
+    }
     lookup.put(desc, managable);
     managables.add(managable);
     try {
@@ -53,6 +57,15 @@ public class Manager<D,M extends Managable<D>> implements Closeable {
     return managables.get(id);
   }
 
+  public synchronized M getDefault(M def) {
+    D desc = def.getDescriptor();
+    M managable = getUnsafe(desc);
+    if (managable == null) {
+      managable = put(def);
+    }
+    return managable;
+  }
+
   public synchronized M get(D descriptor) {
     M managable = getUnsafe(descriptor);
     if (managable != null) {
@@ -62,7 +75,7 @@ public class Manager<D,M extends Managable<D>> implements Closeable {
     }
   }
 
-  public synchronized M getUnsafe(D descriptor) {
+  private synchronized M getUnsafe(D descriptor) {
     return lookup.get(descriptor);
   }
 

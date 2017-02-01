@@ -105,22 +105,18 @@ public class BinaryHistoryLogger extends BinaryLogger {
   private final Lock writelock = readlock;
 
   public final void prewrite () {
-    Thread t = Thread.currentThread();
     writelock.lock();
   }
 
   public final void postwrite () {
-    Thread t = Thread.currentThread();
     writelock.unlock();
   }
 
   public final void preread () {
-    Thread t = Thread.currentThread();
     readlock.lock();
   }
 
   public final void postread () {
-    Thread t = Thread.currentThread();
     readlock.unlock();
   }
 

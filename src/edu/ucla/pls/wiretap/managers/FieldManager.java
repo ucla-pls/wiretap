@@ -28,13 +28,8 @@ public class FieldManager extends Manager<String, Field> {
     return b.toString();
   }
 
-  public Field getField(String owner, String name, String desc) {
-    String descriptor = getFieldDescriptor(owner, name, desc);
-    Field f = getUnsafe(descriptor);
-    if (f == null) {
-      return put(new Field(0, owner, name, desc, null));
-    }
-    return f;
+  public synchronized Field getField(String owner, String name, String desc) {
+    return getDefault(new Field(0, owner, name, desc, null));
   }
 
 }
