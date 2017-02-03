@@ -57,7 +57,7 @@ public class WiretapClassVisitor extends ClassVisitor {
 
     // The use of desc over signature, might be a mistake. Note that signature
     // can be null.
-    Method m = methodManager.put(new Method(access, className, name, desc, exceptions));
+    Method m = methodManager.getDefault(new Method(access, className, name, desc, exceptions));
 
 
     if (m.isSynchronized()) {
