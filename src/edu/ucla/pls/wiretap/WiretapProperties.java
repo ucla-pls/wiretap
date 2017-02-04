@@ -9,7 +9,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 
-import edu.ucla.pls.utils.Maybe;
+import edu.ucla.pls.wiretap.utils.Maybe;
 
 public class WiretapProperties extends Properties {
   public static final long serialVersionUID = 1;

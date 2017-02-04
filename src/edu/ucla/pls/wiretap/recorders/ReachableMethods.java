@@ -7,7 +7,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 
-import edu.ucla.pls.utils.IntSet;
+import edu.ucla.pls.wiretap.utils.IntSet;
 import edu.ucla.pls.wiretap.Agent;
 import edu.ucla.pls.wiretap.WiretapProperties;
 import edu.ucla.pls.wiretap.managers.MethodManager;

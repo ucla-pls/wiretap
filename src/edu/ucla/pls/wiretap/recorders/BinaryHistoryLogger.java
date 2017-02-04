@@ -12,8 +12,8 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import edu.ucla.pls.utils.ConcurrentOutputStream;
 import edu.ucla.pls.wiretap.Closer;
+import edu.ucla.pls.wiretap.utils.ConcurrentOutputStream;
 import edu.ucla.pls.wiretap.WiretapProperties;
 
 /** The logger logs events to file.

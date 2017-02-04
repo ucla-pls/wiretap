@@ -1,6 +1,6 @@
 package edu.ucla.pls.wiretap.managers;
 
-import edu.ucla.pls.utils.Pair;
+import edu.ucla.pls.wiretap.utils.Pair;
 
 public class Instruction extends Managable<Pair<Method, Integer>> {
 

@@ -9,7 +9,7 @@ import java.io.Writer;
 
 import org.objectweb.asm.Type;
 
-import edu.ucla.pls.utils.IntMapSet;
+import edu.ucla.pls.wiretap.utils.IntMapSet;
 import edu.ucla.pls.wiretap.Agent;
 import edu.ucla.pls.wiretap.WiretapProperties;
 import edu.ucla.pls.wiretap.managers.InstructionManager;

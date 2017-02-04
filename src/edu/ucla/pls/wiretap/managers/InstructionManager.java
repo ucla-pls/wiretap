@@ -2,7 +2,7 @@ package edu.ucla.pls.wiretap.managers;
 
 import java.util.List;
 
-import edu.ucla.pls.utils.Pair;
+import edu.ucla.pls.wiretap.utils.Pair;
 import edu.ucla.pls.wiretap.WiretapProperties;
 
 public class InstructionManager extends Manager<Pair<Method, Integer>, Instruction> {
