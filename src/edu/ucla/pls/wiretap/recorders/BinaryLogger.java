@@ -30,6 +30,10 @@ public abstract class BinaryLogger implements Closeable {
   private final OutputStream logInst;
 
   public BinaryLogger(OutputStream out, byte[] event, int id, OutputStream logInst) {
+    if (out == null)
+      throw new NullPointerException("The output stream was null");
+    if (logInst == null)
+      throw new NullPointerException("Instruction logger was null");
     this.id = id;
     this.out = out;
     this.event = event;
