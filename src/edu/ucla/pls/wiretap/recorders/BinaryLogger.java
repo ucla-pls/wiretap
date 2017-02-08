@@ -220,7 +220,6 @@ public abstract class BinaryLogger implements Closeable {
 
   @Override
 	public void close() throws IOException {
-    out.close();
     logInst.close();
   }
 

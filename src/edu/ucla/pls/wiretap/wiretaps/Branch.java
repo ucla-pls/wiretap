@@ -20,7 +20,8 @@ public class Branch extends Wiretapper {
     return new Wiretap(next) {
       @Override
       public void visitJumpInsn(int opcode, Label label) {
-        branch.emit(createInstructionId());
+        if (opcode != GOTO)
+          branch.emit(createInstructionId());
         super.visitJumpInsn(opcode, label);
       }
     };

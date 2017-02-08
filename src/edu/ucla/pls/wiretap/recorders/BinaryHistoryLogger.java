@@ -101,6 +101,7 @@ public class BinaryHistoryLogger extends BinaryLogger {
       System.exit(1);
     }
   }
+
   private final Lock readlock = new ReentrantLock();
   private final Lock writelock = readlock;
 

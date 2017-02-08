@@ -23,7 +23,8 @@ public class ForkThread extends Wiretapper {
                                   String desc,
                                   boolean itf) {
 
-        if (name.equals("start") && desc.equals("()V") && owner.equals("java/lang/Thread")) {
+        if (name.equals("start") && desc.equals("()V") ) {
+          System.err.println("WARNING: Assumes that " + owner + " is inheriting from thread.");
           fork.log(createInstructionId());
         }
 
