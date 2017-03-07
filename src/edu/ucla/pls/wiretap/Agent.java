@@ -89,7 +89,7 @@ public class Agent implements ClassFileTransformer, Closeable {
 
       classWriter = new BufferedWriter(new FileWriter(properties.getClassFile()));
     } catch (IOException e) {
-      System.err.println("Some IO error occured");
+      System.err.println("Some IO error occurred");
       e.printStackTrace();
       System.exit(-1);
     } catch (Exception e) {
@@ -97,6 +97,8 @@ public class Agent implements ClassFileTransformer, Closeable {
       e.printStackTrace();
       System.exit(-1);
     }
+
+    new DeadlockDetector(recorder, properties, 1000).start();
 
     final Thread mainThread = Thread.currentThread();
     Runtime.getRuntime().addShutdownHook(new Thread() {
@@ -114,6 +116,7 @@ public class Agent implements ClassFileTransformer, Closeable {
           }
         }
       });
+
   }
 
   public void close () throws IOException {
@@ -260,7 +263,6 @@ public class Agent implements ClassFileTransformer, Closeable {
 
   private void logClass(String className, byte[] bytes)  {
     System.err.println("Class '" + className + "' has " + bytes.length + " bytes.");
-
   }
 
   private void dumpClassFile(String className, byte[] bytes) {

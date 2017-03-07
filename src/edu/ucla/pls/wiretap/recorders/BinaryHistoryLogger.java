@@ -47,6 +47,10 @@ public class BinaryHistoryLogger extends BinaryLogger {
     }
   }
 
+  public static BinaryLogger getLogger(Thread thread) {
+    return getBinaryHistoryLogger(thread);
+  }
+
   public synchronized static void closeRecorder() throws IOException {
     System.out.println("Closing loggers...");
     for (BinaryHistoryLogger logger: loggers.values()) {
