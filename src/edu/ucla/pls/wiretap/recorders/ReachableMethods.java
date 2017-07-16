@@ -6,19 +6,35 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Set;
 
-import edu.ucla.pls.wiretap.utils.IntSet;
 import edu.ucla.pls.wiretap.Agent;
+import edu.ucla.pls.wiretap.DeadlockDetector;
 import edu.ucla.pls.wiretap.WiretapProperties;
 import edu.ucla.pls.wiretap.managers.MethodManager;
+import edu.ucla.pls.wiretap.utils.IntSet;
+import edu.ucla.pls.wiretap.utils.Maybe;
 
 public class ReachableMethods implements Closeable{
 
   private static MethodManager handler;
   private static ReachableMethods instance;
 
+  private static Set<String> overapproximation;
+  private static int difference = 0;
+  private static File unsoundnessfolder;
+
   public static void setupRecorder (WiretapProperties properties) {
     handler = Agent.v().getMethodManager();
+
+    Maybe<Set<String>> methods = properties.getOverapproximation();
+    if (methods.hasValue()) {
+      System.out.println("Found overapproximation, printing differences");
+      overapproximation = methods.getValue();
+      unsoundnessfolder = properties.getUnsoundnessFolder();
+      unsoundnessfolder.mkdirs();
+    }
+
     File file = new File(properties.getOutFolder(), "reachable.txt");
     try {
       PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter(file)));
@@ -27,6 +43,19 @@ public class ReachableMethods implements Closeable{
       System.err.println("Could not open file 'reachable.txt' in out folder");
       System.exit(-1);
     }
+
+    new DeadlockDetector(new DeadlockDetector.Handler () {
+        public void handleDeadlock(Thread [] threads) {
+          System.out.println("Found deadlock, exiting program");
+          try {
+            ReachableMethods.closeRecorder();
+          } catch (IOException e) {
+            e.printStackTrace();
+          }
+          System.exit(1);
+        }
+      }, 1000).start();
+
   }
 
   public static void closeRecorder() throws IOException {
@@ -49,6 +78,27 @@ public class ReachableMethods implements Closeable{
       final String desc = handler.get(id).getDescriptor();
       synchronized (this) {
         writer.println(desc);
+      }
+      System.out.println(desc);
+      if (overapproximation != null && !overapproximation.contains(desc)) {
+        System.out.println("did not find");
+        // Somethings wrong here, lets report it.
+        File f = new File(unsoundnessfolder, "unsound" + difference + ".txt");
+        PrintWriter writer = null;
+        try {
+          writer = new PrintWriter(f, "UTF-8");
+          StackTraceElement[] trace = Thread.currentThread().getStackTrace();
+          int i = 0;
+          for (StackTraceElement e : trace) {
+            if (++i <= 2) continue;
+            writer.println(e.toString());
+          }
+        } catch (IOException e) {
+          e.printStackTrace();
+        } finally {
+          if (writer != null) writer.close();
+        }
+
       }
     }
   }

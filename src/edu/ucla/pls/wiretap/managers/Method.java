@@ -70,7 +70,6 @@ public class Method extends Managable<String> {
     return this.exceptions;
   };
 
-
   public int getNumberOfArgumentLocals() {
     return getArgumentTypes().length + (isStatic() ? 1: 0);
   }

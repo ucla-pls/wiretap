@@ -1,13 +1,18 @@
 package edu.ucla.pls.wiretap;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
+import java.util.Set;
 
 import edu.ucla.pls.wiretap.utils.Maybe;
 
@@ -59,6 +64,27 @@ public class WiretapProperties extends Properties {
   public File getMethodFile() {
     final File _default = new File (getOutFolder(), "methods.txt");
     return getFile("methodfile", _default);
+  }
+
+  public File getUnsoundnessFolder() {
+    final File _default = new File (getOutFolder(), "unsoundness");
+    return getFile("unsoundnessfolder", _default);
+  }
+
+  public Maybe<File> getOverapproximationFile() {
+    File file = getFile("overapproximation", null);
+    return Maybe.<File>fromMaybeNull(file);
+  }
+
+  public Maybe<Set<String>> getOverapproximation() {
+    Maybe<File> file = getOverapproximationFile();
+    if (file.hasValue()) {
+      HashSet<String> set = new HashSet<String>();
+      readFileInto(file.getValue(), set);
+      return Maybe.<Set<String>>just(set);
+    } else {
+      return Maybe.<Set<String>>nothing();
+    }
   }
 
   public File getInstructionFile() {
@@ -243,6 +269,28 @@ public class WiretapProperties extends Properties {
     } else {
       String [] array = value.split(",");
       return Arrays.asList(array);
+    }
+  }
+
+  public static void readFileInto(File file, Collection<String> lines) {
+    FileReader fr = null;
+    BufferedReader br = null;
+    try {
+      fr = new FileReader(file);
+      br = new BufferedReader(fr);
+      String line = null;
+      while ((line = br.readLine()) != null) {
+        lines.add(line);
+      }
+    } catch (IOException e) {
+      e.printStackTrace();
+    } finally {
+      try {
+        if (fr != null) fr.close();
+        if (br != null) br.close();
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
     }
   }
 
