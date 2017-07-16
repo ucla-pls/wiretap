@@ -87,6 +87,23 @@ public class WiretapProperties extends Properties {
     }
   }
 
+  public Maybe<File> getWorldFile() {
+    File file = getFile("world", null);
+    return Maybe.<File>fromMaybeNull(file);
+  }
+
+  public Maybe<Set<String>> getWorld() {
+    Maybe<File> file = getWorldFile();
+    if (file.hasValue()) {
+      HashSet<String> set = new HashSet<String>();
+      readFileInto(file.getValue(), set);
+      return Maybe.<Set<String>>just(set);
+    } else {
+      return Maybe.<Set<String>>nothing();
+    }
+  }
+
+
   public File getInstructionFile() {
     final File _default = new File (getOutFolder(), "instructions.txt");
     return getFile("instructionfile", _default);

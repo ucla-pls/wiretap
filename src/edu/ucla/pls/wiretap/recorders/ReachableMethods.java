@@ -21,6 +21,7 @@ public class ReachableMethods implements Closeable{
   private static ReachableMethods instance;
 
   private static Set<String> overapproximation;
+  private static Set<String> world;
   private static int difference = 0;
   private static File unsoundnessfolder;
 
@@ -31,6 +32,13 @@ public class ReachableMethods implements Closeable{
     if (methods.hasValue()) {
       System.out.println("Found overapproximation, printing differences");
       overapproximation = methods.getValue();
+
+      Maybe<Set<String>> worldmethods = properties.getWorld();
+      if (worldmethods.hasValue()) {
+        System.out.println("Found world, excluding differences not present in world");
+        world = worldmethods.getValue();
+      }
+
       unsoundnessfolder = properties.getUnsoundnessFolder();
       unsoundnessfolder.mkdirs();
     }
@@ -79,9 +87,9 @@ public class ReachableMethods implements Closeable{
       synchronized (this) {
         writer.println(desc);
       }
-      System.out.println(desc);
-      if (overapproximation != null && !overapproximation.contains(desc)) {
-        System.out.println("did not find");
+      if (overapproximation != null
+          && !overapproximation.contains(desc)
+          && (world == null || world.contains(desc))) {
         // Somethings wrong here, lets report it.
         File f = new File(unsoundnessfolder, "unsound" + difference + ".txt");
         PrintWriter writer = null;
