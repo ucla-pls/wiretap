@@ -2,9 +2,11 @@ package edu.ucla.pls.wiretap.recorders;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.PrintStream;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -13,8 +15,10 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import edu.ucla.pls.wiretap.Closer;
-import edu.ucla.pls.wiretap.utils.ConcurrentOutputStream;
+import edu.ucla.pls.wiretap.DeadlockDetector;
 import edu.ucla.pls.wiretap.WiretapProperties;
+import edu.ucla.pls.wiretap.managers.InstructionManager;
+import edu.ucla.pls.wiretap.utils.ConcurrentOutputStream;
 
 /** The logger logs events to file.
  */
@@ -30,8 +34,26 @@ public class BinaryHistoryLogger extends BinaryLogger {
   private static AtomicLong counter;
   private static final AtomicInteger loggerId = new AtomicInteger();
 
-  public static void setupRecorder(WiretapProperties properties) {
+  public static void setupRecorder(final WiretapProperties properties) {
     File historyFile = properties.getHistoryFile();
+    new DeadlockDetector(new DeadlockDetector.Handler () {
+        public void handleDeadlock(Thread [] threads) {
+          File file = new File(properties.getOutFolder(), "deadlocks.txt");
+          try {
+            PrintStream out = new PrintStream(file);
+            for (Thread t: threads) {
+              BinaryHistoryLogger hl = getBinaryHistoryLogger(t);
+              out.print(hl.getId());
+              out.print(" ");
+              out.println(hl.getLastInstruction());
+            }
+            out.close();
+          } catch (FileNotFoundException e) {
+            e.printStackTrace();
+          }
+          System.exit(1);
+        }
+      }, 1000).start();
     instFolder = properties.getInstFolder();
     long loggingDepth = properties.getLoggingDepth();
     if (loggingDepth > 0) {
@@ -132,7 +154,6 @@ public class BinaryHistoryLogger extends BinaryLogger {
 
   @Override
   public void close() throws IOException {
-    end();
     super.close();
   }
 

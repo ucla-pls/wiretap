@@ -98,8 +98,6 @@ public class Agent implements ClassFileTransformer, Closeable {
       System.exit(-1);
     }
 
-    new DeadlockDetector(recorder, properties, 1000).start();
-
     final Thread mainThread = Thread.currentThread();
     Runtime.getRuntime().addShutdownHook(new Thread() {
         public void run() {

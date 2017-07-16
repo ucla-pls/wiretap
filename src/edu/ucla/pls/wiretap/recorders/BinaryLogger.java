@@ -54,17 +54,24 @@ public abstract class BinaryLogger implements Closeable {
     return "Logger_" + this.id;
   }
 
+  private volatile int lastInstruction;
   private final void logInstruction(int inst) {
     if (logInst != null) {
       try {
         byte[] bytes = new byte[4];
         writeInt(inst, bytes, 0);
         logInst.write(bytes);
+        lastInstruction = inst;
       } catch (IOException e) {
         throw new RuntimeException(e);
       }
     }
   }
+
+  public int getLastInstruction() {
+    return lastInstruction;
+  }
+
 
   public final void write(int value) {
     byte[] _event = this.event;
