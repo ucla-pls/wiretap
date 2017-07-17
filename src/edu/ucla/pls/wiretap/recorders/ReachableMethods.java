@@ -99,14 +99,15 @@ public class ReachableMethods implements Closeable{
             if (++i <= 2) continue;
             writer.println(e.toString());
           }
+          // Let's only report one
+          overapproximation = null;
         } catch (IOException e) {
           e.printStackTrace();
         } finally {
           if (writer != null) writer.close();
         }
       }
-      // Let's only report one
-      overapproximation = null;
+
     }
   }
 
