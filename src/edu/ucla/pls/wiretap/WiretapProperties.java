@@ -66,9 +66,9 @@ public class WiretapProperties extends Properties {
     return getFile("methodfile", _default);
   }
 
-  public File getUnsoundnessFolder() {
-    final File _default = new File (getOutFolder(), "unsoundness");
-    return getFile("unsoundnessfolder", _default);
+  public File getUnsoundnessFile() {
+    final File _default = new File (getOutFolder(), "unsoundness.txt");
+    return getFile("unsoundnessfile", _default);
   }
 
   public Maybe<File> getOverapproximationFile() {
