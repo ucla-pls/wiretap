@@ -22,8 +22,7 @@ public class ReachableMethods implements Closeable{
 
   private static Set<String> overapproximation;
   private static Set<String> world;
-  private static int difference = 0;
-  private static File unsoundnessfile;
+  private static File unsoundnessfolder;
 
   public static void setupRecorder (WiretapProperties properties) {
     handler = Agent.v().getMethodManager();
@@ -39,7 +38,8 @@ public class ReachableMethods implements Closeable{
         world = worldmethods.getValue();
       }
 
-      unsoundnessfile = properties.getUnsoundnessFile();
+      unsoundnessfolder = properties.getUnsoundnessFolder();
+      unsoundnessfolder.mkdirs();
     }
 
     File file = new File(properties.getOutFolder(), "reachable.txt");
@@ -92,15 +92,13 @@ public class ReachableMethods implements Closeable{
 
         PrintWriter writer = null;
         try {
-          writer = new PrintWriter(unsoundnessfile, "UTF-8");
+          writer = new PrintWriter(new File(unsoundnessfolder, "" + id + ".stack.txt"), "UTF-8");
           StackTraceElement[] trace = Thread.currentThread().getStackTrace();
           int i = 0;
           for (StackTraceElement e : trace) {
             if (++i <= 2) continue;
             writer.println(e.toString());
           }
-          // Let's only report one
-          overapproximation = null;
         } catch (IOException e) {
           e.printStackTrace();
         } finally {
