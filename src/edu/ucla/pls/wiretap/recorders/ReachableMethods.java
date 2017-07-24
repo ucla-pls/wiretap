@@ -85,6 +85,7 @@ public class ReachableMethods implements Closeable{
       final String desc = handler.get(id).getDescriptor();
       synchronized (this) {
         writer.println(desc);
+        writer.flush();
       }
       if (overapproximation != null
           && !overapproximation.contains(desc)
