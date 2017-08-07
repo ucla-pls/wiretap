@@ -116,19 +116,17 @@ public class ReachableMethodsAnalyzer implements Closeable{
   }
 
   public void enter(Object obj, int id) {
-    final String desc = handler.get(id).getDescriptor();
-    writer.printf("E %s %d", desc, objectToInt(obj));
     if (visitedMethods.add(id)) {
+      final String desc = handler.get(id).getDescriptor();
       if (overapproximation != null
           && !overapproximation.contains(desc)
           && (world == null || world.contains(desc))) {
-        writer.print(" X");
-
         PrintWriter stackLogger = null;
         try {
           stackLogger = new PrintWriter(new File(unsoundnessfolder, ""
                                             + id + ".stack.txt"), "UTF-8");
 
+          writer.printf("X %s %d\n", desc, objectToInt(obj));
           stackLogger.print(objectToInt(obj));
           stackLogger.print(" ");
           stackLogger.println(desc);
@@ -146,13 +144,11 @@ public class ReachableMethodsAnalyzer implements Closeable{
         }
       }
     }
-    writer.println();
   }
 
   public void returnMethod(Object obj, String m) {
     if (obj != null) {
-      writer.printf("R %s %d", m, objectToInt(obj));
-      writer.println();
+      writer.printf("R %s %d\n", m, objectToInt(obj));
     }
   }
 
