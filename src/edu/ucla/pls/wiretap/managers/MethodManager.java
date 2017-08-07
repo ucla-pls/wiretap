@@ -33,6 +33,10 @@ public class MethodManager extends Manager<String, Method> {
     b.append(":").append(desc);
 
 		return b.toString();
-	}
+  }
+
+  public Method getMethod(String owner, String name, String desc) {
+    return get(getMethodDescriptor(owner, name, desc));
+  }
 
 }

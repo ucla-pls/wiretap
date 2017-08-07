@@ -66,6 +66,10 @@ public class Method extends Managable<String> {
     return Type.getArgumentTypes(desc);
   }
 
+  public Type getReturnType () {
+    return Type.getReturnType(desc);
+  }
+
   public String [] getExceptions () {
     return this.exceptions;
   };

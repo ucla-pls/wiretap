@@ -181,7 +181,9 @@ public class WiretapProperties extends Properties {
               "WaitLock",
 
               "JoinThread",
-              "ForkThread"
+              "ForkThread",
+
+              "ReturnMethod"
             }));
 
       wiretappers = new ArrayList<Wiretapper>();

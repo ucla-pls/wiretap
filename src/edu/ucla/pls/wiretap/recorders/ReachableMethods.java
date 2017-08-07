@@ -34,7 +34,8 @@ public class ReachableMethods implements Closeable{
 
       Maybe<Set<String>> worldmethods = properties.getWorld();
       if (worldmethods.hasValue()) {
-        System.out.println("Found world, excluding differences not present in world");
+        System.out.println("Found world, " +
+                           "excluding differences not present in world");
         world = worldmethods.getValue();
       }
 
@@ -44,8 +45,8 @@ public class ReachableMethods implements Closeable{
 
     File file = new File(properties.getOutFolder(), "reachable.txt");
     try {
-      PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter(file)));
-      instance = new ReachableMethods(writer);
+      BufferedWriter w = new BufferedWriter(new FileWriter(file));
+      instance = new ReachableMethods(new PrintWriter(w));
     } catch (IOException e) {
       System.err.println("Could not open file 'reachable.txt' in out folder");
       System.exit(-1);
@@ -93,7 +94,9 @@ public class ReachableMethods implements Closeable{
 
         PrintWriter writer = null;
         try {
-          writer = new PrintWriter(new File(unsoundnessfolder, "" + id + ".stack.txt"), "UTF-8");
+          String flname = "" + id + ".stack.txt";
+          File f = new File(unsoundnessfolder, flname);
+          writer = new PrintWriter(f, "UTF-8");
           StackTraceElement[] trace = Thread.currentThread().getStackTrace();
           int i = 0;
           for (StackTraceElement e : trace) {
