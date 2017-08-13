@@ -4,12 +4,24 @@ import java.io.Closeable;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
+
+import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.Label;
+import org.objectweb.asm.Opcodes;
+
 
 import edu.ucla.pls.wiretap.Agent;
 import edu.ucla.pls.wiretap.Closer;
@@ -126,17 +138,28 @@ public class ReachableMethodsAnalyzer implements Closeable{
           stackLogger = new PrintWriter(new File(unsoundnessfolder, ""
                                             + id + ".stack.txt"), "UTF-8");
 
-          writer.printf("X %s %d\n", desc, objectToInt(obj));
-          stackLogger.print(objectToInt(obj));
-          stackLogger.print(" ");
-          stackLogger.println(desc);
-
           int i = 0;
-          StackTraceElement[] trace = Thread.currentThread().getStackTrace();
+          StackTraceElement[] trace =
+            Thread.currentThread().getStackTrace();
+
+          stackLogger.printf("%s -1\n", desc);
+
           for (StackTraceElement e : trace) {
-            if (++i <= 2) continue;
-            stackLogger.println(e.toString());
+            if (++i <= 3) continue;
+            String methodName = methodFromStackTraceElement(e);
+            stackLogger.printf("%s %s\n", methodName,
+                               e.isNativeMethod() ?
+                               "Native" :
+                               "" + e.getLineNumber());
           }
+
+          if (obj != null) {
+            stackLogger.println("----");
+            for (String s: getMethods(obj)) {
+              stackLogger.println(s);
+            }
+          }
+
         } catch (IOException e) {
           e.printStackTrace();
         } finally {
@@ -146,9 +169,31 @@ public class ReachableMethodsAnalyzer implements Closeable{
     }
   }
 
+  private Map<Object, HashSet<String>> methodsPerObject =
+    new HashMap<Object, HashSet<String>>();
+
   public void returnMethod(Object obj, String m) {
     if (obj != null) {
-      writer.printf("R %s %d\n", m, objectToInt(obj));
+      synchronized (methodsPerObject) {
+        HashSet<String> set = methodsPerObject.get(obj);
+        if (set == null) {
+          set = new HashSet<String>();
+          methodsPerObject.put(obj, set);
+        }
+        set.add(m);
+      }
+    }
+  }
+
+  public Set<String> getMethods(Object obj) {
+    assert obj != null;
+    synchronized (methodsPerObject) {
+      HashSet<String> s = methodsPerObject.get(obj);
+      if (s != null) {
+        return (HashSet<String>) s.clone();
+      } else {
+        return Collections.EMPTY_SET;
+      }
     }
   }
 
@@ -156,5 +201,75 @@ public class ReachableMethodsAnalyzer implements Closeable{
 	public void close() throws IOException {
     writer.close();
   }
+
+  /** https://stackoverflow.com/questions/4024587/get-callers-method-java-lang-reflect-method
+   Gets the method from a stack trace. Pretty much stolen from the url above.
+
+  */
+  private static String methodFromStackTraceElement(StackTraceElement element) {
+    String owner = element.getClassName();
+    String name = element.getMethodName();
+    int lineNumber = element.getLineNumber();
+
+    if ( lineNumber < 0 ) {
+      return MethodManager.getMethodDescriptor(owner, name, "?");
+    }
+
+    String resourceName = "/" + owner.replace("\\.", "/") + ".class";
+
+    Class<?> clazz = null;
+    try {
+      clazz = Class.forName(owner);
+    } catch (ClassNotFoundException e) {
+      return MethodManager.getMethodDescriptor(owner, name, "?");
+    }
+
+    InputStream result = clazz.getResourceAsStream(resourceName);
+
+    final AtomicReference<String> reference =
+      new AtomicReference<String>();
+
+    if (result == null) {
+      return MethodManager.getMethodDescriptor(owner, name, "?");
+    }
+
+    try {
+      ClassReader classReader = new ClassReader(result);
+      classReader.accept(new ClassVisitor(Opcodes.ASM5) {
+
+          @Override
+          public MethodVisitor visitMethod(int a, final String mname,
+                                           final String desc, String signature,
+                                           String[] exceptions) {
+            if (!name.equals(mname)) return null;
+
+            return new MethodVisitor(Opcodes.ASM5) {
+              @Override
+              public void visitLineNumber(int line, Label start) {
+                if (line == lineNumber) {
+                  reference.set(desc);
+                }
+              }
+            };
+          }
+        }, 0);
+    } catch ( IOException e ) {
+      // do nothing
+    } finally {
+      try {
+      result.close();
+      } catch ( IOException e ) {
+        // do nothing
+      }
+    }
+
+    String desc = reference.get();
+    if (desc == null) {
+      return MethodManager.getMethodDescriptor(owner, name, "?");
+    } else {
+      return MethodManager.getMethodDescriptor(owner, name, desc);
+    }
+  }
+
 
 }
