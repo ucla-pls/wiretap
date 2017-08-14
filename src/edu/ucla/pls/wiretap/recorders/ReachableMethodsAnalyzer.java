@@ -227,15 +227,17 @@ public class ReachableMethodsAnalyzer implements Closeable{
     int lineNumber = element.getLineNumber();
 
     if ( lineNumber < 0 ) {
+      System.out.println("No Line number");
       return MethodManager.getMethodDescriptor(owner, name, "?");
     }
 
-    String resourceName = "/" + owner.replace("\\.", "/") + ".class";
+    String resourceName = "/" + owner.replace(".", "/") + ".class";
 
     Class<?> clazz = null;
     try {
       clazz = Class.forName(owner);
     } catch (ClassNotFoundException e) {
+      e.printStackTrace();
       return MethodManager.getMethodDescriptor(owner, name, "?");
     }
 
@@ -245,6 +247,7 @@ public class ReachableMethodsAnalyzer implements Closeable{
       new AtomicReference<String>();
 
     if (result == null) {
+      System.out.println("Cound not read '" + resourceName + "'");
       return MethodManager.getMethodDescriptor(owner, name, "?");
     }
 
@@ -270,16 +273,19 @@ public class ReachableMethodsAnalyzer implements Closeable{
         }, 0);
     } catch ( IOException e ) {
       // do nothing
+      e.printStackTrace();
     } finally {
       try {
       result.close();
       } catch ( IOException e ) {
         // do nothing
+        e.printStackTrace();
       }
     }
 
     String desc = reference.get();
     if (desc == null) {
+      System.out.println("Could not find reference");
       return MethodManager.getMethodDescriptor(owner, name, "?");
     } else {
       return MethodManager.getMethodDescriptor(owner, name, desc);
