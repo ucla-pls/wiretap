@@ -111,7 +111,9 @@ public class ReachableMethodsAnalyzer implements Closeable{
   public synchronized static void closeRecorder() throws IOException {
     System.out.println("Closing loggers...");
     for (ReachableMethodsAnalyzer logger: loggers.values()) {
-      Closer.close(logger.toString(), logger, 1000);
+      synchronized (logger) {
+        Closer.close(logger.toString(), logger, 1000);
+      }
     }
     System.out.println("Done closing loggers...");
   }
@@ -133,39 +135,52 @@ public class ReachableMethodsAnalyzer implements Closeable{
       if (overapproximation != null
           && !overapproximation.contains(desc)
           && (world == null || world.contains(desc))) {
-        PrintWriter stackLogger = null;
-        try {
-          stackLogger = new PrintWriter(new File(unsoundnessfolder, ""
-                                            + id + ".stack.txt"), "UTF-8");
 
-          int i = 0;
-          StackTraceElement[] trace =
-            Thread.currentThread().getStackTrace();
+        printStack(obj, id, desc);
+      }
+    }
+  }
 
-          stackLogger.printf("%s -1\n", desc);
+  private synchronized void printStack(Object obj, int id, String desc) {
+    PrintWriter stackLogger = null;
+    try {
+      stackLogger =
+        new PrintWriter(new File(unsoundnessfolder, ""
+                                 + id + ".stack.txt"), "UTF-8");
 
-          for (StackTraceElement e : trace) {
-            if (++i <= 3) continue;
-            String methodName = methodFromStackTraceElement(e);
-            stackLogger.printf("%s %s\n", methodName,
-                               e.isNativeMethod() ?
-                               "Native" :
-                               "" + e.getLineNumber());
-          }
+      int i = 0;
+      StackTraceElement[] trace =
+        Thread.currentThread().getStackTrace();
 
-          if (obj != null) {
-            stackLogger.println("----");
-            for (String s: getMethods(obj)) {
-              stackLogger.println(s);
-            }
-          }
+      stackLogger.printf("%s -1\n", desc);
 
-        } catch (IOException e) {
-          e.printStackTrace();
-        } finally {
-          if (stackLogger != null) stackLogger.close();
+      stackLogger.flush();
+
+      for (StackTraceElement e : trace) {
+        if (++i <= 3) continue;
+        String methodName = methodFromStackTraceElement(e);
+        stackLogger.printf("%s %s\n", methodName,
+                           e.isNativeMethod() ?
+                           "Native" :
+                           "" + e.getLineNumber());
+      }
+
+      stackLogger.flush();
+
+      if (obj != null) {
+        stackLogger.println("----");
+        stackLogger.flush();
+        for (String s: getMethods(obj)) {
+          stackLogger.println(s);
         }
       }
+
+      stackLogger.flush();
+
+    } catch (IOException e) {
+      e.printStackTrace();
+    } finally {
+      if (stackLogger != null) stackLogger.close();
     }
   }
 
