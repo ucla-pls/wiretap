@@ -157,7 +157,7 @@ public class ReachableMethodsAnalyzer implements Closeable{
       stackLogger.flush();
 
       for (StackTraceElement e : trace) {
-        if (++i <= 3) continue;
+        if (++i <= 4) continue;
         String methodName = methodFromStackTraceElement(e);
         stackLogger.printf("%s %s\n", methodName,
                            e.isNativeMethod() ?
