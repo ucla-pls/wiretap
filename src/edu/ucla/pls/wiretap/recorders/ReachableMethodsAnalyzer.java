@@ -228,8 +228,6 @@ public class ReachableMethodsAnalyzer implements Closeable{
 
     String owner = element.getClassName().replace(".", "/");
 
-    System.out.println(owner);
-
     if ( lineNumber < 0 ) {
       System.out.println("No Line number");
       return MethodManager.getMethodDescriptor(owner, name, "?");
@@ -239,7 +237,7 @@ public class ReachableMethodsAnalyzer implements Closeable{
 
     Class<?> clazz = null;
     try {
-      clazz = Class.forName(ownerDot);
+      clazz = ClassLoader.getSystemClassLoader().loadClass(ownerDot);
     } catch (ClassNotFoundException e) {
       e.printStackTrace();
       return MethodManager.getMethodDescriptor(owner, name, "?");
