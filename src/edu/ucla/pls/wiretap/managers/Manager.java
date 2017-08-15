@@ -75,7 +75,7 @@ public class Manager<D,M extends Managable<D>> implements Closeable {
     }
   }
 
-  private synchronized M getUnsafe(D descriptor) {
+  public synchronized M getUnsafe(D descriptor) {
     return lookup.get(descriptor);
   }
 

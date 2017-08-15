@@ -54,6 +54,10 @@ public class Method extends Managable<String> {
     return (access & Opcodes.ACC_SYNCHRONIZED) != 0;
   }
 
+  public boolean isNative() {
+    return (access & Opcodes.ACC_NATIVE) != 0;
+  }
+
   public boolean isStatic() {
     return (access & Opcodes.ACC_STATIC) != 0;
   }

@@ -10,11 +10,12 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
-import java.lang.reflect.Method;
+// import java.lang.reflect.Method;
 import java.security.ProtectionDomain;
 
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.Opcodes;
@@ -24,6 +25,7 @@ import edu.ucla.pls.wiretap.managers.Field;
 import edu.ucla.pls.wiretap.managers.FieldManager;
 import edu.ucla.pls.wiretap.managers.InstructionManager;
 import edu.ucla.pls.wiretap.managers.MethodManager;
+import edu.ucla.pls.wiretap.managers.Method;
 
 /**
  * @author Christian Gram Kalhauge <kalhauge@cs.ucla.edu>
@@ -40,7 +42,7 @@ public class Agent implements ClassFileTransformer, Closeable {
 
   private BufferedWriter classWriter;
 
-  private Method closeRecorder;
+  private java.lang.reflect.Method closeRecorder;
 
   public Agent(WiretapProperties properties) {
 		this(properties,
@@ -70,7 +72,6 @@ public class Agent implements ClassFileTransformer, Closeable {
     }
     return f.delete();
   }
-
 
   public void setup() {
 
@@ -177,6 +178,20 @@ public class Agent implements ClassFileTransformer, Closeable {
     ClassReader reader = new ClassReader(buffer);
     reader.accept(new ClassVisitor (Opcodes.ASM5)  {
 
+        public MethodVisitor visitMethod(int access,
+                                       String name,
+                                       String desc,
+                                       String signature,
+                                       String [] exceptions) {
+          Method m = new Method(access, className, name, desc, exceptions);
+          try {
+            methods.put(m);
+          } catch (Exception e) {
+            System.err.println("Warn: trying to add this method again: " + m);
+          }
+          return super.visitMethod(access, name, desc, signature, exceptions);
+        }
+
         public FieldVisitor visitField(int access,
                                        String name,
                                        String desc,
@@ -192,7 +207,6 @@ public class Agent implements ClassFileTransformer, Closeable {
           }
           return super.visitField(access, name, desc, signature, value);
         }
-
       }, 0);
 
     if (properties.isClassIgnored(className)) {

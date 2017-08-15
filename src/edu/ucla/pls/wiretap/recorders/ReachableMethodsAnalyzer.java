@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.io.FileWriter;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -23,6 +24,7 @@ import org.objectweb.asm.Label;
 import org.objectweb.asm.Opcodes;
 
 
+import edu.ucla.pls.wiretap.managers.Method;
 import edu.ucla.pls.wiretap.Agent;
 import edu.ucla.pls.wiretap.Closer;
 import edu.ucla.pls.wiretap.DeadlockDetector;
@@ -46,6 +48,8 @@ public class ReachableMethodsAnalyzer implements Closeable{
 
   private static File unsoundnessfolder;
 
+  private static PrintWriter reachablewriter;
+
   public static void setupRecorder (WiretapProperties properties) {
     handler = Agent.v().getMethodManager();
 
@@ -68,6 +72,15 @@ public class ReachableMethodsAnalyzer implements Closeable{
       unsoundnessfolder.mkdirs();
     }
 
+    File file = new File(properties.getOutFolder(), "reachable.txt");
+
+    try {
+      reachablewriter = new PrintWriter(new FileWriter(file));
+    } catch (IOException e) {
+      System.err.println("Could not open file 'reachable.txt' in out folder");
+      System.exit(-1);
+    }
+
     new DeadlockDetector(new DeadlockDetector.Handler () {
         public void handleDeadlock(Thread [] threads) {
           System.out.println("Found deadlock, exiting program");
@@ -79,6 +92,7 @@ public class ReachableMethodsAnalyzer implements Closeable{
           System.exit(1);
         }
       }, 1000).start();
+
   }
 
   public static ReachableMethodsAnalyzer getLogger(Thread thread) {
@@ -132,10 +146,13 @@ public class ReachableMethodsAnalyzer implements Closeable{
   public void enter(Object obj, int id) {
     if (visitedMethods.add(id)) {
       final String desc = handler.get(id).getDescriptor();
+      synchronized (reachablewriter) {
+        reachablewriter.println(desc);
+        reachablewriter.flush();
+      }
       if (overapproximation != null
           && !overapproximation.contains(desc)
           && (world == null || world.contains(desc))) {
-
         printStack(obj, id, desc);
       }
     }
@@ -170,8 +187,8 @@ public class ReachableMethodsAnalyzer implements Closeable{
       if (obj != null) {
         stackLogger.println("----");
         stackLogger.flush();
-        for (String s: getMethods(obj)) {
-          stackLogger.println(s);
+        for (Method m: getMethods(obj)) {
+          stackLogger.printf("%s %b", m, m.isNative());
         }
       }
 
@@ -184,28 +201,28 @@ public class ReachableMethodsAnalyzer implements Closeable{
     }
   }
 
-  private Map<Object, HashSet<String>> methodsPerObject =
-    new HashMap<Object, HashSet<String>>();
+  private Map<Object, HashSet<Method>> methodsPerObject =
+    new HashMap<Object, HashSet<Method>>();
 
-  public void returnMethod(Object obj, String m) {
+  public void returnMethod(Object obj, int id) {
     if (obj != null) {
       synchronized (methodsPerObject) {
-        HashSet<String> set = methodsPerObject.get(obj);
+        HashSet<Method> set = methodsPerObject.get(obj);
         if (set == null) {
-          set = new HashSet<String>();
+          set = new HashSet<Method>();
           methodsPerObject.put(obj, set);
         }
-        set.add(m);
+        set.add(handler.get(id));
       }
     }
   }
 
-  public Set<String> getMethods(Object obj) {
+  public Set<Method> getMethods(Object obj) {
     assert obj != null;
     synchronized (methodsPerObject) {
-      HashSet<String> s = methodsPerObject.get(obj);
+      HashSet<Method> s = methodsPerObject.get(obj);
       if (s != null) {
-        return (HashSet<String>) s.clone();
+        return (HashSet<Method>) s.clone();
       } else {
         return Collections.EMPTY_SET;
       }
