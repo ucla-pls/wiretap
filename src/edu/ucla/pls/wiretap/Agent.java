@@ -21,6 +21,7 @@ import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.util.CheckClassAdapter;
 
+import edu.ucla.pls.wiretap.ClassSkimmer;
 import edu.ucla.pls.wiretap.managers.Field;
 import edu.ucla.pls.wiretap.managers.FieldManager;
 import edu.ucla.pls.wiretap.managers.InstructionManager;
@@ -176,38 +177,8 @@ public class Agent implements ClassFileTransformer, Closeable {
                           byte[] buffer) {
 
     ClassReader reader = new ClassReader(buffer);
-    reader.accept(new ClassVisitor (Opcodes.ASM5)  {
 
-        public MethodVisitor visitMethod(int access,
-                                       String name,
-                                       String desc,
-                                       String signature,
-                                       String [] exceptions) {
-          Method m = new Method(access, className, name, desc, exceptions);
-          try {
-            methods.put(m);
-          } catch (Exception e) {
-            System.err.println("Warn: trying to add this method again: " + m);
-          }
-          return super.visitMethod(access, name, desc, signature, exceptions);
-        }
-
-        public FieldVisitor visitField(int access,
-                                       String name,
-                                       String desc,
-                                       String signature,
-                                       Object value) {
-          // The use of desc over signature, might be a mistake. Note that signature
-          // can be null.
-          Field f = new Field(access, className, name, desc, value);
-          try {
-            fields.put(f);
-          } catch (Exception e) {
-            System.err.println("Warn: trying to add this field again: " + f);
-          }
-          return super.visitField(access, name, desc, signature, value);
-        }
-      }, 0);
+    new ClassSkimmer(className, methods, fields).readFrom(reader);
 
     if (properties.isClassIgnored(className)) {
       return null;
