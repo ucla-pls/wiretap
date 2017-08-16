@@ -151,8 +151,11 @@ public class ReachableMethodsAnalyzer implements Closeable{
         reachablewriter.flush();
       }
       if (overapproximation != null
-          && !overapproximation.contains(desc)
-          && (world == null || world.contains(desc))) {
+          && !overapproximation.contains(desc)) {
+          // && !(desc.startsWith("java/"))
+          // //&& !(desc.startsWith("sun/"))
+          // ) {
+          //      && (world == null || world.contains(desc))) {
         printStack(obj, id, desc);
       }
     }
@@ -162,8 +165,9 @@ public class ReachableMethodsAnalyzer implements Closeable{
     PrintWriter stackLogger = null;
     try {
       stackLogger =
-        new PrintWriter(new File(unsoundnessfolder, ""
-                                 + id + ".stack.txt"), "UTF-8");
+        new PrintWriter(new File(unsoundnessfolder,
+                                 "" + id + ".stack.txt"),
+                        "UTF-8");
 
       int i = 0;
       StackTraceElement[] trace =
@@ -187,12 +191,17 @@ public class ReachableMethodsAnalyzer implements Closeable{
       if (obj != null) {
         stackLogger.println("----");
         stackLogger.flush();
-        for (Method m: getMethods(obj)) {
-          stackLogger.printf("%s %b", m, m.isNative());
+        for (String m: getMethods(obj)) {
+          Method method = handler.getUnsafe(m);
+          String nat = "?";
+          if (method != null) {
+            nat = method.isNative() ? "t" : "f";
+          }
+          stackLogger.printf("%s %s\n", m, nat);
         }
+        stackLogger.flush();
       }
 
-      stackLogger.flush();
 
     } catch (IOException e) {
       e.printStackTrace();
@@ -201,28 +210,28 @@ public class ReachableMethodsAnalyzer implements Closeable{
     }
   }
 
-  private Map<Object, HashSet<Method>> methodsPerObject =
-    new HashMap<Object, HashSet<Method>>();
+  private Map<Object, HashSet<String>> methodsPerObject =
+    new HashMap<Object, HashSet<String>>();
 
-  public void returnMethod(Object obj, int id) {
+  public void returnMethod(Object obj, String name) {
     if (obj != null) {
       synchronized (methodsPerObject) {
-        HashSet<Method> set = methodsPerObject.get(obj);
+        HashSet<String> set = methodsPerObject.get(obj);
         if (set == null) {
-          set = new HashSet<Method>();
+          set = new HashSet<String>();
           methodsPerObject.put(obj, set);
         }
-        set.add(handler.get(id));
+        set.add(name);
       }
     }
   }
 
-  public Set<Method> getMethods(Object obj) {
+  public Set<String> getMethods(Object obj) {
     assert obj != null;
     synchronized (methodsPerObject) {
-      HashSet<Method> s = methodsPerObject.get(obj);
+      HashSet<String> s = methodsPerObject.get(obj);
       if (s != null) {
-        return (HashSet<Method>) s.clone();
+        return (HashSet<String>) s.clone();
       } else {
         return Collections.EMPTY_SET;
       }
@@ -233,6 +242,7 @@ public class ReachableMethodsAnalyzer implements Closeable{
 	public void close() throws IOException {
     writer.close();
   }
+
 
   /** https://stackoverflow.com/questions/4024587/get-callers-method-java-lang-reflect-method
    Gets the method from a stack trace. Pretty much stolen from the url above.

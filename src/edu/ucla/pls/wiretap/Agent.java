@@ -74,6 +74,10 @@ public class Agent implements ClassFileTransformer, Closeable {
     return f.delete();
   }
 
+  public WiretapProperties getProperties () {
+    return this.properties;
+  }
+
   public void setup() {
 
     // Clean up, and make sure that the data is consistent.

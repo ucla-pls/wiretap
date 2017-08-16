@@ -28,11 +28,12 @@ public class IntSet {
     boolean [] local = set;
     if (local.length <= id) {
       synchronized (lock) {
-        final int size = set.length;
-        if (size <= id) {
+        int size = set.length;
+        while (size <= id) {
           local = new boolean [size << 1];
           System.arraycopy(set, 0, local, 0, size);
           set = local;
+          size = set.length;
         }
       }
     }

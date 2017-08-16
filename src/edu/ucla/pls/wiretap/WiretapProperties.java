@@ -124,7 +124,9 @@ public class WiretapProperties extends Properties {
 
   public Collection<String> getIgnoredPrefixes() {
     if (ignoredPrefixes == null) {
-      ignoredPrefixes = getList("ignoredprefixes", Arrays.asList("java", "sun", "edu/ucla/pls/wiretap"));
+      ignoredPrefixes =
+        getList("ignoredprefixes",
+                Arrays.asList("java/", "sun/", "edu/ucla/pls/wiretap/"));
     }
     return ignoredPrefixes;
   }
