@@ -49,6 +49,9 @@ public class ReachableMethodsAnalyzer implements Closeable{
   private static File unsoundnessfolder;
 
   private static PrintWriter reachablewriter;
+  private static PrintWriter loggedmethods;
+
+  private static HashSet<String> allMethods = new HashSet<String>();
 
   public static void setupRecorder (WiretapProperties properties) {
     handler = Agent.v().getMethodManager();
@@ -73,9 +76,11 @@ public class ReachableMethodsAnalyzer implements Closeable{
     }
 
     File file = new File(properties.getOutFolder(), "reachable.txt");
+    File loggedfile = new File(unsoundnessfolder, "methods.txt");
 
     try {
       reachablewriter = new PrintWriter(new FileWriter(file));
+      loggedmethods = new PrintWriter(new FileWriter(loggedfile));
     } catch (IOException e) {
       System.err.println("Could not open file 'reachable.txt' in out folder");
       System.exit(-1);
@@ -130,6 +135,8 @@ public class ReachableMethodsAnalyzer implements Closeable{
       }
     }
     System.out.println("Done closing loggers...");
+    Closer.close("reachablewriter", reachablewriter, 1000);
+    Closer.close("loggedmethods", loggedmethods, 1000);
   }
 
   private final PrintWriter writer;
@@ -152,10 +159,6 @@ public class ReachableMethodsAnalyzer implements Closeable{
       }
       if (overapproximation != null
           && !overapproximation.contains(desc)) {
-          // && !(desc.startsWith("java/"))
-          // //&& !(desc.startsWith("sun/"))
-          // ) {
-          //      && (world == null || world.contains(desc))) {
         printStack(obj, id, desc);
       }
     }
@@ -163,18 +166,21 @@ public class ReachableMethodsAnalyzer implements Closeable{
 
   private synchronized void printStack(Object obj, int id, String desc) {
     PrintWriter stackLogger = null;
+    File stackfile = new File(unsoundnessfolder, "" + id + ".stack");
+
+    synchronized (allMethods) {
+      loggedmethods.printf("- %s\n", desc);
+      loggedmethods.flush();
+    }
+
     try {
-      stackLogger =
-        new PrintWriter(new File(unsoundnessfolder,
-                                 "" + id + ".stack.txt"),
-                        "UTF-8");
+      stackLogger = new PrintWriter(stackfile, "UTF-8");
 
       int i = 0;
       StackTraceElement[] trace =
         Thread.currentThread().getStackTrace();
 
       stackLogger.printf("%s -1\n", desc);
-
       stackLogger.flush();
 
       for (StackTraceElement e : trace) {
@@ -185,28 +191,32 @@ public class ReachableMethodsAnalyzer implements Closeable{
                            "Native" :
                            "" + e.getLineNumber());
       }
-
       stackLogger.flush();
+    } catch (IOException e) {
+      e.printStackTrace();
+    } finally {
+      if (stackLogger != null) stackLogger.close();
+    }
 
-      if (obj != null) {
-        stackLogger.println("----");
-        stackLogger.flush();
+    if (obj != null) {
+      File logfile = new File(unsoundnessfolder, "" + id + ".log");
+      PrintWriter logger = null;
+      try {
+        logger = new PrintWriter(logfile, "UTF-8");
         for (String m: getMethods(obj)) {
           Method method = handler.getUnsafe(m);
           String nat = "?";
           if (method != null) {
             nat = method.isNative() ? "t" : "f";
           }
-          stackLogger.printf("%s %s\n", m, nat);
+          logger.printf("%s %s\n", m, nat);
         }
-        stackLogger.flush();
+        logger.flush();
+      } catch (IOException e) {
+        e.printStackTrace();
+      } finally {
+        if (logger != null) logger.close();
       }
-
-
-    } catch (IOException e) {
-      e.printStackTrace();
-    } finally {
-      if (stackLogger != null) stackLogger.close();
     }
   }
 
@@ -222,6 +232,12 @@ public class ReachableMethodsAnalyzer implements Closeable{
           methodsPerObject.put(obj, set);
         }
         set.add(name);
+      }
+      synchronized (allMethods) {
+        if (allMethods.add(name)) {
+          loggedmethods.printf("+ %s\n", name);
+          loggedmethods.flush();
+        }
       }
     }
   }

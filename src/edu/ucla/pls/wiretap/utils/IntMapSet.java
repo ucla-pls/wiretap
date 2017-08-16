@@ -31,11 +31,12 @@ public class IntMapSet <T> {
     Set<T> [] local = map;
     if (local.length <= id) {
       synchronized (lock) {
-        final int size = map.length;
-        if (size <= id) {
+        int size = map.length;
+        while (size <= id) {
           local = (Set<T>[]) new Set<?> [size << 1];
           System.arraycopy(map, 0, local, 0, size);
           map = local;
+          size = map.length;
         }
       }
     }
