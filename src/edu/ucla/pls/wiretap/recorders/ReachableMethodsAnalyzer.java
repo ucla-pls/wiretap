@@ -9,7 +9,7 @@ import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.FileWriter;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -221,7 +221,7 @@ public class ReachableMethodsAnalyzer implements Closeable{
   }
 
   private Map<Object, HashSet<String>> methodsPerObject =
-    new HashMap<Object, HashSet<String>>();
+    new IdentityHashMap<Object, HashSet<String>>();
 
   public void returnMethod(Object obj, String name) {
     if (obj != null) {
