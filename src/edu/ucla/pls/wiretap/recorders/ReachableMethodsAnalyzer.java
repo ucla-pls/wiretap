@@ -37,39 +37,24 @@ public class ReachableMethodsAnalyzer implements Closeable{
 
   private static MethodManager handler;
 
-  private static final Map<Thread, ReachableMethodsAnalyzer> loggers =
-    new ConcurrentHashMap<Thread, ReachableMethodsAnalyzer>();
-
-  private static File logFolder;
-  private static final AtomicInteger loggerId = new AtomicInteger();
-
   private static Set<String> overapproximation;
-  private static Set<String> world;
 
   private static File unsoundnessfolder;
 
   private static PrintWriter reachablewriter;
   private static PrintWriter loggedmethods;
 
+  private static ReachableMethodsAnalyzer instance;
+
   private static HashSet<String> allMethods = new HashSet<String>();
 
   public static void setupRecorder (WiretapProperties properties) {
     handler = Agent.v().getMethodManager();
 
-    logFolder = properties.getLogFolder();
-    logFolder.mkdirs();
-
     Maybe<Set<String>> methods = properties.getOverapproximation();
     if (methods.hasValue()) {
       System.out.println("Found overapproximation, printing differences");
       overapproximation = methods.getValue();
-
-      Maybe<Set<String>> worldmethods = properties.getWorld();
-      if (worldmethods.hasValue()) {
-        String msg = "Found world, excluding differences not present in world";
-        System.out.println(msg);
-        world = worldmethods.getValue();
-      }
 
       unsoundnessfolder = properties.getUnsoundnessFolder();
       unsoundnessfolder.mkdirs();
@@ -98,53 +83,19 @@ public class ReachableMethodsAnalyzer implements Closeable{
         }
       }, 1000).start();
 
-  }
-
-  public static ReachableMethodsAnalyzer getLogger(Thread thread) {
-    return getReachableMethodsAnalyzer(thread);
+    instance = new ReachableMethodsAnalyzer();
   }
 
   public static ReachableMethodsAnalyzer getRecorder() {
-    return getLogger(Thread.currentThread());
-  }
-
-  public static ReachableMethodsAnalyzer
-    getReachableMethodsAnalyzer(Thread thread)
-  {
-    ReachableMethodsAnalyzer logger = loggers.get(thread);
-    if (logger == null) {
-      int id = loggerId.getAndIncrement();
-      try {
-        File logfile = new File(logFolder, "" + id + ".log");
-        OutputStream s = new FileOutputStream(logfile);
-        logger = new ReachableMethodsAnalyzer(id, new PrintWriter(s));
-        loggers.put(thread, logger);
-      } catch (IOException e) {
-        e.printStackTrace();
-        System.exit(-1);
-      }
-    }
-    return logger;
+    return instance;
   }
 
   public synchronized static void closeRecorder() throws IOException {
-    System.out.println("Closing loggers...");
-    for (ReachableMethodsAnalyzer logger: loggers.values()) {
-      synchronized (logger) {
-        Closer.close(logger.toString(), logger, 1000);
-      }
-    }
-    System.out.println("Done closing loggers...");
     Closer.close("reachablewriter", reachablewriter, 1000);
     Closer.close("loggedmethods", loggedmethods, 1000);
   }
 
-  private final PrintWriter writer;
   private final IntSet visitedMethods = new IntSet();
-
-  public ReachableMethodsAnalyzer (int id, PrintWriter writer) {
-    this.writer = writer;
-  }
 
   public static int objectToInt(Object object) {
     return object != null ? System.identityHashCode(object) : 0;
@@ -255,9 +206,7 @@ public class ReachableMethodsAnalyzer implements Closeable{
   }
 
   @Override
-	public void close() throws IOException {
-    writer.close();
-  }
+  public void close() throws IOException {}
 
 
   /** https://stackoverflow.com/questions/4024587/get-callers-method-java-lang-reflect-method
