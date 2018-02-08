@@ -29,10 +29,9 @@ import edu.ucla.pls.wiretap.managers.MethodManager;
 import edu.ucla.pls.wiretap.managers.Method;
 
 /**
- * @author Christian Gram Kalhauge <kalhauge@cs.ucla.edu>
- * The agent holds all the information of the run-time of the program.
+ * @author Christian Gram Kalhauge <kalhauge@cs.ucla.edu> The agent holds all the information of the
+ *     run-time of the program.
  */
-
 public class Agent implements ClassFileTransformer, Closeable {
 
   private final WiretapProperties properties;
@@ -46,18 +45,20 @@ public class Agent implements ClassFileTransformer, Closeable {
   private java.lang.reflect.Method closeRecorder;
 
   public Agent(WiretapProperties properties) {
-		this(properties,
-         properties.getRecorder(),
-         new MethodManager(properties),
-         new InstructionManager(properties),
-         new FieldManager(properties));
+    this(
+        properties,
+        properties.getRecorder(),
+        new MethodManager(properties),
+        new InstructionManager(properties),
+        new FieldManager(properties));
   }
 
-  public Agent (WiretapProperties properties,
-                Class<?> recorder,
-                MethodManager methods,
-                InstructionManager instructions,
-                FieldManager fields) {
+  public Agent(
+      WiretapProperties properties,
+      Class<?> recorder,
+      MethodManager methods,
+      InstructionManager instructions,
+      FieldManager fields) {
     this.properties = properties;
     this.methods = methods;
     this.recorder = recorder;
@@ -74,7 +75,7 @@ public class Agent implements ClassFileTransformer, Closeable {
     return f.delete();
   }
 
-  public WiretapProperties getProperties () {
+  public WiretapProperties getProperties() {
     return this.properties;
   }
 
@@ -105,39 +106,42 @@ public class Agent implements ClassFileTransformer, Closeable {
     }
 
     final Thread mainThread = Thread.currentThread();
-    Runtime.getRuntime().addShutdownHook(new Thread() {
-        public void run() {
-          try {
-            System.err.println("Waiting for the main thread to close... 2s");
-            mainThread.join(2000);
-            System.err.println("Closing agent");
-            Agent.v().close();
-            System.err.println("Agent closed... Halting system.");
-            Runtime.getRuntime().halt(1);
-          } catch (Exception e) {
-            System.err.println("Could not close agent");
-            e.printStackTrace();
-          }
-        }
-      });
-
+    Runtime.getRuntime()
+        .addShutdownHook(
+            new Thread() {
+              public void run() {
+                try {
+                  System.err.println("Waiting for the main thread to close... 2s");
+                  mainThread.join(2000);
+                  System.err.println("Closing agent");
+                  Agent.v().close();
+                  System.err.println("Agent closed... Halting system.");
+                  Runtime.getRuntime().halt(1);
+                } catch (Exception e) {
+                  System.err.println("Could not close agent");
+                  e.printStackTrace();
+                }
+              }
+            });
   }
 
-  public void close () throws IOException {
-    Thread t = new Thread(new Runnable () {
-        public void run () {
-          try {
-            closeRecorder.invoke(null);
-          } catch (Exception e) {
-            System.err.println("Could not close recorder:");
-            e.printStackTrace(System.err);
-          }
-        }
-      });
+  public void close() throws IOException {
+    Thread t =
+        new Thread(
+            new Runnable() {
+              public void run() {
+                try {
+                  closeRecorder.invoke(null);
+                } catch (Exception e) {
+                  System.err.println("Could not close recorder:");
+                  e.printStackTrace(System.err);
+                }
+              }
+            });
     t.start();
     try {
       t.join(10000);
-    } catch (InterruptedException e){
+    } catch (InterruptedException e) {
       System.err.println("Could not close recorder:");
       e.printStackTrace(System.err);
     }
@@ -147,15 +151,15 @@ public class Agent implements ClassFileTransformer, Closeable {
     Closer.close("field writer", fields, 1000);
   }
 
-  public MethodManager getMethodManager () {
+  public MethodManager getMethodManager() {
     return this.methods;
   }
 
-  public InstructionManager getInstructionManager () {
+  public InstructionManager getInstructionManager() {
     return this.instructions;
   }
 
-  public FieldManager getFieldManager () {
+  public FieldManager getFieldManager() {
     return this.fields;
   }
 
@@ -167,18 +171,19 @@ public class Agent implements ClassFileTransformer, Closeable {
     }
   }
 
-  static double getVersion () {
+  static double getVersion() {
     String version = System.getProperty("java.version");
     int pos = version.indexOf('.');
-    pos = version.indexOf('.', pos+1);
-    return Double.parseDouble (version.substring (0, pos));
+    pos = version.indexOf('.', pos + 1);
+    return Double.parseDouble(version.substring(0, pos));
   }
 
-  public byte[] transform(ClassLoader loader,
-                          final String className,
-                          Class<?> clazz,
-                          ProtectionDomain protectionDomain,
-                          byte[] buffer) {
+  public byte[] transform(
+      ClassLoader loader,
+      final String className,
+      Class<?> clazz,
+      ProtectionDomain protectionDomain,
+      byte[] buffer) {
 
     ClassReader reader = new ClassReader(buffer);
 
@@ -205,12 +210,8 @@ public class Agent implements ClassFileTransformer, Closeable {
 
       ClassWriter writer = new ClassWriter(reader, flag);
       WiretapClassVisitor wiretap =
-        new WiretapClassVisitor(writer,
-                                className,
-                                properties.getRecorder(),
-                                properties.getWiretappers(),
-                                methods);
-
+          new WiretapClassVisitor(
+              writer, className, properties.getRecorder(), properties.getWiretappers(), methods);
 
       try {
         wiretap.readFrom(reader);
@@ -248,7 +249,7 @@ public class Agent implements ClassFileTransformer, Closeable {
     }
   }
 
-  private void logClass(String className, byte[] bytes)  {
+  private void logClass(String className, byte[] bytes) {
     System.err.println("Class '" + className + "' has " + bytes.length + " bytes.");
   }
 
@@ -278,24 +279,21 @@ public class Agent implements ClassFileTransformer, Closeable {
   }
 
   private static Agent instance;
-  /** Create a new agent from the command-line options
-   */
+  /** Create a new agent from the command-line options */
   public static Agent fromOptions(String options) {
     instance = new Agent(new WiretapProperties(System.getProperties()));
     instance.setup();
     return instance;
   }
 
-  public static Agent v(){
+  public static Agent v() {
     return instance;
   }
 
-  /** Entry point for the javaagent.
-   */
+  /** Entry point for the javaagent. */
   public static void premain(String options, Instrumentation inst) {
     Agent agent = Agent.fromOptions(options);
     agent.greet();
     inst.addTransformer(agent);
   }
-
 }
