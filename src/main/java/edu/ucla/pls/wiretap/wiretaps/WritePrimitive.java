@@ -23,7 +23,7 @@ public class WritePrimitive extends ValueWiretapper {
 
 			@Override
       public void visitInsn(int opcode) {
-        Emitter emitter = value.getTypedEmitter(opcode, ISTORE);
+        Emitter emitter = value.getTypedEmitter(opcode, IASTORE);
 
         if (emitter != null && opcode != AASTORE) {
           // Array, Index, Value...
