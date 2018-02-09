@@ -4,3 +4,4 @@ hs_err_pid*
 *.class
 .DS_Store
 test/*
+src/test/output
