@@ -10,6 +10,7 @@ import edu.ucla.pls.wiretap.managers.Field;
 
 public class WritePrimitive extends ValueWiretapper {
 
+  EventType postwrite = declareEventType("postwrite");
   EventType write = declareEventType("write", Object.class, int.class, int.class);
   EventType writearray = declareEventType("writearray", Object.class, int.class, int.class);
 
@@ -17,6 +18,7 @@ public class WritePrimitive extends ValueWiretapper {
   public Wiretap createWiretap(MethodVisitor next,
                                final RecorderAdapter out,
                                final ValueEmitter value) {
+    final Emitter postwrite = this.postwrite.getEmitter(out);
     final Emitter write = this.write.getEmitter(out);
     final Emitter writearray = this.writearray.getEmitter(out);
     return new Wiretap(next) {
@@ -41,8 +43,12 @@ public class WritePrimitive extends ValueWiretapper {
           writearray.consume2(createInstructionId());
 
           // Array, Index, Value...
+          super.visitInsn(opcode);
+
+          postwrite.emit();
+        } else {
+          super.visitInsn(opcode);
         }
-        super.visitInsn(opcode);
 
       }
 
@@ -63,7 +69,11 @@ public class WritePrimitive extends ValueWiretapper {
               // Log the written value. Ignore everything else on the stack.
               emitter.log();
               write.emit(null, f.getId(), createInstructionId());
-              break;
+
+              super.visitFieldInsn(opcode, owner, name, desc);
+
+              postwrite.emit();
+              return;
 
             case PUTFIELD:
               // Object, Value...
@@ -77,13 +87,16 @@ public class WritePrimitive extends ValueWiretapper {
               // Object, Value..., Object
               write.consume(f.getId(), createInstructionId());
               // Object, Value...
-              break;
+
+              super.visitFieldInsn(opcode, owner, name, desc);
+
+              postwrite.emit();
+              return;
 
             }
           }
         }
         super.visitFieldInsn(opcode, owner, name, desc);
-
       }
     };
 

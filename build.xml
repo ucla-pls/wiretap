@@ -5,7 +5,7 @@
   <property name="classes.dir" value="${build.dir}/classes"/>
   <property name="lib.dir" value="lib" />
 
-  <property name="test.dir" value="src/test/resources/regression"/>
+  <property name="test.dir" value="test/regression"/>
   <property name="test.classes.dir" value="${test.dir}/classes"/>
   <property name="test.src.dir" value="${test.dir}/src"/>
 

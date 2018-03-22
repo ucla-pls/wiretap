@@ -3,6 +3,10 @@ package edu.ucla.pls.wiretap.recorders;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.concurrent.locks.Lock;
+import java.util.LinkedList;
+import java.util.Arrays;
+import java.util.concurrent.locks.ReentrantLock;
 
 public abstract class BinaryLogger implements Closeable {
 
@@ -164,12 +168,57 @@ public abstract class BinaryLogger implements Closeable {
     output(inst);
   }
 
+  private final Lock readlock = new ReentrantLock();
+  private final Lock writelock = readlock;
+
+  private final LinkedList<Entry> writestack = new LinkedList<>();
+
+  private class Entry {
+    final int inst;
+    final int offset;
+    final byte [] event;
+
+    Entry(int inst, int offset, byte [] event) {
+      this.inst = inst;
+      this.offset = offset;
+      this.event = event;
+    }
+  }
+
+  private final void stack(int inst) {
+    synchronized (writestack) {
+      writestack.push(new Entry(inst, offset, Arrays.copyOf(event, event.length)));
+      postOutput();
+    }
+  }
+
+  private final void destack() {
+    synchronized (writestack) {
+      Entry e = writestack.pop();
+      try {
+        out.write(e.event, 0, e.offset);
+        logInstruction(e.inst);
+      } catch (IOException exp) {
+      }
+    }
+  }
+
+  public final void postwrite () {
+    destack();
+    writelock.unlock();
+  }
+
+  public final void preread () {
+    readlock.lock();
+  }
+
   public final void read(Object o, int field, int inst) {
     event[offset++] = (byte) (READ | valueType);
     write(o);
     write(field);
     offset += valueSize;
     output(inst);
+    readlock.unlock();
   }
   public final void readarray(Object a, int index, int inst) {
     event[offset++] = (byte) (READARRAY | valueType);
@@ -177,22 +226,25 @@ public abstract class BinaryLogger implements Closeable {
     write(index);
     offset += valueSize;
     output(inst);
+    readlock.unlock();
   }
 
   public final void write(Object o, int field, int inst) {
+    writelock.lock();
     event[offset++] = (byte) (WRITE | valueType);
     write(o);
     write(field);
     offset += valueSize;
-    output(inst);
+    stack(inst);
   }
 
   public final void writearray(Object a, int index, int inst) {
+    writelock.lock();
     event[offset++] = (byte) (WRITEARRAY | valueType);
     write(a);
     write(index);
     offset += valueSize;
-    output(inst);
+    stack(inst);
   }
 
   public final void begin() {

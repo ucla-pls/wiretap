@@ -127,25 +127,6 @@ public class BinaryHistoryLogger extends BinaryLogger {
     }
   }
 
-  private final Lock readlock = new ReentrantLock();
-  private final Lock writelock = readlock;
-
-  public final void prewrite () {
-    writelock.lock();
-  }
-
-  public final void postwrite () {
-    writelock.unlock();
-  }
-
-  public final void preread () {
-    readlock.lock();
-  }
-
-  public final void postread () {
-    readlock.unlock();
-  }
-
 	@Override
   public BinaryLogger fromThread(Thread thread) {
     return getBinaryHistoryLogger(thread);

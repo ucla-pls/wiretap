@@ -14,6 +14,11 @@ public class NestedDeadlock extends Thread {
   public void run () {
     synchronized (a) {
       synchronized (a) {
+          try {
+            Thread.sleep(100);
+          } catch(Exception e){
+            e.printStackTrace();
+          } 
         synchronized (b) {
           synchronized (b) {
             System.out.println("Yeah, not in a deadlock");
