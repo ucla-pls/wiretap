@@ -160,7 +160,7 @@ public abstract class BinaryLogger implements Closeable {
   private final Lock readlock = new ReentrantLock();
   private final Lock writelock = readlock;
 
-  private final LinkedList<Entry> writestack = new LinkedList<>();
+  private final LinkedList<Entry> writestack = new LinkedList<Entry>();
 
   private class Entry {
     final int inst;
