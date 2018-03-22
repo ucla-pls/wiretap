@@ -18,10 +18,6 @@ public abstract class BinaryLogger implements Closeable {
     return offset + 4;
   }
 
-  /** out contains the output stream. All the events will
-      be written to this stream. */
-  protected final OutputStream out;
-
   /** contains the event. */
   protected final byte[] event;
 
@@ -33,22 +29,15 @@ public abstract class BinaryLogger implements Closeable {
 
   private final OutputStream logInst;
 
-  public BinaryLogger(OutputStream out, byte[] event, int id, OutputStream logInst) {
-    if (out == null)
-      throw new NullPointerException("The output stream was null");
+  public BinaryLogger(byte[] event, int id, OutputStream logInst) {
     if (logInst == null)
       throw new NullPointerException("Instruction logger was null");
     this.id = id;
-    this.out = out;
     this.event = event;
     this.logInst = logInst;
   }
 
   public abstract BinaryLogger fromThread(Thread thread);
-
-  public void postOutput() {
-    offset = 0;
-  };
 
   public final int getId() {
     return id;
@@ -59,7 +48,8 @@ public abstract class BinaryLogger implements Closeable {
   }
 
   private volatile int lastInstruction;
-  private final void logInstruction(int inst) {
+
+  protected final void logInstruction(int inst) {
     if (logInst != null) {
       try {
         byte[] bytes = new byte[4];
@@ -95,13 +85,12 @@ public abstract class BinaryLogger implements Closeable {
     write(objectToInt(object));
   }
 
-  private final void output(int inst) {
-    try {
-      out.write(event, 0, offset);
-      logInstruction(inst);
-    } catch (IOException e) {
-    }
-    postOutput();
+  public abstract void override();
+  public abstract void output(byte [] event, int offset, int inst);
+
+  public final void output(int inst) {
+    output(event, offset, inst);
+    override();
   }
 
   public static final byte SYNC = 0;
@@ -187,19 +176,15 @@ public abstract class BinaryLogger implements Closeable {
 
   private final void stack(int inst) {
     synchronized (writestack) {
-      writestack.push(new Entry(inst, offset, Arrays.copyOf(event, event.length)));
-      postOutput();
+      writestack.push(new Entry(inst, offset, Arrays.copyOf(event, offset)));
+      override();
     }
   }
 
   private final void destack() {
     synchronized (writestack) {
       Entry e = writestack.pop();
-      try {
-        out.write(e.event, 0, e.offset);
-        logInstruction(e.inst);
-      } catch (IOException exp) {
-      }
+      output(e.event, e.offset, e.inst);
     }
   }
 
