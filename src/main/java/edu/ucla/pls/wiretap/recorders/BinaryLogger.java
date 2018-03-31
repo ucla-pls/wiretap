@@ -3,6 +3,10 @@ package edu.ucla.pls.wiretap.recorders;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.IdentityHashMap;
+import java.util.Map;
+import java.util.Collections;
 import java.util.concurrent.locks.Lock;
 import java.util.LinkedList;
 import java.util.Arrays;
@@ -28,6 +32,8 @@ public abstract class BinaryLogger implements Closeable {
   public boolean running = false;
 
   private final OutputStream logInst;
+  private static final Map<Object,Integer> objectInts = new IdentityHashMap<Object,Integer>();
+  private static final AtomicInteger objectCounter = new AtomicInteger(0);
 
   public BinaryLogger(byte[] event, int id, OutputStream logInst) {
     if (logInst == null)
@@ -78,7 +84,18 @@ public abstract class BinaryLogger implements Closeable {
   }
 
   public static int objectToInt(Object object) {
-    return object != null ? System.identityHashCode(object) : 0;
+    if (object == null) { 
+      return 0;
+    } else { 
+      synchronized (objectInts) { 
+        Integer x = objectInts.get(object);
+        if (x == null) {
+          x = objectCounter.getAndIncrement();
+          objectInts.put(object, x);
+        }
+        return x;
+      }
+    }
   }
 
   public final void write(Object object) {
