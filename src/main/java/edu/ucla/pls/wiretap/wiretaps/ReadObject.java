@@ -55,8 +55,6 @@ public class ReadObject extends ValueWiretapper {
 
         if (desc.charAt(0) == 'L' || desc.charAt(0) == '[') {
           Field f = getField(owner, name, desc);
-          // Ignore final fields, they do not contribute to synchronization.
-          if (! f.isFinal()) {
           switch (opcode) {
 
           case GETSTATIC:
@@ -79,11 +77,8 @@ public class ReadObject extends ValueWiretapper {
             // Consume the object
             read.consume(f.getId(), createInstructionId());
             return;
-
-          }
           }
         }
-
         super.visitFieldInsn(opcode, owner, name, desc);
       }
     };

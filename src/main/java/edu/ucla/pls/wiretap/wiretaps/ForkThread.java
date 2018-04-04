@@ -9,7 +9,7 @@ import edu.ucla.pls.wiretap.Wiretapper;
 
 public class ForkThread extends Wiretapper {
 
-  EventType fork = declareEventType("fork", Thread.class, int.class);
+  EventType fork = declareEventType("fork", Object.class, int.class);
 
   @Override
   public Wiretap createWiretap(MethodVisitor next,

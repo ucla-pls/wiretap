@@ -25,6 +25,7 @@ public abstract class ValueWiretapper extends Wiretapper {
                                ) {
     ValueEmitter emitter = new ValueEmitter(out);
     return createWiretap(next, out, emitter);
+
   }
 
   public abstract Wiretap createWiretap(MethodVisitor next,

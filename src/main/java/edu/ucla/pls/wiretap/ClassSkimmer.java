@@ -1,5 +1,7 @@
 package edu.ucla.pls.wiretap;
 
+import java.util.HashMap;
+
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.MethodVisitor;
@@ -17,14 +19,26 @@ public class ClassSkimmer extends ClassVisitor {
   private final MethodManager methods;
   private final FieldManager fields;
   private final String className;
+  private final HashMap<String, String> supers;
 
   public ClassSkimmer(String className,
                       MethodManager methods,
-                      FieldManager fields) {
+                      FieldManager fields,
+                      HashMap<String, String> supers) {
     super(Opcodes.ASM5);
     this.methods = methods;
     this.className = className;
     this.fields = fields;
+    this.supers = supers;
+  }
+
+  public void visit(int version,
+                    int access,
+                    String name,
+                    String signature,
+                    String superName,
+                    String[] interfaces) {
+    supers.put(className, superName);
   }
 
   public MethodVisitor visitMethod(int access,
@@ -33,11 +47,7 @@ public class ClassSkimmer extends ClassVisitor {
                                    String signature,
                                    String [] exceptions) {
     Method m = new Method(access, className, name, desc, exceptions);
-    try {
-      methods.put(m);
-    } catch (Exception e) {
-      System.err.println("Warn: trying to add this method again: " + m);
-    }
+    methods.verify(m);
     return super.visitMethod(access, name, desc, signature, exceptions);
   }
 
@@ -49,11 +59,7 @@ public class ClassSkimmer extends ClassVisitor {
     // The use of desc over signature, might be a mistake. Note that signature
     // can be null.
     Field f = new Field(access, className, name, desc, value);
-    try {
-      fields.put(f);
-    } catch (Exception e) {
-      System.err.println("Warn: trying to add this field again: " + f);
-    }
+    fields.verify(f);
     return super.visitField(access, name, desc, signature, value);
   }
 

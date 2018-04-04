@@ -59,41 +59,38 @@ public class WritePrimitive extends ValueWiretapper {
                                  String desc) {
 
         if (desc.charAt(0) != 'L' && desc.charAt(0) != '[') {
+          Emitter emitter = value.getTypedEmitter(desc);
           Field f = getField(owner, name, desc);
-          // Ignore final fields, they do not contribute to synchronization.
-          if (! f.isFinal()) {
-            Emitter emitter = value.getTypedEmitter(desc);
-            switch (opcode) {
+          switch (opcode) {
 
-            case PUTSTATIC:
-              // Log the written value. Ignore everything else on the stack.
-              emitter.log();
-              write.emit(null, f.getId(), createInstructionId());
+          case PUTSTATIC:
+            // Log the written value. Ignore everything else on the stack.
+            emitter.log();
+            write.emit(null, f.getId(), createInstructionId());
 
-              super.visitFieldInsn(opcode, owner, name, desc);
+            super.visitFieldInsn(opcode, owner, name, desc);
 
-              postwrite.emit();
-              return;
+            postwrite.emit();
+            return;
 
-            case PUTFIELD:
-              // Object, Value...
-              emitter.logX1();
-              // Value..., Object
-              if (emitter.getType(0).getSize() == 2) {
-                out.dupX2();
-              } else {
-                out.dupX1();
-              }
-              // Object, Value..., Object
-              write.consume(f.getId(), createInstructionId());
-              // Object, Value...
-
-              super.visitFieldInsn(opcode, owner, name, desc);
-
-              postwrite.emit();
-              return;
-
+          case PUTFIELD:
+            // Object, Value...
+            emitter.logX1();
+            // Value..., Object
+            if (emitter.getType(0).getSize() == 2) {
+              out.dupX2();
+            } else {
+              out.dupX1();
             }
+            // Object, Value..., Object
+            write.consume(f.getId(), createInstructionId());
+            // Object, Value...
+
+            super.visitFieldInsn(opcode, owner, name, desc);
+
+            postwrite.emit();
+            return;
+
           }
         }
         super.visitFieldInsn(opcode, owner, name, desc);

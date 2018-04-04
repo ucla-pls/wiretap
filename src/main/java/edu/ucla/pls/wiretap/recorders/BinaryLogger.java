@@ -12,6 +12,9 @@ import java.util.LinkedList;
 import java.util.Arrays;
 import java.util.concurrent.locks.ReentrantLock;
 
+import edu.ucla.pls.wiretap.managers.FieldManager;
+import edu.ucla.pls.wiretap.Agent;
+
 public abstract class BinaryLogger implements Closeable {
 
   public static final int writeInt(int value, byte [] array, int offset) {
@@ -33,7 +36,8 @@ public abstract class BinaryLogger implements Closeable {
 
   private final OutputStream logInst;
   private static final Map<Object,Integer> objectInts = new IdentityHashMap<Object,Integer>();
-  private static final AtomicInteger objectCounter = new AtomicInteger(0);
+  private static final AtomicInteger objectCounter = new AtomicInteger(1);
+  private final FieldManager fields;
 
   public BinaryLogger(byte[] event, int id, OutputStream logInst) {
     if (logInst == null)
@@ -41,6 +45,7 @@ public abstract class BinaryLogger implements Closeable {
     this.id = id;
     this.event = event;
     this.logInst = logInst;
+    this.fields = Agent.v().getFieldManager();
   }
 
   public abstract BinaryLogger fromThread(Thread thread);
@@ -140,12 +145,14 @@ public abstract class BinaryLogger implements Closeable {
   }
 
 
-  public final void fork(Thread thread, int inst) {
-    BinaryLogger logger = fromThread(thread);
-    event[offset++] = FORK;
-    write(logger.id);
-    output(inst);
-    logger.begin();
+  public final void fork(Object thread, int inst) {
+    if (thread instanceof Thread) {
+      BinaryLogger logger = fromThread((Thread) thread);
+      event[offset++] = FORK;
+      write(logger.id);
+      output(inst);
+      logger.begin();
+    }
   }
 
   public final void join(Thread thread, int inst) {
@@ -217,6 +224,9 @@ public abstract class BinaryLogger implements Closeable {
   public final void read(Object o, int field, int inst) {
     event[offset++] = (byte) (READ | valueType);
     write(o);
+    if (field < 0) {
+      field = fields.check(field);
+    }
     write(field);
     offset += valueSize;
     output(inst);
@@ -235,6 +245,9 @@ public abstract class BinaryLogger implements Closeable {
     writelock.lock();
     event[offset++] = (byte) (WRITE | valueType);
     write(o);
+    if (field < 0) {
+      field = fields.check(field);
+    }
     write(field);
     offset += valueSize;
     stack(inst);
