@@ -54,30 +54,32 @@ public class WriteObject extends ValueWiretapper {
         if ((desc.charAt(0) == 'L' || desc.charAt(0) == '[') ) {
           // in some inner classes this$0 is used as value.
           Field f = getField(owner, name, desc);
-          switch (opcode) {
-          case PUTSTATIC:
-            // Log the written value. Ignore everything else on the stack.
-            value.vObject.log();
-            write.emit(null, f.getId(), createInstructionId());
+          if (!f.isFinal()) {
+            switch (opcode) {
+            case PUTSTATIC:
+              // Log the written value. Ignore everything else on the stack.
+              value.vObject.log();
+              write.emit(null, f.getId(), createInstructionId());
 
-            super.visitFieldInsn(opcode, owner, name, desc);
+              super.visitFieldInsn(opcode, owner, name, desc);
 
-            postwrite.emit();
-            return;
-          case PUTFIELD:
-            // Copy value up 1 in stack.  Object, Value -> Value, Object, Value
-            out.dupX1();
-            // Consume value -> Value, Object
-            value.vObject.consume();
-            // Copy the object -> Object, Value, Object
-            out.dupX1();
-            // Consume object
-            write.consume(f.getId(), createInstructionId());
+              postwrite.emit();
+              return;
+            case PUTFIELD:
+              // Copy value up 1 in stack.  Object, Value -> Value, Object, Value
+              out.dupX1();
+              // Consume value -> Value, Object
+              value.vObject.consume();
+              // Copy the object -> Object, Value, Object
+              out.dupX1();
+              // Consume object
+              write.consume(f.getId(), createInstructionId());
 
-            super.visitFieldInsn(opcode, owner, name, desc);
+              super.visitFieldInsn(opcode, owner, name, desc);
 
-            postwrite.emit();
-            return;
+              postwrite.emit();
+              return;
+            }
           }
         }
         super.visitFieldInsn(opcode, owner, name, desc);
