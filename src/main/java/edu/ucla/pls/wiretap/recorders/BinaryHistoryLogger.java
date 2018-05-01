@@ -111,39 +111,29 @@ public class BinaryHistoryLogger extends BinaryLogger {
   public int order = 0;
 
   public BinaryHistoryLogger(int id, OutputStream instLogger) {
-    super(BinaryHistoryLogger.globalWriter, new byte[MAX_SIZE], id, instLogger);
+    super(new byte[MAX_SIZE], id, instLogger);
     offset = 0;
     write(id);
-    write(order++);
+    offset = 8;
   }
 
   @Override
-  public void postOutput() {
-    offset = 4;
-    write(order++);
+  public void output(byte [] event, int offset, int inst) {
+    writeInt(order++, event, 4);
+    try {
+      globalWriter.write(event, 0, offset);
+      logInstruction(inst);
+    } catch (IOException e) {
+    }
     if (counter != null && counter.getAndDecrement() <= 0) {
       System.err.println("Reached maximal depth.");
       System.exit(1);
     }
   }
 
-  private final Lock readlock = new ReentrantLock();
-  private final Lock writelock = readlock;
-
-  public final void prewrite () {
-    writelock.lock();
-  }
-
-  public final void postwrite () {
-    writelock.unlock();
-  }
-
-  public final void preread () {
-    readlock.lock();
-  }
-
-  public final void postread () {
-    readlock.unlock();
+  @Override
+  public void override() {
+    offset = 8;
   }
 
 	@Override

@@ -1,6 +1,6 @@
 <project name="wiretap" default="jar" >
 
-    <property name="src.dir" value="src/main"/>
+  <property name="src.dir" value="src/main"/>
   <property name="build.dir" value="build"/>
   <property name="classes.dir" value="${build.dir}/classes"/>
   <property name="lib.dir" value="lib" />

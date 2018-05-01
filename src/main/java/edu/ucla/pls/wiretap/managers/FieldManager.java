@@ -29,7 +29,7 @@ public class FieldManager extends Manager<String, Field> {
   }
 
   public synchronized Field getField(String owner, String name, String desc) {
-    return getDefault(new Field(0, owner, name, desc, null));
+    return getUnmanaged(new Field(0, owner, name, desc, null));
   }
 
 }

@@ -3,6 +3,17 @@ package edu.ucla.pls.wiretap.recorders;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.IdentityHashMap;
+import java.util.Map;
+import java.util.Collections;
+import java.util.concurrent.locks.Lock;
+import java.util.LinkedList;
+import java.util.Arrays;
+import java.util.concurrent.locks.ReentrantLock;
+
+import edu.ucla.pls.wiretap.managers.FieldManager;
+import edu.ucla.pls.wiretap.Agent;
 
 public abstract class BinaryLogger implements Closeable {
 
@@ -14,10 +25,6 @@ public abstract class BinaryLogger implements Closeable {
     return offset + 4;
   }
 
-  /** out contains the output stream. All the events will
-      be written to this stream. */
-  protected final OutputStream out;
-
   /** contains the event. */
   protected final byte[] event;
 
@@ -28,23 +35,20 @@ public abstract class BinaryLogger implements Closeable {
   public boolean running = false;
 
   private final OutputStream logInst;
+  private static final Map<Object,Integer> objectInts = new IdentityHashMap<Object,Integer>();
+  private static final AtomicInteger objectCounter = new AtomicInteger(1);
+  private final FieldManager fields;
 
-  public BinaryLogger(OutputStream out, byte[] event, int id, OutputStream logInst) {
-    if (out == null)
-      throw new NullPointerException("The output stream was null");
+  public BinaryLogger(byte[] event, int id, OutputStream logInst) {
     if (logInst == null)
       throw new NullPointerException("Instruction logger was null");
     this.id = id;
-    this.out = out;
     this.event = event;
     this.logInst = logInst;
+    this.fields = Agent.v().getFieldManager();
   }
 
   public abstract BinaryLogger fromThread(Thread thread);
-
-  public void postOutput() {
-    offset = 0;
-  };
 
   public final int getId() {
     return id;
@@ -55,7 +59,8 @@ public abstract class BinaryLogger implements Closeable {
   }
 
   private volatile int lastInstruction;
-  private final void logInstruction(int inst) {
+
+  protected final void logInstruction(int inst) {
     if (logInst != null) {
       try {
         byte[] bytes = new byte[4];
@@ -84,20 +89,30 @@ public abstract class BinaryLogger implements Closeable {
   }
 
   public static int objectToInt(Object object) {
-    return object != null ? System.identityHashCode(object) : 0;
+    if (object == null) { 
+      return 0;
+    } else { 
+      synchronized (objectInts) { 
+        Integer x = objectInts.get(object);
+        if (x == null) {
+          x = objectCounter.getAndIncrement();
+          objectInts.put(object, x);
+        }
+        return x;
+      }
+    }
   }
 
   public final void write(Object object) {
     write(objectToInt(object));
   }
 
-  private final void output(int inst) {
-    try {
-      out.write(event, 0, offset);
-      logInstruction(inst);
-    } catch (IOException e) {
-    }
-    postOutput();
+  public abstract void override();
+  public abstract void output(byte [] event, int offset, int inst);
+
+  public final void output(int inst) {
+    output(event, offset, inst);
+    override();
   }
 
   public static final byte SYNC = 0;
@@ -130,12 +145,14 @@ public abstract class BinaryLogger implements Closeable {
   }
 
 
-  public final void fork(Thread thread, int inst) {
-    BinaryLogger logger = fromThread(thread);
-    event[offset++] = FORK;
-    write(logger.id);
-    output(inst);
-    logger.begin();
+  public final void fork(Object thread, int inst) {
+    if (thread instanceof Thread) {
+      BinaryLogger logger = fromThread((Thread) thread);
+      event[offset++] = FORK;
+      write(logger.id);
+      output(inst);
+      logger.begin();
+    }
   }
 
   public final void join(Thread thread, int inst) {
@@ -164,12 +181,56 @@ public abstract class BinaryLogger implements Closeable {
     output(inst);
   }
 
+  private final Lock readlock = new ReentrantLock();
+  private final Lock writelock = readlock;
+
+  private final LinkedList<Entry> writestack = new LinkedList<Entry>();
+
+  private class Entry {
+    final int inst;
+    final int offset;
+    final byte [] event;
+
+    Entry(int inst, int offset, byte [] event) {
+      this.inst = inst;
+      this.offset = offset;
+      this.event = event;
+    }
+  }
+
+  private final void stack(int inst) {
+    synchronized (writestack) {
+      writestack.push(new Entry(inst, offset, Arrays.copyOf(event, offset)));
+      override();
+    }
+  }
+
+  private final void destack() {
+    synchronized (writestack) {
+      Entry e = writestack.pop();
+      output(e.event, e.offset, e.inst);
+    }
+  }
+
+  public final void postwrite () {
+    destack();
+    writelock.unlock();
+  }
+
+  public final void preread () {
+    readlock.lock();
+  }
+
   public final void read(Object o, int field, int inst) {
     event[offset++] = (byte) (READ | valueType);
     write(o);
+    if (field < 0) {
+      field = fields.check(field);
+    }
     write(field);
     offset += valueSize;
     output(inst);
+    readlock.unlock();
   }
   public final void readarray(Object a, int index, int inst) {
     event[offset++] = (byte) (READARRAY | valueType);
@@ -177,22 +238,28 @@ public abstract class BinaryLogger implements Closeable {
     write(index);
     offset += valueSize;
     output(inst);
+    readlock.unlock();
   }
 
   public final void write(Object o, int field, int inst) {
+    writelock.lock();
     event[offset++] = (byte) (WRITE | valueType);
     write(o);
+    if (field < 0) {
+      field = fields.check(field);
+    }
     write(field);
     offset += valueSize;
-    output(inst);
+    stack(inst);
   }
 
   public final void writearray(Object a, int index, int inst) {
+    writelock.lock();
     event[offset++] = (byte) (WRITEARRAY | valueType);
     write(a);
     write(index);
     offset += valueSize;
-    output(inst);
+    stack(inst);
   }
 
   public final void begin() {

@@ -100,11 +100,13 @@ public class SynchronizedBinaryLogger extends BinaryLogger {
   }
 
   public static final int MAX_SIZE = 21;
+  private final OutputStream out;
 
   private int lastSync = 0;
 
   public SynchronizedBinaryLogger(OutputStream out, int id) {
-    super(out, new byte[MAX_SIZE], id, null);
+    super(new byte[MAX_SIZE], id, null);
+    this.out = out;
   }
 
   @Override
@@ -113,7 +115,18 @@ public class SynchronizedBinaryLogger extends BinaryLogger {
   }
 
   @Override
-  public void postOutput() {
+  public void output(byte [] event, int offset, int inst) {
+    try {
+      out.write(event, 0, offset);
+      logInstruction(inst);
+    } catch (IOException e) {
+    }
+  }
+
+  @Override
+  public void override() {
+    offset = 0;
+
     int localTick = tick;
     if (localTick != lastSync) {
       int order = totalOrderId.getAndIncrement();

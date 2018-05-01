@@ -215,8 +215,8 @@ public class ReachableMethodsAnalyzer implements Closeable{
   */
   private static String methodFromStackTraceElement(StackTraceElement element) {
     String ownerDot = element.getClassName();
-    String name = element.getMethodName();
-    int lineNumber = element.getLineNumber();
+    final String name = element.getMethodName();
+    final int lineNumber = element.getLineNumber();
 
     String owner = element.getClassName().replace(".", "/");
 

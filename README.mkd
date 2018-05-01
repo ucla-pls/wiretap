@@ -16,7 +16,7 @@ Wiretap should work with java's down to version 1.6.
 Wiretap is implemented as a java agent. To run it write
 
 ```
-java -javaagent:wiretap.jar .. normal parameters 
+java -javaagent:wiretap.jar -Dwiretap.recorder=<recorder>.. normal parameters 
 ```
 
 This will by default create a wiretap folder `_wiretap/`, which will contain
@@ -46,12 +46,6 @@ The `_wiretap/` folder contain these files:
   [ ] Find a good way to represent the GenericSignature, Should it replace the
       Signature?
       
-- `log/`, this is where the fun happens. Each logger will add events to one of
-  the files in this directory. The files are numerated by thread. The events of
-  different threads are stored in different files to reduce the needed for
-  synchronization.
-
-
 ## Wiretaps 
 
 Wiretaps are installed by a Wiretapper. A wiretapper is essentially a wrapper
@@ -74,6 +68,15 @@ public static void closeRecorder();
 Also it has to implement the methods for all the event that it will accept.
 
 Note: Recorders can be chained if some of the events has to be processed. 
+
+### Currently Implemented Recorders
+
+A full list can be found in `src/main/edu/ucla/pls/wiretap/recorders/`
+
+- `ReachableMethods` - Outputs the reachable methods of a program with
+no repetition in the order they where encounterd in the program.
+- `BinaryHistoryLogger` - Logs alot of event in a binary file
+wiretap.hist. The format is described in `wiretap-tools` repository.
 
 ## Building from Source
 

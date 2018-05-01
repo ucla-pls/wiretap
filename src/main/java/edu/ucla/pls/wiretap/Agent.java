@@ -8,6 +8,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.HashMap;
+import java.util.ArrayList;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
 // import java.lang.reflect.Method;
@@ -38,6 +40,7 @@ public class Agent implements ClassFileTransformer, Closeable {
   private final MethodManager methods;
   private final InstructionManager instructions;
   private final FieldManager fields;
+  private final HashMap<String,String> supers;
   private final Class<?> recorder;
 
   private BufferedWriter classWriter;
@@ -50,7 +53,8 @@ public class Agent implements ClassFileTransformer, Closeable {
         properties.getRecorder(),
         new MethodManager(properties),
         new InstructionManager(properties),
-        new FieldManager(properties));
+        new FieldManager(properties),
+        new HashMap<String, String>());
   }
 
   public Agent(
@@ -58,12 +62,14 @@ public class Agent implements ClassFileTransformer, Closeable {
       Class<?> recorder,
       MethodManager methods,
       InstructionManager instructions,
-      FieldManager fields) {
+      FieldManager fields,
+      HashMap<String, String> supers) {
     this.properties = properties;
     this.methods = methods;
     this.recorder = recorder;
     this.instructions = instructions;
     this.fields = fields;
+    this.supers = supers;
   }
 
   private static boolean delete(File f) throws IOException {
@@ -146,9 +152,9 @@ public class Agent implements ClassFileTransformer, Closeable {
       e.printStackTrace(System.err);
     }
     Closer.close("class writer", classWriter, 1000);
+    Closer.close("field writer", fields, 1000);
     Closer.close("method writer", methods, 1000);
     Closer.close("instruction writer", instructions, 1000);
-    Closer.close("field writer", fields, 1000);
   }
 
   public MethodManager getMethodManager() {
@@ -185,9 +191,22 @@ public class Agent implements ClassFileTransformer, Closeable {
       ProtectionDomain protectionDomain,
       byte[] buffer) {
 
+    System.err.println("+ " + className);
     ClassReader reader = new ClassReader(buffer);
 
-    new ClassSkimmer(className, methods, fields).readFrom(reader);
+
+    new ClassSkimmer(className, methods, fields, supers).readFrom(reader);
+
+    for (Field v : new ArrayList<Field>(fields.unverified)) {
+      String supero = supers.get(v.getOwner());
+      if (supero != null && !supero.equals("java/lang/Object")) {
+        synchronized (fields) {
+          Field superf = fields.getUnmanaged(new Field(0, supero, v.getName(), v.getDesc(), null));
+          fields.unverified.remove(v);
+          v.setId(superf.getId());
+        }
+      }
+    }
 
     if (properties.isClassIgnored(className)) {
       return null;

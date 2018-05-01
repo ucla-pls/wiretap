@@ -11,6 +11,7 @@ import edu.ucla.pls.wiretap.managers.Field;
 
 public class ReadObject extends ValueWiretapper {
 
+  EventType preread = declareEventType("preread");
   EventType read = declareEventType("read", Object.class, int.class, int.class);
   EventType readarray = declareEventType("readarray", Object.class, int.class, int.class);
 
@@ -19,6 +20,7 @@ public class ReadObject extends ValueWiretapper {
                                final RecorderAdapter out,
                                final ValueEmitter value) {
     final Emitter read = this.read.getEmitter(out);
+    final Emitter preread = this.preread.getEmitter(out);
     final Emitter readarray = this.readarray.getEmitter(out);
     return new Wiretap(next) {
 
@@ -26,6 +28,8 @@ public class ReadObject extends ValueWiretapper {
       public void visitInsn(int opcode) {
 
         if (opcode == Opcodes.AALOAD) {
+
+          preread.emit();
           // Copy array and index
           out.dup2();
 
@@ -51,11 +55,10 @@ public class ReadObject extends ValueWiretapper {
 
         if (desc.charAt(0) == 'L' || desc.charAt(0) == '[') {
           Field f = getField(owner, name, desc);
-          // Ignore final fields, they do not contribute to synchronization.
-          if (! f.isFinal()) {
           switch (opcode) {
 
           case GETSTATIC:
+            preread.emit();
             // Log the written value. Ignore everything else on the stack.
             super.visitFieldInsn(opcode, owner, name, desc);
             value.vObject.log();
@@ -63,6 +66,7 @@ public class ReadObject extends ValueWiretapper {
             return;
 
           case GETFIELD:
+            preread.emit();
             // Copy object on the stack.  Object -> Object, Object
             out.dup();
             // Fetch value -> Object, Value
@@ -73,11 +77,8 @@ public class ReadObject extends ValueWiretapper {
             // Consume the object
             read.consume(f.getId(), createInstructionId());
             return;
-
-          }
           }
         }
-
         super.visitFieldInsn(opcode, owner, name, desc);
       }
     };
