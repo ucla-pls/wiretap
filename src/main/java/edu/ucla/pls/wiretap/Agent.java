@@ -191,7 +191,7 @@ public class Agent implements ClassFileTransformer, Closeable {
       ProtectionDomain protectionDomain,
       byte[] buffer) {
 
-    System.err.println("+ " + className);
+    ///System.err.println("+ " + className);
     ClassReader reader = new ClassReader(buffer);
 
 
