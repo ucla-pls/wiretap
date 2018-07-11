@@ -1,5 +1,8 @@
 package edu.ucla.pls.wiretap;
 
+
+import edu.ucla.pls.wiretap.Agent;
+
 import java.io.Closeable;
 
 public class Closer implements Runnable, Closeable {
@@ -15,14 +18,14 @@ public class Closer implements Runnable, Closeable {
   }
 
   public void run () {
-    System.err.print("- Closing " + name + "... ");
-    System.err.flush();
+    Agent.err.print("- Closing " + name + "... ");
+    Agent.err.flush();
     try {
       closeable.close();
-      System.err.println("Done.");
+      Agent.err.println("Done.");
     } catch (Exception e) {
-      System.err.println("Failed.");
-      e.printStackTrace(System.err);
+      Agent.err.println("Failed.");
+      e.printStackTrace(Agent.err);
     }
   }
 
@@ -38,8 +41,8 @@ public class Closer implements Runnable, Closeable {
         t.join();
       }
     } catch (InterruptedException e) {
-      System.err.println("Couldn't close " + name + " was interrupted.");
-      e.printStackTrace(System.err);
+      Agent.err.println("Couldn't close " + name + " was interrupted.");
+      e.printStackTrace(Agent.err);
     }
   }
 

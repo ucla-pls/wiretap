@@ -2,6 +2,7 @@ package edu.ucla.pls.wiretap.wiretaps;
 
 import org.objectweb.asm.MethodVisitor;
 
+import edu.ucla.pls.wiretap.Agent;
 import edu.ucla.pls.wiretap.EventType;
 import edu.ucla.pls.wiretap.EventType.Emitter;
 import edu.ucla.pls.wiretap.RecorderAdapter;
@@ -24,7 +25,7 @@ public class ForkThread extends Wiretapper {
                                   boolean itf) {
 
         if (name.equals("start") && desc.equals("()V") ) {
-          System.err.println("WARNING: Assumes that " + owner + " is inheriting from thread.");
+          Agent.err.println("WARNING: Assumes that " + owner + " is inheriting from thread.");
           fork.log(createInstructionId());
         }
 

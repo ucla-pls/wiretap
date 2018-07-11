@@ -14,6 +14,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
+import edu.ucla.pls.wiretap.Agent;
+
 public class Manager<D,M extends Managable<D>> implements Closeable {
 
   public final File out;
@@ -111,7 +113,7 @@ public class Manager<D,M extends Managable<D>> implements Closeable {
       if (nid != id) {
         managable.setId(check(nid));
       } else {
-        System.err.println("WARN: UNVERIFIED " + managable);
+        Agent.err.println("WARN: UNVERIFIED " + managable);
         putUnsafe(managable);
       }
       return managable.getId();
@@ -136,7 +138,7 @@ public class Manager<D,M extends Managable<D>> implements Closeable {
       writer = new BufferedWriter(new FileWriter(out));
     } catch (IOException e) {
       System.err.println("Could not open file-writer");
-      e.printStackTrace();
+      e.printStackTrace(Agent.err);
       System.exit(-1);
     }
   }

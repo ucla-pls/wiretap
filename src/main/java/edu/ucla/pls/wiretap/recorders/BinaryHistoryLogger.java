@@ -8,6 +8,8 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.util.Map;
+import java.util.Arrays;
+import java.lang.Thread;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -15,6 +17,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import edu.ucla.pls.wiretap.Closer;
+import edu.ucla.pls.wiretap.Agent;
 import edu.ucla.pls.wiretap.DeadlockDetector;
 import edu.ucla.pls.wiretap.WiretapProperties;
 import edu.ucla.pls.wiretap.utils.ConcurrentOutputStream;
@@ -60,8 +63,7 @@ public class BinaryHistoryLogger extends BinaryLogger {
     }
     try {
       OutputStream s = new FileOutputStream(historyFile);
-      globalWriter =
-        new ConcurrentOutputStream(new BufferedOutputStream(s, 32768));
+      globalWriter = new BufferedOutputStream(s, 32768);
     } catch (IOException e) {
       e.printStackTrace();
       System.exit(-1);
@@ -73,11 +75,11 @@ public class BinaryHistoryLogger extends BinaryLogger {
   }
 
   public synchronized static void closeRecorder() throws IOException {
-    System.out.println("Closing loggers...");
+    Agent.err.println("Closing loggers...");
     for (BinaryHistoryLogger logger: loggers.values()) {
       Closer.close(logger.toString(), logger, 1000);
     }
-    System.out.println("Done closing loggers...");
+    Agent.err.println("Done closing loggers...");
     Closer.close("the global writer", globalWriter, 100);
   }
 
@@ -121,7 +123,9 @@ public class BinaryHistoryLogger extends BinaryLogger {
   public void output(byte [] event, int offset, int inst) {
     writeInt(order++, event, 4);
     try {
-      globalWriter.write(event, 0, offset);
+      synchronized(globalWriter) {
+        globalWriter.write(event, 0, offset);
+      }
       logInstruction(inst);
     } catch (IOException e) {
     }

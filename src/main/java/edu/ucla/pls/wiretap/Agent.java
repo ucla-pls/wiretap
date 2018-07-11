@@ -7,6 +7,7 @@ import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.PrintStream;
 import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.ArrayList;
@@ -46,6 +47,9 @@ public class Agent implements ClassFileTransformer, Closeable {
   private BufferedWriter classWriter;
 
   private java.lang.reflect.Method closeRecorder;
+
+  public static final PrintStream out = System.out;
+  public static final PrintStream err = System.err;
 
   public Agent(WiretapProperties properties) {
     this(
@@ -102,11 +106,11 @@ public class Agent implements ClassFileTransformer, Closeable {
 
       classWriter = new BufferedWriter(new FileWriter(properties.getClassFile()));
     } catch (IOException e) {
-      System.err.println("Some IO error occurred");
+      Agent.err.println("Some IO error occurred");
       e.printStackTrace();
       System.exit(-1);
     } catch (Exception e) {
-      System.err.println("Could not call setup on recorder");
+      Agent.err.println("Could not call setup on recorder");
       e.printStackTrace();
       System.exit(-1);
     }
@@ -117,14 +121,14 @@ public class Agent implements ClassFileTransformer, Closeable {
             new Thread() {
               public void run() {
                 try {
-                  System.err.println("Waiting for the main thread to close... 2s");
+                  Agent.err.println("Waiting for the main thread to close... 2s");
                   mainThread.join(2000);
-                  System.err.println("Closing agent");
+                  Agent.err.println("Closing agent");
                   Agent.v().close();
-                  System.err.println("Agent closed... Halting system.");
+                  Agent.err.println("Agent closed... Halting system.");
                   Runtime.getRuntime().halt(1);
                 } catch (Exception e) {
-                  System.err.println("Could not close agent");
+                  Agent.err.println("Could not close agent");
                   e.printStackTrace();
                 }
               }
@@ -139,8 +143,8 @@ public class Agent implements ClassFileTransformer, Closeable {
                 try {
                   closeRecorder.invoke(null);
                 } catch (Exception e) {
-                  System.err.println("Could not close recorder:");
-                  e.printStackTrace(System.err);
+                  Agent.err.println("Could not close recorder:");
+                  e.printStackTrace(Agent.err);
                 }
               }
             });
@@ -148,8 +152,8 @@ public class Agent implements ClassFileTransformer, Closeable {
     try {
       t.join(10000);
     } catch (InterruptedException e) {
-      System.err.println("Could not close recorder:");
-      e.printStackTrace(System.err);
+      Agent.err.println("Could not close recorder:");
+      e.printStackTrace(Agent.err);
     }
     Closer.close("class writer", classWriter, 1000);
     Closer.close("field writer", fields, 1000);
@@ -171,9 +175,9 @@ public class Agent implements ClassFileTransformer, Closeable {
 
   public void greet() {
     if (properties.isVerbose()) {
-      System.err.println("====== Running program with Wiretap ======");
-      properties.list(System.err);
-      System.err.println("==========================================");
+      Agent.err.println("====== Running program with Wiretap ======");
+      properties.list(Agent.err);
+      Agent.err.println("==========================================");
     }
   }
 
@@ -191,7 +195,7 @@ public class Agent implements ClassFileTransformer, Closeable {
       ProtectionDomain protectionDomain,
       byte[] buffer) {
 
-    ///System.err.println("+ " + className);
+    ///Agent.err.println("+ " + className);
     ClassReader reader = new ClassReader(buffer);
 
 
@@ -235,7 +239,7 @@ public class Agent implements ClassFileTransformer, Closeable {
       try {
         wiretap.readFrom(reader);
       } catch (Exception e) {
-        System.err.println("Could not read from reader");
+        Agent.err.println("Could not read from reader");
         e.printStackTrace();
         System.exit(-1);
       }
@@ -254,12 +258,12 @@ public class Agent implements ClassFileTransformer, Closeable {
           CheckClassAdapter.verify(new ClassReader(bytes), loader, false, pw);
           String result = sw.toString();
           if (result.length() != 0) {
-            System.err.println("Test Failed");
-            System.err.println(result);
+            Agent.err.println("Test Failed");
+            Agent.err.println(result);
           }
         } catch (Exception e) {
-          System.err.println("Test Failed");
-          System.err.println(sw.toString());
+          Agent.err.println("Test Failed");
+          Agent.err.println(sw.toString());
           e.printStackTrace();
         }
       }
@@ -269,7 +273,7 @@ public class Agent implements ClassFileTransformer, Closeable {
   }
 
   private void logClass(String className, byte[] bytes) {
-    System.err.println("Class '" + className + "' has " + bytes.length + " bytes.");
+    Agent.err.println("Class '" + className + "' has " + bytes.length + " bytes.");
   }
 
   private void dumpClassFile(String className, byte[] bytes) {

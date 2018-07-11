@@ -53,7 +53,7 @@ public class ReachableMethodsAnalyzer implements Closeable{
 
     Maybe<Set<String>> methods = properties.getOverapproximation();
     if (methods.hasValue()) {
-      System.out.println("Found overapproximation, printing differences");
+      Agent.err.println("Found overapproximation, printing differences");
       overapproximation = methods.getValue();
 
       unsoundnessfolder = properties.getUnsoundnessFolder();
@@ -73,7 +73,7 @@ public class ReachableMethodsAnalyzer implements Closeable{
 
     new DeadlockDetector(new DeadlockDetector.Handler () {
         public void handleDeadlock(Thread [] threads) {
-          System.out.println("Found deadlock, exiting program");
+          Agent.err.println("Found deadlock, exiting program");
           try {
             ReachableMethodsAnalyzer.closeRecorder();
           } catch (IOException e) {
@@ -221,7 +221,7 @@ public class ReachableMethodsAnalyzer implements Closeable{
     String owner = element.getClassName().replace(".", "/");
 
     if ( lineNumber < 0 ) {
-      System.out.println("No Line number");
+      Agent.err.println("No Line number");
       return MethodManager.getMethodDescriptor(owner, name, "?");
     }
 
@@ -241,7 +241,7 @@ public class ReachableMethodsAnalyzer implements Closeable{
       new AtomicReference<String>();
 
     if (result == null) {
-      System.out.println("Could not read '" + resourceName + "'");
+      Agent.err.println("Could not read '" + resourceName + "'");
       return MethodManager.getMethodDescriptor(owner, name, "?");
     }
 
@@ -267,19 +267,19 @@ public class ReachableMethodsAnalyzer implements Closeable{
         }, 0);
     } catch ( IOException e ) {
       // do nothing
-      e.printStackTrace();
+      e.printStackTrace(Agent.err);
     } finally {
       try {
       result.close();
       } catch ( IOException e ) {
         // do nothing
-        e.printStackTrace();
+        e.printStackTrace(Agent.err);
       }
     }
 
     String desc = reference.get();
     if (desc == null) {
-      System.out.println("Could not find reference");
+      Agent.err.println("Could not find reference");
       return MethodManager.getMethodDescriptor(owner, name, "?");
     } else {
       return MethodManager.getMethodDescriptor(owner, name, desc);

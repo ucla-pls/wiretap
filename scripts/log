@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+java -javaagent:./build/wiretap.jar \
+    -Dwiretap.recorder=BinaryHistoryLogger \
+    -Dwiretap.classfilesfolder=_wiretap/classes \
+    -Dwiretap.ignoredprefixes="org/mockito,org/powermock,edu/ucla/pls/wiretap,java,sun,org/dacapo/harness/" \
+    $@

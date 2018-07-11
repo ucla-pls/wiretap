@@ -199,17 +199,17 @@ public class WiretapProperties extends Properties {
             wiretapper.setRecorder(recorder);
             wiretappers.add(wiretapper);
           } catch (NoSuchMethodException e) {
-            System.err.println("WARNING: " + wiretapper + " not active: " + e.toString());
+            Agent.err.println("WARNING: " + wiretapper + " not active: " + e.toString());
           }
         } catch (ClassNotFoundException e) {
-          System.err.println("Could not find class '" + classname + "'");
-          e.printStackTrace();
+          Agent.err.println("Could not find class '" + classname + "'");
+          e.printStackTrace(Agent.err);
         } catch (NoSuchMethodException e) {
-          System.err.println("'" + classname + "' must have an empty constructor");
-          e.printStackTrace();
+          Agent.err.println("'" + classname + "' must have an empty constructor");
+          e.printStackTrace(Agent.err);
         } catch (Exception e) {
-          System.err.println("Unexpected exception");
-          e.printStackTrace();
+          Agent.err.println("Unexpected exception");
+          e.printStackTrace(Agent.err);
         }
       }
     }
@@ -220,16 +220,16 @@ public class WiretapProperties extends Properties {
     if (recorder == null) {
       String recorderName =
         "edu.ucla.pls.wiretap.recorders." + getProperty("recorder");
-      System.out.println("RecorderName " + recorderName);
+      Agent.err.println("RecorderName " + recorderName);
       try {
         recorder = Class.forName(recorderName);
       } catch (ClassNotFoundException e) {
-        System.err.println("Could not find class '" + recorderName + "'");
-        e.printStackTrace();
+        Agent.err.println("Could not find class '" + recorderName + "'");
+        e.printStackTrace(Agent.err);
         System.exit(-1);
       } catch (Exception e) {
-        System.err.println("Unexpected exception");
-        e.printStackTrace();
+        Agent.err.println("Unexpected exception");
+        e.printStackTrace(Agent.err);
         System.exit(-1);
       }
     }
@@ -301,13 +301,13 @@ public class WiretapProperties extends Properties {
         lines.add(line);
       }
     } catch (IOException e) {
-      e.printStackTrace();
+      e.printStackTrace(Agent.err);
     } finally {
       try {
         if (fr != null) fr.close();
         if (br != null) br.close();
       } catch (IOException e) {
-        e.printStackTrace();
+        e.printStackTrace(Agent.err);
       }
     }
   }

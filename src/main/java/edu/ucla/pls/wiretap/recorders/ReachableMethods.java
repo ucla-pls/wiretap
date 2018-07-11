@@ -29,12 +29,12 @@ public class ReachableMethods implements Closeable{
 
     Maybe<Set<String>> methods = properties.getOverapproximation();
     if (methods.hasValue()) {
-      System.out.println("Found overapproximation, printing differences");
+      Agent.err.println("Found overapproximation, printing differences");
       overapproximation = methods.getValue();
 
       Maybe<Set<String>> worldmethods = properties.getWorld();
       if (worldmethods.hasValue()) {
-        System.out.println("Found world, " +
+        Agent.err.println("Found world, " +
                            "excluding differences not present in world");
         world = worldmethods.getValue();
       }
@@ -54,11 +54,11 @@ public class ReachableMethods implements Closeable{
 
     new DeadlockDetector(new DeadlockDetector.Handler () {
         public void handleDeadlock(Thread [] threads) {
-          System.out.println("Found deadlock, exiting program");
+          Agent.err.println("Found deadlock, exiting program");
           try {
             ReachableMethods.closeRecorder();
           } catch (IOException e) {
-            e.printStackTrace();
+            e.printStackTrace(Agent.err);
           }
           System.exit(1);
         }
@@ -104,7 +104,7 @@ public class ReachableMethods implements Closeable{
             writer.println(e.toString());
           }
         } catch (IOException e) {
-          e.printStackTrace();
+          e.printStackTrace(Agent.err);
         } finally {
           if (writer != null) writer.close();
         }

@@ -32,9 +32,9 @@ public class Logger implements Closeable {
   }
 
   public synchronized static void closeRecorder() throws IOException {
-    System.out.println("Closing recorders");
+    Agent.err.println("Closing recorders");
     for (Logger logger: loggers.values()) {
-      System.out.println("Closing " + logger);
+      Agent.err.println("Closing " + logger);
       logger.close();
     }
   }

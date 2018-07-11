@@ -144,7 +144,6 @@ public abstract class BinaryLogger implements Closeable {
     output(-1);
   }
 
-
   public final void fork(Object thread, int inst) {
     if (thread instanceof Thread) {
       BinaryLogger logger = fromThread((Thread) thread);
@@ -222,6 +221,7 @@ public abstract class BinaryLogger implements Closeable {
   }
 
   public final void read(Object o, int field, int inst) {
+    offset = 8;
     event[offset++] = (byte) (READ | valueType);
     write(o);
     if (field < 0) {
@@ -233,6 +233,7 @@ public abstract class BinaryLogger implements Closeable {
     readlock.unlock();
   }
   public final void readarray(Object a, int index, int inst) {
+    offset = 8;
     event[offset++] = (byte) (READARRAY | valueType);
     write(a);
     write(index);
@@ -243,6 +244,7 @@ public abstract class BinaryLogger implements Closeable {
 
   public final void write(Object o, int field, int inst) {
     writelock.lock();
+    offset = 8;
     event[offset++] = (byte) (WRITE | valueType);
     write(o);
     if (field < 0) {
@@ -255,6 +257,7 @@ public abstract class BinaryLogger implements Closeable {
 
   public final void writearray(Object a, int index, int inst) {
     writelock.lock();
+    offset = 8;
     event[offset++] = (byte) (WRITEARRAY | valueType);
     write(a);
     write(index);
@@ -263,6 +266,7 @@ public abstract class BinaryLogger implements Closeable {
   }
 
   public final void begin() {
+    offset = 8;
     synchronized (this) {
       event[offset++] = BEGIN;
       running = true;
@@ -271,6 +275,7 @@ public abstract class BinaryLogger implements Closeable {
   }
 
   public final void end() {
+    offset = 8;
     synchronized (this) {
       if (running) {
         running = false;
@@ -281,11 +286,13 @@ public abstract class BinaryLogger implements Closeable {
   }
 
   public final void branch(int inst) {
+    offset = 8;
     event[offset++] = BRANCH;
     output(inst);
   }
 
   public final void enter(Object o, int methodId) {
+    offset = 8;
     event[offset++] = ENTER;
     write(o);
     write(methodId);
@@ -310,7 +317,7 @@ public abstract class BinaryLogger implements Closeable {
   private byte valueType;
 
   public final void value(byte v) {
-    int _offset = this.offset + 9;
+    int _offset = 17;
     byte[] _event = this.event;
     _event[_offset] = v;
     valueSize = 1;
@@ -323,7 +330,7 @@ public abstract class BinaryLogger implements Closeable {
   }
 
   public final void value(short v) {
-    int _offset = this.offset + 9;
+    int _offset = 17;
     byte[] _event = this.event;
     _event[_offset + 0] = (byte)(v >>> 8);
     _event[_offset + 1] = (byte)(v);
@@ -332,7 +339,7 @@ public abstract class BinaryLogger implements Closeable {
   }
 
   public final void value(int v) {
-    int _offset = this.offset + 9;
+    int _offset = 17;
     byte[] _event = this.event;
     _event[_offset + 0] = (byte)(v >>> 24);
     _event[_offset + 1] = (byte)(v >>> 16);
@@ -343,7 +350,7 @@ public abstract class BinaryLogger implements Closeable {
   }
 
   public final void value(long v) {
-    int _offset = this.offset + 9;
+    int _offset = 17;
     byte[] _event = this.event;
     _event[_offset + 0] = (byte)(v >>> 52);
     _event[_offset + 1] = (byte)(v >>> 48);
