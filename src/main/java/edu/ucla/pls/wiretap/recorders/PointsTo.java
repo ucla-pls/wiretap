@@ -24,7 +24,7 @@ public class PointsTo implements Closeable{
       Writer writer = new BufferedWriter(new FileWriter(file));
       instance = new PointsTo(writer, Agent.v().getInstructionManager());
     } catch (IOException e) {
-      System.err.println("Could not open file 'reachable.txt' in out folder");
+      Agent.err.println("Could not open file 'reachable.txt' in out folder");
       System.exit(-1);
     }
   }

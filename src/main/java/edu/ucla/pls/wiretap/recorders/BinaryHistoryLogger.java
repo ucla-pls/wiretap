@@ -130,7 +130,7 @@ public class BinaryHistoryLogger extends BinaryLogger {
     } catch (IOException e) {
     }
     if (counter != null && counter.getAndDecrement() <= 0) {
-      System.err.println("Reached maximal depth.");
+      Agent.err.println("Reached maximal depth.");
       System.exit(1);
     }
   }

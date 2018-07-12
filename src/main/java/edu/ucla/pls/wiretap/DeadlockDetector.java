@@ -22,7 +22,7 @@ public class DeadlockDetector implements Runnable {
     t.setDaemon(true);
     //scheduler.scheduleAtFixedRate(this, interval, interval, TimeUnit.MILLISECONDS);
     t.start();
-    System.err.println("Deadlock detector started!");
+    Agent.err.println("Deadlock detector started!");
   }
 
   public void run () {
@@ -37,10 +37,10 @@ public class DeadlockDetector implements Runnable {
   }
 
   public void checkForDeadlock () {
-    System.err.println("Checking for deadlocks");
+    Agent.err.println("Checking for deadlocks");
     long [] threadIds = mbean.findMonitorDeadlockedThreads();
     if (threadIds != null) {
-      System.err.println("Deadlock detected");
+      Agent.err.println("Deadlock detected");
       ThreadInfo [] threadInfos = mbean.getThreadInfo(threadIds);
       Map<Thread, StackTraceElement[]> stackTraceMap = Thread.getAllStackTraces();
       Thread [] threads = new Thread [threadInfos.length];

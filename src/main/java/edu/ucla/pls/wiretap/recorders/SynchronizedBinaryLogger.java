@@ -11,6 +11,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import java.util.concurrent.ConcurrentHashMap;
 
+import edu.ucla.pls.wiretap.Agent;
 import edu.ucla.pls.wiretap.Formatter;
 import edu.ucla.pls.wiretap.WiretapProperties;
 
@@ -36,14 +37,14 @@ public class SynchronizedBinaryLogger extends BinaryLogger {
     logfolder = properties.getLogFolder();
     logfolder.mkdirs();
 
-    System.err.println("BinaryLogger setup with " + logfolder);
+    Agent.err.println("BinaryLogger setup with " + logfolder);
 
     final long synchtime = properties.getSynchTime();
     if (synchtime > 0) {
       synchThread = new Thread(new Runnable () {
           public void run ()  {
             try {
-              System.err.println("Synchronizing every " + synchtime + " millis.");
+              Agent.err.println("Synchronizing every " + synchtime + " millis.");
               boolean running = true;
               while (running) {
                 Thread.sleep(synchtime);
@@ -65,12 +66,12 @@ public class SynchronizedBinaryLogger extends BinaryLogger {
 
   public static void closeRecorder() throws IOException {
     if (synchThread != null) {
-      System.err.println("Interrupting Synch Thread");
+      Agent.err.println("Interrupting Synch Thread");
       synchThread.interrupt();
     }
-    System.err.println("Closing recorders");
+    Agent.err.println("Closing recorders");
     for (BinaryLogger logger: loggers.values()) {
-      System.err.println("Closing " + logger);
+      Agent.err.println("Closing " + logger);
       logger.close();
     }
   }

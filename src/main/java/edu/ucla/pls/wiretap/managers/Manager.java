@@ -62,7 +62,7 @@ public class Manager<D,M extends Managable<D>> implements Closeable {
       writer.write(desc.toString());
       writer.write("\n");
     } catch (IOException e) {
-      System.err.println("Could not write '" + desc + "' to file");
+      Agent.err.println("Could not write '" + desc + "' to file");
     }
     return managable;
   }
@@ -72,7 +72,7 @@ public class Manager<D,M extends Managable<D>> implements Closeable {
     M result = getUnsafe(desc);
     putUnsafe(managable);
     if (result != null) {
-      // System.err.println("WARN: adding " + managable + " again");
+      // Agent.err.println("WARN: adding " + managable + " again");
       unverified.remove(result);
       result.setId(managable.getId());
     }
@@ -137,7 +137,7 @@ public class Manager<D,M extends Managable<D>> implements Closeable {
     try {
       writer = new BufferedWriter(new FileWriter(out));
     } catch (IOException e) {
-      System.err.println("Could not open file-writer");
+      Agent.err.println("Could not open file-writer");
       e.printStackTrace(Agent.err);
       System.exit(-1);
     }

@@ -67,7 +67,7 @@ public class ReachableMethodsAnalyzer implements Closeable{
       reachablewriter = new PrintWriter(new FileWriter(file));
       loggedmethods = new PrintWriter(new FileWriter(loggedfile));
     } catch (IOException e) {
-      System.err.println("Could not open file 'reachable.txt' in out folder");
+      Agent.err.println("Could not open file 'reachable.txt' in out folder");
       System.exit(-1);
     }
 
