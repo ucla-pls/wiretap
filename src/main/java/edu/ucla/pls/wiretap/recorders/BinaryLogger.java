@@ -154,12 +154,14 @@ public abstract class BinaryLogger implements Closeable {
     }
   }
 
-  public final void join(Thread thread, int inst) {
-    BinaryLogger logger = fromThread(thread);
-    logger.end();
-    event[offset++] = JOIN;
-    write(logger.id);
-    output(inst);
+  public final void join(Object thread, int inst) {
+    if (thread instanceof Thread) {
+      BinaryLogger logger = fromThread((Thread) thread);
+      logger.end();
+      event[offset++] = JOIN;
+      write(logger.id);
+      output(inst);
+    }
   }
 
   public final void request(Object o, int inst) {

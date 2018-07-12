@@ -10,7 +10,7 @@ import edu.ucla.pls.wiretap.Wiretapper;
 
 public class JoinThread extends Wiretapper {
 
-  EventType join = declareEventType("join", Thread.class, int.class);
+  EventType join = declareEventType("join", Object.class, int.class);
 
   @Override
   public Wiretap createWiretap(MethodVisitor next,
