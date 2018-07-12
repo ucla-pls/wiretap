@@ -199,7 +199,8 @@ public class Agent implements ClassFileTransformer, Closeable {
     ClassReader reader = new ClassReader(buffer);
 
 
-    new ClassSkimmer(className, methods, fields, supers).readFrom(reader);
+    ClassSkimmer cs = new ClassSkimmer(className, methods, fields, supers);
+    cs.readFrom(reader);
 
     for (Field v : new ArrayList<Field>(fields.unverified)) {
       String supero = supers.get(v.getOwner());
@@ -227,7 +228,7 @@ public class Agent implements ClassFileTransformer, Closeable {
       }
 
       int flag = ClassWriter.COMPUTE_MAXS;
-      if (getVersion() >= 1.7) {
+      if ((cs.version | 0xff) < 52) {
         flag |= ClassWriter.COMPUTE_FRAMES;
       }
 

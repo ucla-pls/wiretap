@@ -20,6 +20,7 @@ public class ClassSkimmer extends ClassVisitor {
   private final FieldManager fields;
   private final String className;
   private final HashMap<String, String> supers;
+  public int version;
 
   public ClassSkimmer(String className,
                       MethodManager methods,
@@ -38,6 +39,7 @@ public class ClassSkimmer extends ClassVisitor {
                     String signature,
                     String superName,
                     String[] interfaces) {
+    version = version;
     supers.put(className, superName);
   }
 
