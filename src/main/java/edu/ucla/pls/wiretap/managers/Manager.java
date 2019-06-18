@@ -61,6 +61,7 @@ public class Manager<D,M extends Managable<D>> implements Closeable {
     try {
       writer.write(desc.toString());
       writer.write("\n");
+      writer.flush();
     } catch (IOException e) {
       Agent.err.println("Could not write '" + desc + "' to file");
     }
