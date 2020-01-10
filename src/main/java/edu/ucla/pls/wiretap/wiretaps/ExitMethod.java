@@ -25,7 +25,6 @@ public class ExitMethod extends Wiretapper {
       @Override
       public void visitCode() {
         super.visitCode();
-
         out.visitTryCatchBlock(start, end, end, null);
         out.visitLabel(start);
       }

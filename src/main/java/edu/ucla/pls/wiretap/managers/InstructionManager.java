@@ -4,6 +4,7 @@ import java.util.List;
 
 import edu.ucla.pls.wiretap.utils.Pair;
 import edu.ucla.pls.wiretap.WiretapProperties;
+import edu.ucla.pls.wiretap.Agent;
 
 public class InstructionManager extends Manager<Pair<Method, Integer>, Instruction> {
 

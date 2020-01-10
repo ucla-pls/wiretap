@@ -25,14 +25,10 @@ public class MethodManager extends Manager<String, Method> {
                                            String desc) {
     StringBuilder b = new StringBuilder();
     b.append(owner).append(".");
-    if (name.charAt(0) == '<') {
-      b.append('"').append(name).append('"');
-		} else {
-      b.append(name);
-		}
+    b.append(name);
     b.append(":").append(desc);
 
-		return b.toString();
+    return b.toString();
   }
 
   public Method getMethod(String owner, String name, String desc) {

@@ -19,6 +19,14 @@ Wiretap is implemented as a java agent. To run it write
 java -javaagent:wiretap.jar -Dwiretap.recorder=<recorder>.. normal parameters 
 ```
 
+Here are recorder to:
+```
+BinaryHistoryLogger
+PointsTo
+ReachableMethods
+ReachableMethodsAnalyzer
+```
+
 This will by default create a wiretap folder `_wiretap/`, which will contain
 logs of the execution of the program. As a default the program will log enough
 to be able to replay itself.

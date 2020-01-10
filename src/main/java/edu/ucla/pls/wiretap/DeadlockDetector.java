@@ -37,7 +37,7 @@ public class DeadlockDetector implements Runnable {
   }
 
   public void checkForDeadlock () {
-    Agent.err.println("Checking for deadlocks");
+    // Agent.err.println("Checking for deadlocks");
     long [] threadIds = mbean.findMonitorDeadlockedThreads();
     if (threadIds != null) {
       Agent.err.println("Deadlock detected");
